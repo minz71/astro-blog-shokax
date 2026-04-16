@@ -17,6 +17,7 @@ import type {
 import type { EncryptedData } from "@/toolkit/encryption/types";
 import { encryptContent } from "@/toolkit/encryption/crypto";
 import { createPostContentContainer } from "@/toolkit/posts/createPostContentContainer";
+import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
 import { toPostHref, toTagHref } from "@/toolkit/posts/url";
 import { wrapRenderedCodeBlocks } from "@/toolkit/wrapRenderedCodeBlocks";
 import { wrapRenderedImages } from "@/toolkit/wrapRenderedImages";
@@ -37,7 +38,7 @@ export async function getStaticPaths() {
   const posts = await getCollection("posts");
   const sortedPosts = posts
     .filter((post) => !post.data.draft)
-    .toSorted((a, b) => b.data.date.getTime() - a.data.date.getTime());
+    .toSorted(comparePostsByOrderDateDesc);
 
   const container = await createPostContentContainer();
 

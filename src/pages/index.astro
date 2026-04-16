@@ -4,6 +4,7 @@ import IndexContent from "../components/IndexContent.astro";
 import Pagination from "../components/Pagination.astro";
 import { getCollection } from "astro:content";
 import themeConfig from "@/theme.config";
+import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
 
 // Fetch all posts
 const allPosts = await getCollection("posts");
@@ -14,15 +15,11 @@ const publishedPosts = allPosts.filter((post) => !post.data.draft);
 // Separate sticky posts and regular posts
 const stickyPosts = publishedPosts
   .filter((post) => post.data.sticky === true)
-  .toSorted(
-    (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
-  );
+  .toSorted(comparePostsByOrderDateDesc);
 
 const regularPosts = publishedPosts
   .filter((post) => !post.data.sticky)
-  .toSorted(
-    (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
-  );
+  .toSorted(comparePostsByOrderDateDesc);
 
 const pageSize = themeConfig.home?.pageSize ?? 10;
 const lastPage = Math.max(1, Math.ceil(regularPosts.length / pageSize));

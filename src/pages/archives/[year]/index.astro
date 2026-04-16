@@ -3,6 +3,7 @@ import Layout from "../../../layouts/Layout.astro";
 import { getCollection } from "astro:content";
 import { structurePostsByDate } from "@/toolkit/posts/structurePostsByDate";
 import { buildArchiveTimeline } from "@/toolkit/posts/buildArchiveTimeline";
+import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
 import { toCategoryHref, toPostHref } from "@/toolkit/posts/url";
 import { fmtNum } from "@/toolkit/tools/fmtNum";
 import { t } from "@/i18n";
@@ -10,14 +11,10 @@ import "../../../styles/collapse.css";
 
 export async function getStaticPaths() {
   const allPosts = await getCollection("posts");
-  const publishedPosts = allPosts
-    .filter((post) => !post.data.draft)
-    .toSorted((a, b) => b.data.date.getTime() - a.data.date.getTime());
-
+  const publishedPosts = allPosts.filter((post) => !post.data.draft);
   const structuredPosts = structurePostsByDate(publishedPosts, {
     daily: false,
   });
-
   const years = Object.keys(structuredPosts).map(Number);
   const sortedYears = [...years].toSorted((a, b) => b - a);
 
@@ -38,7 +35,6 @@ const { year, posts } = Astro.props as {
   posts: CollectionEntry<"posts">[];
 };
 
-// Helper to format date
 function formatDate(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -57,7 +53,7 @@ function formatDate(date: Date): string {
       </h2>
 
       {
-        buildArchiveTimeline(posts).map(
+        buildArchiveTimeline(posts.toSorted(comparePostsByOrderDateDesc)).map(
           ({ post, month, showMonthSection, monthPostCount }) => {
             const postDate = post.data.date;
             const lastCategory =

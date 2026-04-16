@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import { getCollection } from "astro:content";
 import { currentLocale, getT } from "@/i18n";
 import { toCategoryHref, toPostHref } from "@/toolkit/posts/url";
+import { comparePostsByOrderDateAsc } from "@/toolkit/posts/sortPosts";
 import "../../styles/collapse.css";
 
 export async function getStaticPaths() {
@@ -36,10 +37,8 @@ const postsInCategory = publishedPosts.filter((post) => {
   return categories.includes(category);
 });
 
-// Sort posts by date ascending (older first, matching old project)
-const sortedPosts = postsInCategory.toSorted(
-  (a, b) => new Date(a.data.date).getTime() - new Date(b.data.date).getTime(),
-);
+// Keep the category timeline order, but prioritize updated time when available.
+const sortedPosts = postsInCategory.toSorted(comparePostsByOrderDateAsc);
 
 // Build parent categories breadcrumb
 function getParentCategories(categoryName: string): string[] {

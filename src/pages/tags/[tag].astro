@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import { getCollection } from "astro:content";
 import { toCategoryHref, toPostHref, toTagSlug } from "@/toolkit/posts/url";
 import { t } from "@/i18n";
+import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
 import "../../styles/collapse.css";
 
 export async function getStaticPaths() {
@@ -39,10 +40,7 @@ const postsWithTag = publishedPosts.filter((post) => {
   return tags.includes(tag);
 });
 
-// Sort posts by date descending (newest first)
-const sortedPosts = postsWithTag.toSorted(
-  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
-);
+const sortedPosts = postsWithTag.toSorted(comparePostsByOrderDateDesc);
 
 // Helper to format date
 function formatDate(date: Date): string {
