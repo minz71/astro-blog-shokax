@@ -487,6 +487,55 @@ interface VisibilityTitleConfig {
   restoreDelay?: number;
 }
 
+interface SakuraConfig {
+  /**
+   * 是否启用樱花飘落效果。
+   */
+  enable?: boolean;
+
+  /**
+   * 樱花数量。
+   * - 默认 30
+   */
+  count?: number;
+
+  /**
+   * X 轴飘落速度。
+   * - 默认 0.5
+   */
+  xSpeed?: number;
+
+  /**
+   * Y 轴飘落速度。
+   * - 默认 0.5
+   */
+  ySpeed?: number;
+
+  /**
+   * 旋转速度。
+   * - 默认 0.03
+   */
+  rSpeed?: number;
+
+  /**
+   * 飘落方向。
+   * - 默认 "TopRight"
+   */
+  direction?: string;
+
+  /**
+   * 樱花图层层级。
+   * - 默认 -1，使其位于主体内容后方
+   */
+  zIndex?: number;
+
+  /**
+   * 樱花脚本来源。
+   * - 默认使用 jsDelivr 指向 sakura-rain
+   */
+  scriptSrc?: string;
+}
+
 interface HycAiRecommendConfig {
   /**
    * 是否启用 AI 相近文章推荐。
@@ -698,6 +747,11 @@ export interface ShokaXThemeConfig {
    * - 聚焦：显示 returnTitle，延迟 restoreDelay 后恢复原始标题
    */
   visibilityTitle?: VisibilityTitleConfig;
+
+  /**
+   * 樱花飘落效果配置。
+   */
+  sakura?: SakuraConfig;
 
   /**
    * HYC 扩展功能配置。
