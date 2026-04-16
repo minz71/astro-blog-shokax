@@ -18,7 +18,6 @@
         "@hyacine/cli": "^0.0.3",
         "@hyacine/core": "^0.0.3",
         "@hyacine/helper": "^0.0.3",
-        "@hyacine/mouse-firework": "^0.0.3",
         "@hyacine/site-uptime": "^0.0.3",
         "@pagefind/component-ui": "^1.5.2",
         "@playform/inline": "^0.1.4",
@@ -32,7 +31,7 @@
         "es-toolkit": "^1.49.0",
         "i18next": "^26.3.4",
         "katex": "^0.17.0",
-        "mouse-firework": "^0.2.0",
+        "mouse-firework": "0.3.0-beta.1",
         "node-emoji": "^2.2.0",
         "nyx-player": "^0.1.1",
         "pagefind": "^1.5.2",
@@ -258,8 +257,6 @@
     "@hyacine/core": ["@hyacine/core@0.0.3", "https://registry.npmmirror.com/@hyacine/core/-/core-0.0.3.tgz", {}, "sha512-uD7ZlatFB+unFFcrsjFlDgoa1SNBAjfH0U4AFuVGpe9NRYN8uVYRBeEBhgE8U0+f0TsVGtJyk4tX9u8vtj7Q5w=="],
 
     "@hyacine/helper": ["@hyacine/helper@0.0.3", "https://registry.npmmirror.com/@hyacine/helper/-/helper-0.0.3.tgz", { "dependencies": { "@hyacine/core": "0.0.3", "es-toolkit": "^1.44.0" } }, "sha512-Ir52bNtxSLD5owzuF5YfEhqCRsJi552xf0N6zwoNHrIbXYcSH/qhVIEQ4iX7NMVfbzfe/dDgHgTs/ZluzSkUDQ=="],
-
-    "@hyacine/mouse-firework": ["@hyacine/mouse-firework@0.0.3", "https://registry.npmmirror.com/@hyacine/mouse-firework/-/mouse-firework-0.0.3.tgz", { "dependencies": { "@hyacine/core": "0.0.3", "@hyacine/helper": "0.0.3", "mouse-firework": "^0.2.0" } }, "sha512-wF3DGyr6b523B8vE/CkFl3fdKV88E+5uk2OB0VK3r1pP9aLyMR7/ktsN2WmEPzjjf71wkLLChzwB0SOai8VSiQ=="],
 
     "@hyacine/site-uptime": ["@hyacine/site-uptime@0.0.3", "https://registry.npmmirror.com/@hyacine/site-uptime/-/site-uptime-0.0.3.tgz", { "dependencies": { "@hyacine/core": "0.0.3", "@hyacine/helper": "0.0.3" } }, "sha512-cuvTAwhDvoFfFnhCRaVMYTl+N536PFyu/QvhVDglwhHZi5hmSphfVxVhOcZf/c9fb176gCofbp+T4Ed3p2n74w=="],
 
@@ -1749,7 +1746,7 @@
 
     "mlly": ["mlly@1.8.2", "https://registry.npmmirror.com/mlly/-/mlly-1.8.2.tgz", { "dependencies": { "acorn": "^8.16.0", "pathe": "^2.0.3", "pkg-types": "^1.3.1", "ufo": "^1.6.3" } }, "sha512-d+ObxMQFmbt10sretNDytwt85VrbkhhUA/JBGm1MPaWJ65Cl4wOgLaB1NYvJSZ0Ef03MMEU/0xpPMXUIQ29UfA=="],
 
-    "mouse-firework": ["mouse-firework@0.2.0", "https://registry.npmmirror.com/mouse-firework/-/mouse-firework-0.2.0.tgz", { "dependencies": { "theme-shokax-anime": "^0.0.8" } }, "sha512-sU16G8gQQo6BxMAo1II/VIygmOGLBhBXKe7nKQyyxf9k+a7mNxtnomp3/wFIhYJIGF+s+hHo9D9iTPY2QCRMFA=="],
+    "mouse-firework": ["mouse-firework@0.3.0-beta.1", "", {}, "sha512-XqoXZK1sKbJRjU93Si3xfZQWTUbnLIKUj7Jq9ZHDPkQc4B9tniETpR60NvF6AskzVdCTYFbQZ+kKjW+taqXLhw=="],
 
     "mrmime": ["mrmime@2.0.1", "https://registry.npmmirror.com/mrmime/-/mrmime-2.0.1.tgz", {}, "sha512-Y3wQdFg2Va6etvQ5I82yUhGdsKrcYox6p7FfL1LbK2J4V01F9TGlepTIhnK24t7koZibmg82KGglhA1XK5IsLQ=="],
 
@@ -2162,8 +2159,6 @@
     "teex": ["teex@1.0.1", "https://registry.npmmirror.com/teex/-/teex-1.0.1.tgz", { "dependencies": { "streamx": "^2.12.5" } }, "sha512-eYE6iEI62Ni1H8oIa7KlDU6uQBtqr4Eajni3wX7rpfXD8ysFx8z0+dri+KWEPWpBsxXfxu58x/0jvTVT1ekOSg=="],
 
     "text-decoder": ["text-decoder@1.2.7", "https://registry.npmmirror.com/text-decoder/-/text-decoder-1.2.7.tgz", { "dependencies": { "b4a": "^1.6.4" } }, "sha512-vlLytXkeP4xvEq2otHeJfSQIRyWxo/oZGEbXrtEEF9Hnmrdly59sUbzZ/QgyWuLYHctCHxFF4tRQZNQ9k60ExQ=="],
-
-    "theme-shokax-anime": ["theme-shokax-anime@0.0.8", "https://registry.npmmirror.com/theme-shokax-anime/-/theme-shokax-anime-0.0.8.tgz", {}, "sha512-RzpqYWK3ZYjeP+Z/fXetz1YgEZnuQWd0+4H1/76xbATWrjMqq9Gqzq/g+mE5grmDiRxRgWUJJQgcSrIXPSbxbg=="],
 
     "third-party-web": ["third-party-web@0.26.7", "https://registry.npmmirror.com/third-party-web/-/third-party-web-0.26.7.tgz", {}, "sha512-buUzX4sXC4efFX6xg2bw6/eZsCUh8qQwSavC4D9HpONMFlRbcHhD8Je5qwYdCpViR6q0qla2wPP+t91a2vgolg=="],
 
