@@ -55,8 +55,10 @@ const mdxAutoImports = [
 import Font from "vite-plugin-font";
 
 import PlayformInline from "@playform/inline";
-import { installProcessWarningFilter } from "./src/toolkit/suppressWatcherWarning";
 import themeConfig from "./src/theme.config.ts";
+import { installProcessWarningFilter } from "./src/toolkit/suppressWatcherWarning";
+
+const site = themeConfig.siteUrl || undefined;
 
 if (themeConfig.diagnostics?.suppressFsWatcherMaxListenersWarning !== false) {
   installProcessWarningFilter();
@@ -64,7 +66,7 @@ if (themeConfig.diagnostics?.suppressFsWatcherMaxListenersWarning !== false) {
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://preview.astro.kaitaku.xyz",
+  site,
   trailingSlash: "always",
   build: {
     format: "directory",
