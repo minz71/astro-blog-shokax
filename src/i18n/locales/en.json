@@ -136,6 +136,23 @@
     "poweredSuffix": "Theme",
     "totalWordsTitle": "Total words",
     "estimatedReadingTimeTitle": "Estimated reading time",
+    "siteUptime": {
+      "prefix": "This site has been online for",
+      "units": {
+        "year": "year",
+        "years": "years",
+        "month": "month",
+        "months": "months",
+        "day": "day",
+        "days": "days",
+        "hour": "hour",
+        "hours": "hours",
+        "minute": "minute",
+        "minutes": "minutes",
+        "second": "second",
+        "seconds": "seconds"
+      }
+    },
     "randomPosts": "Random Posts",
     "recentComments": "Recent Comments",
     "noRecentComments": "No comments yet. Start a conversation!",
