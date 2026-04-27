@@ -14,8 +14,7 @@ declare global {
   }
 }
 
-const DEFAULT_SCRIPT_SRC =
-  "https://cdn.jsdelivr.net/gh/minz71/sakura-rain/sakura-rain.js";
+const DEFAULT_SCRIPT_SRC = "https://cdn.jsdelivr.net/gh/minz71/sakura-rain/sakura-rain.js";
 const SAKURA_SCRIPT_ID = "shokax-sakura-script";
 
 const initSakura = () => {

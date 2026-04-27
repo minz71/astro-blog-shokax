@@ -3,8 +3,7 @@ import { wrapRenderedCodeBlocks } from "./wrapRenderedCodeBlocks";
 
 describe("wrapRenderedCodeBlocks", () => {
   it("should wrap astro code blocks with code-block", () => {
-    const html =
-      '<pre class="astro-code"><code><span>const a = 1;</span></code></pre>';
+    const html = '<pre class="astro-code"><code><span>const a = 1;</span></code></pre>';
 
     expect(wrapRenderedCodeBlocks(html)).toContain(
       '<code-block><pre class="astro-code"><code><span>const a = 1;</span></code></pre></code-block>',

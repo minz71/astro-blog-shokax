@@ -943,7 +943,5 @@ function mergeThemeConfig<T>(defaults: T, overrides?: ThemeUserConfig<T>): T {
 }
 
 export function defineConfig(config: ShokaXThemeUserConfig = {}): ShokaXThemeConfig {
-  return normalizeThemeConfig(
-    mergeThemeConfig<ShokaXThemeConfig>(DEFAULT_THEME_CONFIG, config),
-  );
+  return normalizeThemeConfig(mergeThemeConfig<ShokaXThemeConfig>(DEFAULT_THEME_CONFIG, config));
 }
