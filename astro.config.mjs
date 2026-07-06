@@ -91,6 +91,14 @@ export default defineConfig({
     mdx(),
     PlayformInline({
       Logger: 0,
+      Beasties: {
+        // 多页站点的页面共用 _astro/*.css chunk。@playform/inline 默认开启
+        // pruneSource（beasties 本身默认关闭），逐页处理时会把该页的 critical
+        // 规则从共享 CSS 文件中剪掉并写回磁盘（writeFile 未 await），后续页面
+        // 读到的是已被剪过的文件，critical 规则既不在外部 CSS 也没被内联，
+        // 造成随机性的页面跑版。关闭 pruneSource 后内联是纯增益，无此风险。
+        pruneSource: false,
+      },
     }),
   ],
 
