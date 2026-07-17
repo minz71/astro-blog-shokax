@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { slug as githubSlug } from "github-slugger";
 import { toPostHref } from "./posts/url";
 
 // 供 astro.config 的 sitemap({ serialize }) 使用：扫描 src/posts 的 frontmatter,
@@ -40,6 +41,24 @@ function extractDate(frontmatter: string, key: string): Date | undefined {
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
+// 与 Astro glob loader 的默认 generateId 一致：frontmatter slug 优先，
+// 否则对去除扩展名的相对路径逐段 githubSlug(会小写化，如 AI/Accelerators
+// → ai/accelerators)。
+function toPostId(relativePath: string, frontmatter: string): string {
+  const slugOverride = frontmatter
+    .match(/^slug:[ \t]*(.+?)[ \t]*$/m)?.[1]
+    ?.replaceAll(/^["']|["']$/g, "");
+  if (slugOverride) {
+    return slugOverride;
+  }
+
+  return relativePath
+    .replace(/\.mdx?$/i, "")
+    .split("/")
+    .map((segment) => githubSlug(segment))
+    .join("/");
+}
+
 // sitemap 生成的 URL 与 toPostHref 的 encodeURIComponent 编码范围可能不一致
 // (中文文件名等),统一解码后再比对。
 function normalizePathname(pathname: string): string {
@@ -65,7 +84,10 @@ export function buildPostLastmodMap(postsDir: string): Map<string, string> {
       continue;
     }
 
-    const id = relative(postsDir, file).replaceAll("\\", "/");
+    const id = toPostId(
+      relative(postsDir, file).replaceAll("\\", "/"),
+      frontmatter,
+    );
     lastmodByPath.set(normalizePathname(toPostHref(id)), lastmod.toISOString());
   }
 
