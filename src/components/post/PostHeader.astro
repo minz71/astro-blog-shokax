@@ -9,7 +9,7 @@ interface Props {
   readingTime?: number;
 }
 
-const { title, date, wordCount, readingTime } = Astro.props;
+const { title, date, updated, wordCount, readingTime } = Astro.props;
 
 // Format date helper
 function formatDate(d: Date): string {
@@ -36,6 +36,9 @@ function formatFullDate(d: Date): string {
 const estimatedReadingTime = wordCount
   ? Math.ceil(wordCount / 200)
   : readingTime || 1;
+
+// 与 PostFooter 一致：更新日与发布日同天时不显示
+const hasUpdated = updated && formatDate(date) !== formatDate(updated);
 ---
 
 <header>
@@ -54,6 +57,23 @@ const estimatedReadingTime = wordCount
         {formatDate(date)}
       </time>
     </span>
+
+    {
+      hasUpdated && (
+        <span
+          class="item"
+          title={`${t("post.updatedAt")}: ${formatFullDate(updated)}`}
+        >
+          <span class="icon">
+            <i class="ic i-ri-calendar-check-line" />
+          </span>
+          <span class="text">{t("post.updatedAt")} </span>
+          <time itemprop="dateModified" datetime={updated.toISOString()}>
+            {formatDate(updated)}
+          </time>
+        </span>
+      )
+    }
 
     {
       wordCount && (

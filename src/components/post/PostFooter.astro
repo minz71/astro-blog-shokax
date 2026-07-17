@@ -98,9 +98,9 @@ const isNoReprint = license === "NOREPRINT";
             <i class="ic i-ri-calendar-check-line" />
           </span>
           <span class="text">{t("post.updatedAt")} </span>
+          {/* dateModified microdata 已移至 PostHeader，避免重复 */}
           <time
             title={`${t("post.updatedAt")}: ${updated.toLocaleString(currentLocale)}`}
-            itemprop="dateModified"
             datetime={updated.toISOString()}
           >
             {formatDate(updated)}

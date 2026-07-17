@@ -55,8 +55,10 @@ const mdxAutoImports = [
 import Font from "vite-plugin-font";
 
 import PlayformInline from "@playform/inline";
+import { fileURLToPath } from "node:url";
 import themeConfig from "./src/theme.config.ts";
 import { installProcessWarningFilter } from "./src/toolkit/suppressWatcherWarning";
+import { createSitemapSerializer } from "./src/toolkit/sitemapLastmod";
 
 const site = themeConfig.siteUrl || undefined;
 
@@ -86,7 +88,12 @@ export default defineConfig({
         customElement: true,
       },
     }),
-    sitemap(),
+    sitemap({
+      // 文章页输出 <lastmod>（frontmatter updated，缺席时回退 date）
+      serialize: createSitemapSerializer(
+        fileURLToPath(new URL("./src/posts", import.meta.url)),
+      ),
+    }),
     hyacinePlugin(),
     mdx(),
     PlayformInline({

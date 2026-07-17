@@ -326,6 +326,37 @@ const postMeta = {
   wordCount,
   readTime,
 };
+
+// SEO：发布/更新时间、OG 与 JSON-LD（加密文章已 noindex，不输出）
+const publishedTime = post.data.date.toISOString();
+const modifiedTime = (post.data.updated ?? post.data.date).toISOString();
+const pageDescription =
+  post.data.description || post.body?.slice(0, 150).replace(/\s+/g, " ");
+const coverSrc =
+  typeof post.data.cover === "string" ? post.data.cover : post.data.cover?.src;
+const coverUrl =
+  coverSrc && import.meta.env.SITE
+    ? new URL(coverSrc, import.meta.env.SITE).toString()
+    : coverSrc;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: post.data.title,
+  description: pageDescription,
+  datePublished: publishedTime,
+  dateModified: modifiedTime,
+  mainEntityOfPage: permalink,
+  url: permalink,
+  inLanguage: currentLocale,
+  author: { "@type": "Person", name: author },
+  publisher: { "@type": "Organization", name: siteName },
+  ...(coverUrl ? { image: coverUrl } : {}),
+  ...(post.data.tags?.length ? { keywords: post.data.tags.join(", ") } : {}),
+};
+
+// </script> 不能出现在内联 JSON-LD 中
+const jsonLdHtml = JSON.stringify(jsonLd).replaceAll("<", "\\u003c");
 ---
 
 <Layout
@@ -338,13 +369,29 @@ const postMeta = {
   pageCover={post.data.cover}
 >
   <Fragment slot="head">
-    <meta
-      name="description"
-      content={post.data.description ||
-        post.body?.slice(0, 150).replace(/\s+/g, " ")}
-    />
+    <meta name="description" content={pageDescription} />
     {/* 加密文章添加 noindex */}
     {isEncrypted && <meta name="robots" content="noindex, nofollow" />}
+    {
+      !isEncrypted && (
+        <>
+          <meta property="og:type" content="article" />
+          <meta property="og:title" content={post.data.title} />
+          {pageDescription && (
+            <meta property="og:description" content={pageDescription} />
+          )}
+          <meta property="og:url" content={permalink} />
+          <meta property="og:site_name" content={siteName} />
+          {coverUrl && <meta property="og:image" content={coverUrl} />}
+          <meta property="article:published_time" content={publishedTime} />
+          <meta property="article:modified_time" content={modifiedTime} />
+          {post.data.tags?.map((tag) => (
+            <meta property="article:tag" content={tag} />
+          ))}
+          <script type="application/ld+json" set:html={jsonLdHtml} />
+        </>
+      )
+    }
   </Fragment>
 
   <Fragment>
