@@ -3,6 +3,7 @@ import { t } from "@/i18n";
 
 interface PostMeta {
   date: Date;
+  updated?: Date;
   wordCount: number;
   readTime: number;
 }
@@ -43,6 +44,11 @@ function formatWordCount(count: number): string {
   }
   return String(count);
 }
+
+// 更新日与发布日同天时不显示
+const hasUpdated =
+  postMeta?.updated &&
+  formatDate(postMeta.date) !== formatDate(postMeta.updated);
 ---
 
 <div
@@ -87,6 +93,18 @@ function formatWordCount(count: number): string {
               {formatDate(postMeta.date)}
             </time>
           </span>
+          {hasUpdated && postMeta.updated && (
+            <span
+              class="item flex gap-1 items-center"
+              title={`${t("post.updatedAt")} ${formatDate(postMeta.updated)}`}
+            >
+              <i class="i-ri-calendar-check-line" />
+              <span class="text">{t("post.updatedAt")}</span>
+              <time datetime={postMeta.updated.toISOString()}>
+                {formatDate(postMeta.updated)}
+              </time>
+            </span>
+          )}
           <span
             class="item flex gap-1 items-center"
             title={t("post.wordCount")}

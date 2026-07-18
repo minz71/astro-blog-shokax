@@ -323,6 +323,7 @@ const permalink = import.meta.env.SITE
 // Build postMeta for Brand component
 const postMeta = {
   date: post.data.date,
+  updated: post.data.updated,
   wordCount,
   readTime,
 };
@@ -434,7 +435,6 @@ const jsonLdHtml = JSON.stringify(jsonLd).replaceAll("<", "\\u003c");
           title={post.data.title}
           date={post.data.date}
           updated={post.data.updated}
-          wordCount={wordCount}
         />
 
         {
@@ -486,8 +486,6 @@ const jsonLdHtml = JSON.stringify(jsonLd).replaceAll("<", "\\u003c");
         }
 
         <PostFooter
-          date={post.data.date}
-          updated={post.data.updated}
           permalink={permalink}
           title={post.data.title}
           author={author}

@@ -73,15 +73,13 @@ const walineConfig = commentsConfig.waline || {};
     >
       <link itemprop="mainEntityOfPage" href={permalink} />
 
-      <PostHeader title={title} date={publishDate} />
+      <PostHeader title={title} date={publishDate} updated={updatedDate} />
 
       <div class="body md" itemprop="articleBody">
         <AboutContent />
       </div>
 
       <PostFooter
-        date={publishDate}
-        updated={updatedDate}
         permalink={permalink}
         title={title}
         author={author}
