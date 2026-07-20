@@ -1,5 +1,8 @@
 <script lang="ts">
   import type { NavItemType } from "../navbar/NavTypes";
+  import { currentLocale, getT } from "@/i18n";
+
+  const t = getT(currentLocale);
 
   interface Props {
     menu?: NavItemType[];
@@ -24,7 +27,7 @@
   const menuItems = $derived(renderNavItems(menu || []));
 </script>
 
-<nav class="menu p-5 m-0 bg-transparent" aria-label="侧栏菜单导航">
+<nav class="menu p-5 m-0 bg-transparent" aria-label={t("sidebar.menuAria")}>
   <ul class="menu-list list-none m-0 p-0">
     {#each menuItems as item (item.data.href)}
       {@const icon = item.data.icon}

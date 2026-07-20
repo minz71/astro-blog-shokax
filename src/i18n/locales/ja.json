@@ -5,7 +5,8 @@
     "categories": "カテゴリ",
     "tags": "タグ",
     "archives": "アーカイブ",
-    "statistics": "統計"
+    "statistics": "統計",
+    "mainAria": "メインナビゲーション"
   },
   "post": {
     "wordCount": "文字数",
@@ -56,6 +57,8 @@
     "all": "すべて",
     "year": "年",
     "month": "月",
+    "yearTitle": "{{year}}年のアーカイブ",
+    "monthTitle": "{{year}}年{{month}}月のアーカイブ",
     "excellent": "最高です",
     "great": "とても良いです",
     "good": "良いです",
@@ -77,6 +80,8 @@
     "latestMonthSummary": "{{month}} に {{count}} 件の記事が公開されました。"
   },
   "sidebar": {
+    "menuAria": "サイドバーメニュー",
+    "stateAria": "サイト統計ナビゲーション",
     "toc": "目次",
     "overview": "サイト概要",
     "author": "著者",
@@ -131,6 +136,7 @@
     }
   },
   "footer": {
+    "shokaxRepoAria": "ShokaX GitHub プロジェクト",
     "poweredBy": "Powered by",
     "and": "と",
     "poweredSuffix": "テーマ",
@@ -145,7 +151,8 @@
   },
   "pagination": {
     "prev": "前へ",
-    "next": "次へ"
+    "next": "次へ",
+    "pageTitle": "{{page}}ページ目"
   },
   "button": {
     "readMore": "続きを読む",
@@ -178,9 +185,34 @@
   },
   "moments": {
     "title": "モーメント",
+    "description": "モーメント - 日々のひとこまを記録",
     "noContent": "モーメントはまだありません",
     "publishedAt": "公開日",
     "imageAlt": "モーメント画像 {{index}}"
+  },
+  "friends": {
+    "title": "リンク集",
+    "description": "カード形式で表示し、サイトプレビューとテーマカラーに対応。",
+    "rules": "リンクのルール",
+    "snippetTitle": "リンク設定の例",
+    "snippetHint": "本サイトを追加する際は、以下の内容をご自身の links 設定に追記してください。",
+    "list": "リンク一覧",
+    "comments": "コメント"
+  },
+  "about": {
+    "title": "アバウト",
+    "description": "アバウトページ"
+  },
+  "ai": {
+    "similarPosts": "AI おすすめ · 関連記事",
+    "similarPostsAria": "AI による関連記事のおすすめ"
+  },
+  "toolbar": {
+    "scrollTop": "トップへ戻る",
+    "goToComments": "コメントへ移動",
+    "togglePlayer": "プレイヤーを表示/非表示",
+    "playPause": "再生/一時停止",
+    "toggleSidebar": "サイドバーを切替"
   },
   "imageZoom": {
     "dialog": "画像プレビュー",

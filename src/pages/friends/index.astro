@@ -4,15 +4,14 @@ import Layout from "../../layouts/Layout.astro";
 import FriendLinks from "@/components/friends/FriendLinks.astro";
 import FriendRules from "@/content/friends-rules.md";
 import WalineComments from "@/components/post/WalineComments.svelte";
-import { currentLocale } from "@/i18n";
+import { currentLocale, t } from "@/i18n";
 import themeConfig from "@/theme.config";
 import astroConfig from "../../../astro.config.mjs";
 
 const friendsConfig = themeConfig.friends;
 const friendLinks = friendsConfig?.links ?? [];
-const pageTitle = friendsConfig?.title ?? "友链";
-const pageDescription =
-  friendsConfig?.description ?? "卡片式展示，支持站点预览与主题色点缀。";
+const pageTitle = friendsConfig?.title ?? t("friends.title");
+const pageDescription = friendsConfig?.description ?? t("friends.description");
 const commentsConfig = themeConfig.comments || {};
 const walineConfig = commentsConfig.waline || {};
 const friendsPath = "/friends/";
@@ -37,14 +36,14 @@ const friendsJson = JSON.stringify(friendsSnippet, null, 2);
       <p>{pageDescription}</p>
     </div>
     <section class="friend-section friend-rules">
-      <h3>友链规则</h3>
+      <h3>{t("friends.rules")}</h3>
       <div class="friend-rules-content">
         <FriendRules />
       </div>
     </section>
     <section class="friend-section friend-snippet">
-      <h3>友链配置示例</h3>
-      <p>添加本站时，请将下面内容追加到自己的 links 配置中。</p>
+      <h3>{t("friends.snippetTitle")}</h3>
+      <p>{t("friends.snippetHint")}</p>
       <code-block>
         <Code
           code={friendsJson}
@@ -55,13 +54,13 @@ const friendsJson = JSON.stringify(friendsSnippet, null, 2);
       </code-block>
     </section>
     <section class="friend-section friend-links-section">
-      <h3>友链列表</h3>
+      <h3>{t("friends.list")}</h3>
       <FriendLinks links={friendLinks} />
     </section>
     {
       friendsConfig?.comments && commentsConfig.enable !== false && (
         <section class="friend-section friend-comments" id="comments">
-          <h3>评论区</h3>
+          <h3>{t("friends.comments")}</h3>
           <div class="comment">
             <WalineComments
               client:visible

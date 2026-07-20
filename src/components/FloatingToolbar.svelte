@@ -1,7 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { sidebarOpen, toggleSidebar } from "@/stores/sidebarStore";
+  import { currentLocale, getT } from "@/i18n";
   import type { ShokaXThemeConfig } from "@/toolkit/themeConfig";
+
+  const t = getT(currentLocale);
 
   interface Props {
     nyxPlayer?: ShokaXThemeConfig["nyxPlayer"];
@@ -170,26 +173,26 @@
 
 <ul class="floating-toolbar" class:is-hidden={!isVisible}>
   <li class="tool top">
-    <button type="button" onclick={scrollToTop} aria-label="返回顶部">
+    <button type="button" onclick={scrollToTop} aria-label={t("toolbar.scrollTop")}>
       <i class="i-ri-arrow-up-line"></i>
     </button>
     <span class="percent">{percentLabel}</span>
   </li>
   {#if hasComments}
     <li class="tool">
-      <button type="button" onclick={scrollToComments} aria-label="前往评论区">
+      <button type="button" onclick={scrollToComments} aria-label={t("toolbar.goToComments")}>
         <i class="i-ri-chat-1-line"></i>
       </button>
     </li>
   {/if}
   {#if nyxEnabled}
     <li class="tool">
-      <button id="nyx-show-btn" type="button" aria-label="显示或隐藏播放器">
+      <button id="nyx-show-btn" type="button" aria-label={t("toolbar.togglePlayer")}>
         <i class="i-ri-music-2-line"></i>
       </button>
     </li>
     <li class="tool">
-      <button id="nyx-play-btn" type="button" aria-label="播放或暂停">
+      <button id="nyx-play-btn" type="button" aria-label={t("toolbar.playPause")}>
         <i class="i-ri-play-circle-line"></i>
       </button>
     </li>
@@ -198,7 +201,7 @@
     <button
       type="button"
       onclick={toggleSidebarOnMobile}
-      aria-label="切换侧栏"
+      aria-label={t("toolbar.toggleSidebar")}
       aria-pressed={$sidebarOpen}
       class:active={$sidebarOpen}
     >

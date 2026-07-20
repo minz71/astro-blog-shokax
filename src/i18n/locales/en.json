@@ -5,7 +5,8 @@
     "categories": "Categories",
     "tags": "Tags",
     "archives": "Archives",
-    "statistics": "Statistics"
+    "statistics": "Statistics",
+    "mainAria": "Main navigation"
   },
   "post": {
     "wordCount": "Word Count",
@@ -56,6 +57,8 @@
     "all": "All",
     "year": "Year",
     "month": "Month",
+    "yearTitle": "{{year}} Archives",
+    "monthTitle": "{{year}}-{{month}} Archives",
     "excellent": "Excellent",
     "great": "Great",
     "good": "Good",
@@ -77,6 +80,8 @@
     "latestMonthSummary": "In {{month}}, {{count}} posts were published."
   },
   "sidebar": {
+    "menuAria": "Sidebar menu",
+    "stateAria": "Site statistics",
     "toc": "Table of Contents",
     "overview": "Site Overview",
     "author": "Author",
@@ -131,6 +136,7 @@
     }
   },
   "footer": {
+    "shokaxRepoAria": "ShokaX GitHub project",
     "poweredBy": "Powered by",
     "and": "&",
     "poweredSuffix": "Theme",
@@ -162,7 +168,8 @@
   },
   "pagination": {
     "prev": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "pageTitle": "Page {{page}}"
   },
   "button": {
     "readMore": "Read More",
@@ -195,9 +202,34 @@
   },
   "moments": {
     "title": "Moments",
+    "description": "Moments - little snippets of life",
     "noContent": "No moments available",
     "publishedAt": "Published on",
     "imageAlt": "Moment image {{index}}"
+  },
+  "friends": {
+    "title": "Friends",
+    "description": "Card-style links with site previews and theme colors.",
+    "rules": "Link Rules",
+    "snippetTitle": "Link Config Example",
+    "snippetHint": "To add this site, append the following to your own links config.",
+    "list": "Links",
+    "comments": "Comments"
+  },
+  "about": {
+    "title": "About",
+    "description": "About page"
+  },
+  "ai": {
+    "similarPosts": "AI Picks · Similar Posts",
+    "similarPostsAria": "AI similar post recommendations"
+  },
+  "toolbar": {
+    "scrollTop": "Back to top",
+    "goToComments": "Go to comments",
+    "togglePlayer": "Show or hide player",
+    "playPause": "Play or pause",
+    "toggleSidebar": "Toggle sidebar"
   },
   "imageZoom": {
     "dialog": "Image preview",

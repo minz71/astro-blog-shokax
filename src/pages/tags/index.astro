@@ -67,7 +67,7 @@ const totalTags = tags.length;
           sortedTagCloud.map((tag) => (
             <a
               href={toTagHref(tag.name)}
-              aria-label={`${tag.name} 标签`}
+              aria-label={`${tag.name} ${t("tag.title")}`}
               class="tag-cloud-item"
               style={`font-size: ${tag.fontSize}px; color: ${tag.color};`}
               title={`${tag.name} (${tag.count})`}

@@ -74,7 +74,7 @@
 
 <nav
   id="nav"
-  aria-label="主导航"
+  aria-label={t("nav.mainAria")}
   class={`h-12.5 fixed top-0 w-full z-9 backdrop-blur-8 backdrop-saturate-180 ${atTop ? "nav-top" : "nav-bg"}`.trim()}
   style={showNav ? "" : "transform: translateY(-100%);"}
 >

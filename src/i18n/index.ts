@@ -25,12 +25,13 @@ export const currentLocale = resolveLocale(themeConfig.locale);
 /**
  * Initialize i18n with the locale from theme config
  */
-export async function initI18n(locale: Locale = DEFAULT_LOCALE) {
+export async function initI18n(locale: Locale = currentLocale) {
   if (!i18next.isInitialized) {
     await i18next.init({
       lng: locale,
       fallbackLng: DEFAULT_LOCALE,
       resources,
+      initImmediate: false, // init synchronously so SSR output isn't racy
       interpolation: {
         escapeValue: false, // React/Astro already handles escaping
       },
@@ -44,13 +45,14 @@ export async function initI18n(locale: Locale = DEFAULT_LOCALE) {
 /**
  * Get translation function for the configured locale
  */
-export function getT(locale: Locale = DEFAULT_LOCALE) {
+export function getT(locale: Locale = currentLocale) {
   if (!i18next.isInitialized || i18next.language !== locale) {
     // Synchronous init for SSR predictability
     void i18next.init({
       lng: locale,
       fallbackLng: DEFAULT_LOCALE,
       resources,
+      initImmediate: false,
       interpolation: {
         escapeValue: false,
       },

@@ -42,14 +42,14 @@ function formatDate(date: Date): string {
 }
 ---
 
-<Layout pageTitle={`${year} 年归档`}>
+<Layout pageTitle={t("archive.yearTitle", { year })}>
   <div class="wrap">
     <div class="timeline">
       <h2 class="item header">
         <a href="/archives/">{t("archive.all")}</a>
         <small>/</small>
-        {year} 年
-        <small>归档</small>
+        {year} {t("archive.year")}
+        <small>{t("archive.title")}</small>
       </h2>
 
       {
@@ -64,7 +64,7 @@ function formatDate(date: Date): string {
                 {showMonthSection && (
                   <h3 class="item section">
                     <a href={`/archives/${year}/${fmtNum(month)}/`}>
-                      {month} 月
+                      {month} {t("archive.month")}
                     </a>
                     <small>({monthPostCount})</small>
                   </h3>

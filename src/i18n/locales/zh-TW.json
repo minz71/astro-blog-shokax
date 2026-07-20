@@ -5,7 +5,8 @@
     "categories": "分類",
     "tags": "標籤",
     "archives": "歸檔",
-    "statistics": "統計"
+    "statistics": "統計",
+    "mainAria": "主導航"
   },
   "post": {
     "wordCount": "字數統計",
@@ -56,6 +57,8 @@
     "all": "全部",
     "year": "年",
     "month": "月",
+    "yearTitle": "{{year}} 年歸檔",
+    "monthTitle": "{{year}} 年 {{month}} 月歸檔",
     "excellent": "太棒了",
     "great": "非常好",
     "good": "很好",
@@ -77,6 +80,8 @@
     "latestMonthSummary": "最近統計月份 {{month}} 共發佈 {{count}} 篇文章。"
   },
   "sidebar": {
+    "menuAria": "側欄選單導航",
+    "stateAria": "站點統計導航",
     "toc": "目錄",
     "overview": "站點概覽",
     "author": "作者",
@@ -131,6 +136,7 @@
     }
   },
   "footer": {
+    "shokaxRepoAria": "ShokaX GitHub 專案",
     "poweredBy": "由",
     "and": "和",
     "poweredSuffix": "主題強力驅動",
@@ -162,7 +168,8 @@
   },
   "pagination": {
     "prev": "上一頁",
-    "next": "下一頁"
+    "next": "下一頁",
+    "pageTitle": "第{{page}}頁"
   },
   "button": {
     "readMore": "閱讀更多",
@@ -195,9 +202,34 @@
   },
   "moments": {
     "title": "動態",
+    "description": "動態 - 記錄生活的點滴",
     "noContent": "暫無動態",
     "publishedAt": "發佈於",
     "imageAlt": "動態圖片 {{index}}"
+  },
+  "friends": {
+    "title": "友鏈",
+    "description": "卡片式展示，支援站點預覽與主題色點綴。",
+    "rules": "友鏈規則",
+    "snippetTitle": "友鏈配置範例",
+    "snippetHint": "新增本站時，請將下面內容追加到自己的 links 配置中。",
+    "list": "友鏈清單",
+    "comments": "留言區"
+  },
+  "about": {
+    "title": "關於",
+    "description": "關於頁面"
+  },
+  "ai": {
+    "similarPosts": "AI 推薦 · 相近文章",
+    "similarPostsAria": "AI 相近文章推薦"
+  },
+  "toolbar": {
+    "scrollTop": "回到頂部",
+    "goToComments": "前往留言區",
+    "togglePlayer": "顯示或隱藏播放器",
+    "playPause": "播放或暫停",
+    "toggleSidebar": "切換側欄"
   },
   "imageZoom": {
     "dialog": "圖片預覽",
