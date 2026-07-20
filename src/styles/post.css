@@ -7,6 +7,16 @@
   padding: 0 2rem;
 }
 
+/* On small screens the 2rem side padding wastes ~40px per side on top of the
+   .wrap padding, leaving the body cramped. Drop it so content uses the full
+   width (matching hexo-theme-shokaX's +mobile-small() behaviour). Headings
+   carry no left decoration here, so they align flush with the body. */
+@media (max-width: 567px) {
+  .post.block {
+    padding: 0;
+  }
+}
+
 /* Post Content */
 .md {
   word-wrap: break-word;

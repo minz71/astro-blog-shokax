@@ -427,6 +427,22 @@ span.label {
   display: none;
 }
 
+/* The question number is an absolutely-positioned ::before at left: -2.2rem,
+   i.e. it lives in a gutter to the LEFT of the item. On desktop that gutter is
+   supplied by .post.block's side padding, but on small screens that padding is
+   removed (see post.css), so the numbers would be clipped off the left edge.
+   Give the quiz its own self-contained gutter: pull the counter inside the
+   item's own padding so it no longer depends on block padding. */
+@media (max-width: 567px) {
+  .md .quiz-group .quiz-item {
+    padding-left: 2.4rem;
+  }
+
+  .md .quiz-group .quiz-item::before {
+    left: 0;
+  }
+}
+
 .md ruby.ruby-annotation {
   padding: 0 0.2rem;
   ruby-align: center;
