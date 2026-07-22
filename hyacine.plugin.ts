@@ -3,6 +3,7 @@ import { getLocaleFromConfig, getT } from "./src/i18n";
 import themeConfig from "./src/theme.config";
 
 import SiteUpTime from "./src/toolkit/siteUptimePlugin";
+import MouseFirework from "./src/toolkit/mouseFireworkPlugin";
 
 const locale = getLocaleFromConfig(themeConfig);
 const t = getT(locale);
@@ -44,6 +45,16 @@ export default defineConfig({
         second: t("footer.siteUptime.units.second"),
         seconds: t("footer.siteUptime.units.seconds"),
       },
+    }),
+    MouseFirework({
+      colors: [
+        "rgba(255,182,185,.9)",
+        "rgba(250,227,217,.9)",
+        "rgba(187,222,214,.9)",
+        "rgba(138,198,209,.9)",
+      ],
+      count: 6,
+      radius: 20,
     }),
   ],
 });

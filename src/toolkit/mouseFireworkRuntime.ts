@@ -1,19 +1,17 @@
+import type { PluginInitFunction } from "@hyacine/helper/runtime";
 import firework from "mouse-firework";
 
-declare global {
-  interface Window {
-    __shokaxMouseFireworkBound?: boolean;
-  }
+interface MouseFireworkRuntimeOptions {
+  colors: string[];
+  count: number;
+  radius: number;
 }
 
 const HEART_ENTITY_NAME = "heart";
-const FIREWORK_COLORS = [
-  "rgba(255,182,185,.9)",
-  "rgba(250,227,217,.9)",
-  "rgba(187,222,214,.9)",
-  "rgba(138,198,209,.9)",
-];
 
+// 愛心形狀：座標取自 Font Awesome 的 heart 圖示（512×512 viewBox），
+// 以中心點對齊、依 radius 縮放。因為插件 options 不能傳類別，
+// 形狀只能寫死在 runtime 這一層。
 class HeartEntity extends firework.BaseEntity {
   paint() {
     const { ctx, radius } = this;
@@ -84,11 +82,7 @@ class HeartEntity extends firework.BaseEntity {
   }
 }
 
-const initMouseFirework = () => {
-  if (typeof window === "undefined" || window.__shokaxMouseFireworkBound) {
-    return;
-  }
-
+export const init: PluginInitFunction<MouseFireworkRuntimeOptions> = (options) => {
   firework.registerEntity(HEART_ENTITY_NAME, HeartEntity);
   firework({
     excludeElements: ["a", "button", "input", "textarea", "select", "summary"],
@@ -97,11 +91,11 @@ const initMouseFirework = () => {
         shape: HEART_ENTITY_NAME,
         move: "emit",
         easing: "easeOutExpo",
-        colors: FIREWORK_COLORS,
-        number: 6,
+        colors: options.colors,
+        number: options.count,
         duration: [2400, 3000],
         shapeOptions: {
-          radius: 20,
+          radius: options.radius,
         },
       },
       {
@@ -112,21 +106,11 @@ const initMouseFirework = () => {
         number: 1,
         duration: [3000, 4000],
         shapeOptions: {
-          radius: 20,
+          radius: options.radius,
           alpha: 0.5,
           lineWidth: 6,
         },
       },
     ],
   });
-
-  window.__shokaxMouseFireworkBound = true;
 };
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initMouseFirework, {
-    once: true,
-  });
-} else {
-  initMouseFirework();
-}
