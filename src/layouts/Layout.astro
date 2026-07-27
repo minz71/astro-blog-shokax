@@ -249,16 +249,36 @@ import SearchPage from "@/components/search/SearchPage.svelte";
       import "@/toolkit/initSakura";
     </script>
     <script>
-      import { css } from "@/assets/fonts/LXGWWenKai-Regular.ttf?subsets";
+      import { css, fontFamilyFallback } from "@/assets/fonts/jf-openhuninn-2.1.ttf?subsets";
 
-      document.addEventListener("pagereveal", () => {
-        document.body.style.fontFamily = css.family as string;
-        document.documentElement.style.setProperty("--pf-font", css.family as string);
-      });
-      document.addEventListener("DOMContentLoaded", () => {
-        document.body.style.fontFamily = css.family as string;
-        document.documentElement.style.setProperty("--pf-font", css.family as string);
-      });
+      /**
+       * ?subsets 只打包 src 里真的出现过的字，没被打包到的字（罕用字、其他语言）
+       * 会沿着这条堆叠往下找：先用 vite-plugin-font 生成的 metric 对齐字体避免跳版，
+       * 再退到繁中系统字体（避免落到简中字形），最后才是 sans-serif。
+       */
+      /** cn-font-split 给的是没加引号的字体名，含数字的字体名（如 "… 2.1"）不加引号会让整条声明失效 */
+      const primaryFamily = /^["']/.test(css.family as string)
+        ? (css.family as string)
+        : `"${css.family as string}"`;
+
+      const fontStack = [
+        primaryFamily,
+        fontFamilyFallback,
+        '"Microsoft JhengHei"',
+        '"PingFang TC"',
+        '"Noto Sans TC"',
+        "sans-serif",
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+      const applyFontStack = () => {
+        document.body.style.fontFamily = fontStack;
+        document.documentElement.style.setProperty("--pf-font", fontStack);
+      };
+
+      document.addEventListener("pagereveal", applyFontStack);
+      document.addEventListener("DOMContentLoaded", applyFontStack);
     </script>
     <script>
       type VisibilityTitleScriptConfig = {

@@ -13,7 +13,7 @@ themeConfigDefType: ShokaXThemeConfig
 themeConfigTemplatePath: src/theme.config.template.txt
 
 fonts:
-  - path: src/assets/fonts/LXGWWenKai-Regular.ttf
+  - path: src/assets/fonts/jf-openhuninn-2.1.ttf
     type: standard
   - path: src/assets/fonts/MapleMono-CN-Regular.ttf
     type: monospace
