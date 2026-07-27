@@ -228,9 +228,6 @@
   </div>
 </aside>
 
-<!-- Mobile dimmer -->
-<div class="dimmer" class:active={$sidebarOpen}></div>
-
 <style>
   /* Sidebar container */
   #sidebar {
@@ -251,19 +248,34 @@
 
   /* Tablet/Mobile styles */
   @media (max-width: 1023px) {
+    /* Slides in from the left, the same edge the navbar toggle sits on.
+       Parked off-canvas rather than display:none so the motion can animate;
+       visibility keeps it out of the tab order and the a11y tree while closed. */
     #sidebar {
-      display: none;
+      display: block;
       position: fixed;
-      right: 0;
+      left: 0;
       background: var(--grey-1);
       box-shadow: var(--shadow-sidebar-mobile);
       z-index: var(--z-sidebar);
       width: 280px;
       height: 100%;
+      visibility: hidden;
+      transform: translateX(-100%);
+      transition:
+        transform 0.3s ease,
+        visibility 0.3s;
     }
 
     #sidebar.on {
-      display: block;
+      visibility: visible;
+      transform: translateX(0);
+    }
+  }
+
+  @media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+    #sidebar {
+      transition: none;
     }
   }
 
@@ -320,31 +332,6 @@
 
   .panels > .inner::-webkit-scrollbar {
     display: none;
-  }
-
-  /* Dimmer overlay for mobile */
-  .dimmer {
-    display: none;
-  }
-
-  @media (max-width: 1023px) {
-    .dimmer {
-      background: black;
-      height: 100%;
-      left: 100%;
-      opacity: 0;
-      top: 0;
-      width: 100%;
-      z-index: var(--z-sidebar-overlay);
-      transition: opacity 1s;
-    }
-
-    .dimmer.active {
-      position: fixed;
-      display: block;
-      opacity: 0.3;
-      transform: translateX(-100%);
-    }
   }
 
   /* Dark theme */

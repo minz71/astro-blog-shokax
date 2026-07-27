@@ -138,10 +138,6 @@ main {
   }
 }
 
-.dimmer {
-  display: none;
-}
-
 .body.md {
   text-autospace: normal;
 }

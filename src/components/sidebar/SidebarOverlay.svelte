@@ -3,7 +3,7 @@
 </script>
 
 <div
-  class="fixed inset-0 bg-black/50 z-7 cursor-pointer lg:hidden [animation:fadeIn_0.3s_ease]"
+  class="fixed inset-0 bg-black/50 z-[var(--z-sidebar-overlay)] cursor-pointer lg:hidden [animation:fadeIn_0.3s_ease]"
   onclick={toggleSidebar}
   role="button"
   tabindex="0"

@@ -24,8 +24,21 @@ test("@regression 移动端侧边栏可通过导航按钮与遮罩开关", async
 
   await page.getByRole("button", { name: "Toggle sidebar" }).click();
   await expect(sidebar).toHaveClass(/\bon\b/);
+
+  // 抽屉从左侧滑出，与左上角的汉堡按钮同一边
+  const box = await sidebar.boundingBox();
+  expect(box?.x).toBeCloseTo(0, 0);
+
   const closeOverlay = page.getByRole("button", { name: "Close sidebar" });
   await expect(closeOverlay).toBeVisible();
+
+  // 点击而非键盘触发：遮罩曾被另一层无处理器的 .dimmer 盖住，只有真实点击才能发现。
+  // x=350 落在 280px 宽抽屉右侧的露出区域
+  await page.mouse.click(350, 400);
+  await expect(sidebar).not.toHaveClass(/\bon\b/);
+
+  await page.getByRole("button", { name: "Toggle sidebar" }).click();
+  await expect(sidebar).toHaveClass(/\bon\b/);
   await closeOverlay.focus();
   await closeOverlay.press("Enter");
   await expect(sidebar).not.toHaveClass(/\bon\b/);
