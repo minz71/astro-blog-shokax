@@ -32,3 +32,13 @@ password: your_password
 ```
 
 密码：test123
+
+### 图表也能在解密后渲染
+
+```mermaid title="解密流程"
+flowchart LR
+    A[输入密码] --> B{校验通过?}
+    B -- 是 --> C[注入正文 HTML]
+    C --> D[mermaid-diagram 上屏渲染]
+    B -- 否 --> A
+```

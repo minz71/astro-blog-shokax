@@ -237,6 +237,18 @@
     "previous": "查看上一張圖片",
     "next": "查看下一張圖片"
   },
+  "mermaid": {
+    "label": "圖表",
+    "loading": "圖表載入中…",
+    "error": "圖表渲染失敗",
+    "copy": "複製圖表原始碼",
+    "copied": "已複製",
+    "zoomIn": "放大",
+    "zoomOut": "縮小",
+    "reset": "還原縮放",
+    "fullscreen": "全螢幕檢視",
+    "exitFullscreen": "退出全螢幕"
+  },
   "random": {
     "title": "隨機文章",
     "redirecting": "正在跳轉到隨機文章...",

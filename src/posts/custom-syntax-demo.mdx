@@ -56,3 +56,25 @@ categories: ["测试"]
 :::info title="组合示例"
 在提示框中也可以使用 ++下划线++ 和 :span[span 标签]{.text .rainbow}。
 :::
+
+## mermaid 流程图测试
+
+```mermaid title="部署流程"
+%% 注释：测试 MDX 下的花括号与引号转义
+graph TD
+    A[开始] --> B{是否登入?}
+    B -- 是 --> C["载入 & 渲染内容"]
+    B -- 否 --> D[跳转登入页]
+    C --> E[结束]
+    D --> E
+```
+
+时序图（无标题）：
+
+```mermaid
+sequenceDiagram
+    participant 浏览器
+    participant CDN
+    浏览器->>CDN: 请求页面
+    CDN-->>浏览器: 返回 HTML
+```

@@ -237,6 +237,18 @@
     "previous": "View previous image",
     "next": "View next image"
   },
+  "mermaid": {
+    "label": "Diagram",
+    "loading": "Rendering diagram…",
+    "error": "Failed to render diagram",
+    "copy": "Copy diagram source",
+    "copied": "Copied",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "reset": "Reset zoom",
+    "fullscreen": "Enter fullscreen",
+    "exitFullscreen": "Exit fullscreen"
+  },
   "random": {
     "title": "Random Post",
     "redirecting": "Redirecting to a random post...",

@@ -28,6 +28,7 @@ import satteriAutoImport from "./src/satteri-plugins/auto-import.ts";
 import satteriEmoji from "./src/satteri-plugins/emoji.ts";
 import satteriRubyDirective from "./src/satteri-plugins/ruby-directive.ts";
 import codeGroup from "./src/satteri-plugins/code-group.ts";
+import satteriMermaid from "./src/satteri-plugins/mermaid.ts";
 
 const mdxAutoImports = [
   "@/components/mdx/Spoiler.astro",
@@ -157,6 +158,7 @@ export default defineConfig({
         noteDirective(),
         spanDirective(),
         codeGroup(),
+        satteriMermaid(),
         [spoiler, { title: "..." }],
       ],
       hastPlugins: [satteriAutolinkHeadings()],

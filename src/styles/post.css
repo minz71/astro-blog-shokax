@@ -686,6 +686,31 @@
 }
 
 /* ============================================
+   Mermaid 图表
+   ============================================ */
+
+/*
+ * mermaid-diagram 是 Layout 中全局注册的 custom element，定义完成后
+ * 内部改由 shadow DOM 渲染。定义之前先撑出占位并隐藏源码，
+ * 避免文章里闪现一段 mermaid 源文本再被替换掉。
+ */
+mermaid-diagram:not(:defined) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 8rem;
+  margin: 1.5rem 0;
+  border: 1px solid var(--mermaid-card-border);
+  border-radius: 0.5rem;
+  background-color: var(--mermaid-card-bg);
+  box-shadow: var(--mermaid-card-shadow);
+}
+
+mermaid-diagram:not(:defined) .mermaid-source {
+  display: none;
+}
+
+/* ============================================
    Tables
    ============================================ */
 

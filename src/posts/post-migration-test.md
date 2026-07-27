@@ -170,3 +170,15 @@ console.log("No errors or warnings");
 console.error("Error"); // [!code error]
 console.warn("Warning"); // [!code warning]
 ```
+
+### mermaid 流程图
+
+```mermaid title="构建流程"
+%% 注释：测试 .md 下的花括号与转义
+flowchart LR
+    A[Markdown] --> B{是否含 mermaid?}
+    B -- 是 --> C["转成 &lt;mermaid-diagram&gt;"]
+    B -- 否 --> D[Shiki 高亮]
+
+    C --> E[浏览器懒加载渲染]
+```
