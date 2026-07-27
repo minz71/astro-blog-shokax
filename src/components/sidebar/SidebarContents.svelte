@@ -9,6 +9,10 @@
 
   const { toc = [], isActive = false }: Props = $props()
 
+  // Distance kept between the viewport top and the target heading, so it clears
+  // the 50px fixed navbar. Also used as the line that decides the active item.
+  const HEADING_OFFSET = 100
+
   let activeIndex = $state(0)
   let currentItems = $state(new Set<number>())
   let containerElement: HTMLElement | null = $state(null)
@@ -29,7 +33,9 @@
     event.preventDefault()
     const target = document.getElementById(id)
     if (target) {
-      const scrollTop = target.offsetTop - 100
+      // offsetTop is relative to the nearest positioned ancestor (the article
+      // wrapper), not the document, so it must be resolved against the page.
+      const scrollTop = target.getBoundingClientRect().top + window.scrollY - HEADING_OFFSET
       window.scrollTo({
         top: scrollTop,
         behavior: 'smooth',
@@ -42,15 +48,17 @@
     if (typeof window === 'undefined' || toc.length === 0)
       return
 
-    // Get all section elements
-    const sections: HTMLElement[] = toc.map((item) => {
-      return document.getElementById(item.id) as HTMLElement
-    }).filter(Boolean)
+    // Headings that actually exist in the DOM, each paired with its index in
+    // `toc` so a missing heading cannot shift the highlight onto a neighbour.
+    const sections: { index: number, element: HTMLElement }[] = []
+    toc.forEach((item, index) => {
+      const element = document.getElementById(item.id)
+      if (element)
+        sections.push({ index, element })
+    })
 
     if (sections.length === 0)
       return
-
-    const activeLock: number | null = null
 
     const activateNavByIndex = (index: number): void => {
       if (index < 0 || index >= toc.length)
@@ -81,47 +89,50 @@
       }
     }
 
-    const findIndex = (entries: IntersectionObserverEntry[]): number => {
-      let index = 0
-      let entry = entries[index]
-
-      if (entry && entry.boundingClientRect.top > 0) {
-        index = sections.indexOf(entry.target as HTMLElement)
-        return index === 0 ? 0 : Math.max(0, index - 1)
+    // The last heading whose top has reached the HEADING_OFFSET line, i.e. the
+    // one handleTocClick parks at the top of the viewport. The 2px slack keeps
+    // a sub-pixel scroll landing from reading as "not there yet".
+    const findIndex = (): number => {
+      let index = sections[0].index
+      for (const section of sections) {
+        if (section.element.getBoundingClientRect().top - HEADING_OFFSET > 2)
+          break
+        index = section.index
       }
-
-      for (; index < entries.length; index++) {
-        if (entries[index].boundingClientRect.top <= 0) {
-          entry = entries[index]
-        }
-        else {
-          return Math.max(0, sections.indexOf(entry.target as HTMLElement))
-        }
-      }
-
-      return Math.max(0, sections.indexOf(entry?.target as HTMLElement))
+      return index
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (activeLock === null) {
-          const index = findIndex(entries)
-          activateNavByIndex(index)
-        }
-      },
-      {
-        rootMargin: '0px 0px -100% 0px',
-        threshold: 0,
-      },
-    )
+    // Measured on scroll rather than through an IntersectionObserver: a heading
+    // that stops exactly on the line never crosses it, so an observer would
+    // leave the highlight one item behind after a TOC click.
+    let lastIndex = -1
+    let ticking = false
 
-    sections.forEach((element) => {
-      if (element)
-        observer.observe(element)
-    })
+    const update = (): void => {
+      const index = findIndex()
+      if (index === lastIndex)
+        return
+      lastIndex = index
+      activateNavByIndex(index)
+    }
+
+    const onScroll = (): void => {
+      if (ticking)
+        return
+      ticking = true
+      requestAnimationFrame(() => {
+        ticking = false
+        update()
+      })
+    }
+
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
 
     return () => {
-      observer.disconnect()
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
     }
   })
 </script>
