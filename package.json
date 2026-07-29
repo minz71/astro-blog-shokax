@@ -35,7 +35,6 @@
     "@hyacine/core": "^0.0.3",
     "@hyacine/helper": "^0.0.3",
     "@hyacine/site-uptime": "^0.0.3",
-    "@pagefind/component-ui": "^1.5.2",
     "@playform/inline": "^0.1.4",
     "@unocss/astro": "^66.7.4",
     "@unocss/extractor-svelte": "^66.7.4",

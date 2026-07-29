@@ -12,19 +12,22 @@ export async function openSearchDialog(page: Page) {
 
   await expect(openSearchButton).toBeVisible();
 
-  if (await searchDialog.isVisible()) {
-    return searchDialog;
-  }
-
   /* eslint-disable no-await-in-loop */
   for (let attempt = 0; attempt < 6; attempt += 1) {
-    await openSearchButton.click({ force: true });
-
+    // #search 是 toggle：必须先确认面板处于关闭态才点，否则偶数次点击会把它关回去
     if (await searchDialog.isVisible()) {
       return searchDialog;
     }
 
-    await page.waitForTimeout(150);
+    await openSearchButton.click({ force: true });
+
+    try {
+      // 等足水合 + Svelte effect 的时间，而不是立刻重试点击
+      await searchDialog.waitFor({ state: "visible", timeout: 1000 });
+      return searchDialog;
+    } catch {
+      // 仍未出现则回到循环开头重新判断状态
+    }
   }
   /* eslint-enable no-await-in-loop */
 

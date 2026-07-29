@@ -189,7 +189,14 @@
   },
   "search": {
     "devModeSkipped": "当前为开发模式，已跳过 Pagefind 加载。",
-    "buildHint": "请先执行构建（含索引生成）后再预览站内搜索效果。"
+    "buildHint": "请先执行构建（含索引生成）后再预览站内搜索效果。",
+    "placeholder": "文章搜索",
+    "empty": "关于 「 {{query}} 」，什么也没搜到",
+    "stats": "{{time}} ms 内找到 {{hits}} 条结果",
+    "loading": "搜索中…",
+    "failed": "搜索索引加载失败",
+    "prev": "上一页",
+    "next": "下一页"
   },
   "encrypted": {
     "title": "文章已加密",

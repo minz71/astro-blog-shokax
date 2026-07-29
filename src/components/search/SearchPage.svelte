@@ -2,9 +2,13 @@
   import { onMount, onDestroy } from "svelte";
   import { currentLocale, getT } from "@/i18n";
   import { lockBodyScroll } from "@/toolkit/ui/scrollLock";
+  import { buildPaginationItems } from "@/toolkit/posts/buildPaginationItems";
 
   const isDev = import.meta.env.DEV;
   const searchPanelTransitionMs = 350;
+  /** 与旧版 ShokaX `search.hits.per_page` 默认值一致 */
+  const hitsPerPage = 10;
+  const searchDebounceMs = 200;
 
   interface Props {
     selector?: string | HTMLElement;
@@ -19,28 +23,238 @@
   let animatedVisible = $state(false);
   let cleanupListener: (() => void) | null = null;
   let cleanupKeyboard: (() => void) | null = null;
-  let cleanupThemeObserver: (() => void) | null = null;
-  let panelElement: HTMLDivElement | null = null;
   let hideTimeoutId: number | null = null;
-  const pagefindInstanceName = "global-search";
+  let inputElement: HTMLInputElement | null = null;
   const visible = $derived(selector ? internalVisible : Boolean(showSearch));
-  let pagefindTheme = $state<"light" | "dark">("light");
 
-  interface PagefindFocusable extends HTMLElement {
-    focus(): void;
+  // Pagefind 原生 JS API：旧版的命中列表 / 统计 / 分页都需要自己掌控渲染，
+  // 组件化 UI（@pagefind/component-ui）无法提供这些结构，因此直接用底层接口。
+  interface PagefindFragment {
+    url: string;
+    meta?: Record<string, string | undefined>;
+    /** 命中上下文，形如 `文字 <mark>命中</mark> 文字`，其余字符已被 Pagefind 转义 */
+    excerpt?: string;
   }
 
-  async function initPagefindComponentUi() {
-    if (isDev) return;
+  interface PagefindRawResult {
+    id: string;
+    data: () => Promise<PagefindFragment>;
+  }
 
-    try {
-      await Promise.all([
-        import("@pagefind/component-ui"),
-        import("@pagefind/component-ui/css"),
-      ]);
-    } catch (error) {
-      console.warn("Pagefind Component UI 初始化失败：", error);
+  interface PagefindResponse {
+    results: PagefindRawResult[];
+    timings?: { preload: number; search: number; total: number };
+  }
+
+  interface PagefindModule {
+    options: (options: Record<string, unknown>) => Promise<void>;
+    init: () => Promise<void>;
+    debouncedSearch: (
+      term: string,
+      options?: unknown,
+      debounceTimeoutMs?: number,
+    ) => Promise<PagefindResponse | null>;
+  }
+
+  interface HighlightSegment {
+    text: string;
+    marked: boolean;
+  }
+
+  interface SearchHit {
+    url: string;
+    title: string;
+    excerpt: HighlightSegment[];
+  }
+
+  let query = $state("");
+  let rawResults = $state<PagefindRawResult[]>([]);
+  let pageHits = $state<SearchHit[]>([]);
+  let currentPage = $state(1);
+  let statsTime = $state(0);
+  let hasSearched = $state(false);
+  let loading = $state(false);
+  let loadFailed = $state(false);
+  /** 输入与翻页共用的请求序号，用于丢弃过期的 `data()` 结果 */
+  let requestToken = 0;
+
+  let pagefindModule: PagefindModule | null = null;
+  let pagefindLoader: Promise<PagefindModule | null> | null = null;
+
+  const lastPage = $derived(Math.max(1, Math.ceil(rawResults.length / hitsPerPage)));
+  const paginationItems = $derived(buildPaginationItems(currentPage, lastPage));
+  const submittedQuery = $derived(query.trim());
+
+  async function loadPagefind(): Promise<PagefindModule | null> {
+    if (isDev) return null;
+    if (pagefindModule) return pagefindModule;
+
+    pagefindLoader ??= (async () => {
+      try {
+        // 经变量拼接绕开 Vite 的静态依赖分析：/pagefind/ 由 pagefind CLI 在
+        // astro build 之后才生成，构建期解析这个路径必然失败。
+        const basePath = "/pagefind/";
+        const loaded: PagefindModule = await import(
+          /* @vite-ignore */ `${basePath}pagefind.js`
+        );
+
+        await loaded.options({ basePath });
+        await loaded.init();
+
+        pagefindModule = loaded;
+        return loaded;
+      } catch (error) {
+        console.warn("Pagefind 初始化失败：", error);
+        loadFailed = true;
+        return null;
+      }
+    })();
+
+    return pagefindLoader;
+  }
+
+  function escapeRegExp(value: string) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  /**
+   * 旧版由 Algolia 的 `_highlightResult` 提供标题高亮，Pagefind 的片段只给出纯标题，
+   * 因此这里自行切分。返回段落数组而非 HTML 字符串，交给 Svelte 模板渲染 `<mark>`，
+   * 避免 `{@html}` 带来的转义风险。
+   */
+  function buildTitleSegments(title: string, term: string): HighlightSegment[] {
+    const words = term
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((word) => escapeRegExp(word));
+
+    if (words.length === 0) return [{ text: title, marked: false }];
+
+    const alternation = words.join("|");
+    const splitter = new RegExp(`(${alternation})`, "gi");
+    const matcher = new RegExp(`^(?:${alternation})$`, "i");
+
+    return title
+      .split(splitter)
+      .filter((part) => part !== "")
+      .map((part) => ({ text: part, marked: matcher.test(part) }));
+  }
+
+  const NAMED_ENTITIES: Record<string, string> = {
+    amp: "&",
+    lt: "<",
+    gt: ">",
+    quot: '"',
+    apos: "'",
+    nbsp: " ",
+  };
+
+  /** 单次扫描解码，避免先换 `&lt;` 再换 `&amp;` 造成的二次解码 */
+  function decodeEntities(value: string) {
+    return value.replace(/&(#x[0-9a-f]+|#[0-9]+|[a-z]+);/gi, (match, body: string) => {
+      if (body.startsWith("#")) {
+        const isHex = body[1] === "x" || body[1] === "X";
+        const code = Number.parseInt(isHex ? body.slice(2) : body.slice(1), isHex ? 16 : 10);
+        return Number.isFinite(code) && code > 0 ? String.fromCodePoint(code) : match;
+      }
+
+      return NAMED_ENTITIES[body.toLowerCase()] ?? match;
+    });
+  }
+
+  /**
+   * Pagefind 的 excerpt 是 HTML 片段：正文里的 `< > &` 已转义，只有命中词被真正的
+   * `<mark>` 包住。这里把它拆成段落交给模板渲染，同样不走 `{@html}`。
+   */
+  function buildExcerptSegments(excerpt: string): HighlightSegment[] {
+    const segments: HighlightSegment[] = [];
+    const pattern = /<mark>([\s\S]*?)<\/mark>/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null = pattern.exec(excerpt);
+
+    while (match !== null) {
+      if (match.index > lastIndex) {
+        segments.push({
+          text: decodeEntities(excerpt.slice(lastIndex, match.index)),
+          marked: false,
+        });
+      }
+
+      segments.push({ text: decodeEntities(match[1]), marked: true });
+      lastIndex = pattern.lastIndex;
+      match = pattern.exec(excerpt);
     }
+
+    if (lastIndex < excerpt.length) {
+      segments.push({ text: decodeEntities(excerpt.slice(lastIndex)), marked: false });
+    }
+
+    return segments;
+  }
+
+  function resetResults() {
+    rawResults = [];
+    pageHits = [];
+    currentPage = 1;
+    statsTime = 0;
+    hasSearched = false;
+    loading = false;
+  }
+
+  async function loadPageHits(page: number, token: number) {
+    const start = (page - 1) * hitsPerPage;
+    const slice = rawResults.slice(start, start + hitsPerPage);
+
+    loading = true;
+
+    const fragments = await Promise.all(slice.map((result) => result.data()));
+
+    // 翻页 / 继续输入都会推进 requestToken，过期结果直接丢弃，避免画面错位
+    if (token !== requestToken) return;
+
+    pageHits = fragments.map((fragment) => ({
+      url: fragment.url,
+      title: fragment.meta?.title?.trim() || fragment.url,
+      // excerpt 与查询词无关，在这里算一次即可，不必每次渲染重算
+      excerpt: fragment.excerpt ? buildExcerptSegments(fragment.excerpt) : [],
+    }));
+    loading = false;
+  }
+
+  async function runSearch() {
+    const term = query.trim();
+    requestToken += 1;
+    const token = requestToken;
+
+    if (!term) {
+      resetResults();
+      return;
+    }
+
+    const pagefind = await loadPagefind();
+    if (!pagefind || token !== requestToken) return;
+
+    loading = true;
+
+    // debouncedSearch 在被后续输入取代时返回 null，天然充当防抖 + 竞态保护
+    const response = await pagefind.debouncedSearch(term, null, searchDebounceMs);
+    if (response === null || token !== requestToken) return;
+
+    rawResults = response.results;
+    statsTime = response.timings?.total ?? 0;
+    hasSearched = true;
+    currentPage = 1;
+
+    await loadPageHits(1, token);
+  }
+
+  function goToPage(page: number) {
+    const target = Math.min(Math.max(1, page), lastPage);
+    if (target === currentPage) return;
+
+    currentPage = target;
+    requestToken += 1;
+    void loadPageHits(target, requestToken);
   }
 
   function clearHideTimeout() {
@@ -77,28 +291,11 @@
     showSearch = !showSearch;
   }
 
-  async function focusSearchInput() {
+  function focusSearchInput() {
     if (typeof window === "undefined") return;
-    if (isDev) return;
-
-    // 等待 pagefind-input 自定义元素完成升级，
-    // 确保 focus() 能委托到 shadow DOM 内部的 input
-    if (
-      typeof customElements !== "undefined" &&
-      !customElements.get("pagefind-input")
-    ) {
-      await customElements.whenDefined("pagefind-input");
-    }
 
     window.requestAnimationFrame(() => {
-      const inputComponent =
-        panelElement?.querySelector<PagefindFocusable>("pagefind-input");
-
-      if (!inputComponent || typeof inputComponent.focus !== "function") {
-        return;
-      }
-
-      inputComponent.focus();
+      inputElement?.focus();
     });
   }
 
@@ -113,17 +310,7 @@
     );
   }
 
-  function resolveThemeFromRoot(): "light" | "dark" {
-    if (typeof document === "undefined") return "light";
-
-    return document.documentElement.dataset.theme === "dark"
-      ? "dark"
-      : "light";
-  }
-
   onMount(() => {
-    initPagefindComponentUi();
-
     // Setup selector listener
     if (selector) {
       let element: HTMLElement | null = null;
@@ -166,23 +353,6 @@
     cleanupKeyboard = () => {
       window.removeEventListener("keydown", handleKeydown);
     };
-
-    const root = document.documentElement;
-    const syncPagefindTheme = () => {
-      pagefindTheme = resolveThemeFromRoot();
-    };
-
-    syncPagefindTheme();
-
-    const observer = new MutationObserver(syncPagefindTheme);
-    observer.observe(root, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-
-    cleanupThemeObserver = () => {
-      observer.disconnect();
-    };
   });
 
   onDestroy(() => {
@@ -195,10 +365,6 @@
     if (cleanupKeyboard) {
       cleanupKeyboard();
       cleanupKeyboard = null;
-    }
-    if (cleanupThemeObserver) {
-      cleanupThemeObserver();
-      cleanupThemeObserver = null;
     }
   });
 
@@ -248,6 +414,8 @@
     if (!visible) return;
 
     focusSearchInput();
+    // 面板一打开就预热索引与 wasm，首次敲键不必等下载
+    void loadPagefind();
   });
 
   $effect(() => {
@@ -265,88 +433,161 @@
   class:search-shell-visible={animatedVisible}
   hidden={!rendered}
   aria-hidden={!animatedVisible}
-  data-pf-theme={pagefindTheme}
 >
   <button
     type="button"
-    class="search-overlay"
+    class="search-backdrop"
     aria-label="Close search overlay"
     onclick={closeSearch}
   ></button>
 
-  <div
-    bind:this={panelElement}
-    class="pagefind-panel"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Search"
-  >
-    <div class="search-panel__ornament" aria-hidden="true">
-      <span class="search-panel__icon i-ri-search-line"></span>
-      <span class="search-panel__glow"></span>
+  <div class="panel" role="dialog" aria-modal="true" aria-label="Search">
+    <div class="header">
+      <span class="icon" aria-hidden="true">
+        <span class="i-ri-search-line"></span>
+      </span>
+
+      <div class="search-input-container">
+        <form role="search" onsubmit={(event) => event.preventDefault()}>
+          <input
+            bind:this={inputElement}
+            bind:value={query}
+            oninput={() => void runSearch()}
+            class="search-input"
+            type="search"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            enterkeyhint="search"
+            placeholder={t("search.placeholder")}
+            aria-label={t("search.placeholder")}
+            aria-controls="search-hits"
+          />
+        </form>
+      </div>
+
+      <button
+        type="button"
+        class="close-btn"
+        onclick={closeSearch}
+        aria-label="Close search"
+        aria-controls="search-hits"
+      >
+        <span class="i-ri-close-circle-line" aria-hidden="true"></span>
+      </button>
     </div>
 
-    <button
-      type="button"
-      class="search-panel__close"
-      onclick={closeSearch}
-      aria-label="Close search"
-      aria-controls="pagefind-results-region"
-    >
-      <span class="i-ri-close-line"></span>
-    </button>
-
-    <div class="search-panel__body">
-      {#if isDev}
-        <div class="dev-tip">
-          {t("search.devModeSkipped")}<br />
-          {t("search.buildHint")}
-        </div>
-      {:else}
-        <div
-          class="pagefind-component-shell"
-          data-testid="pagefind-component-shell"
-        >
-          <pagefind-config
-            instance={pagefindInstanceName}
-            bundle-path="/pagefind/"
-          ></pagefind-config>
-
-          <div class="pagefind-component-header">
-            <pagefind-input instance={pagefindInstanceName} debounce={200}
-            ></pagefind-input>
+    <div class="results">
+      <div class="results-inner">
+        {#if isDev}
+          <div id="search-hits" class="dev-tip">
+            {t("search.devModeSkipped")}<br />
+            {t("search.buildHint")}
+          </div>
+        {:else}
+          <div id="search-stats" aria-live="polite">
+            {#if loadFailed}
+              {t("search.failed")}
+              <hr />
+            {:else if hasSearched}
+              {t("search.stats", { time: statsTime, hits: rawResults.length })}
+              <hr />
+            {:else if loading}
+              {t("search.loading")}
+              <hr />
+            {/if}
           </div>
 
-          <div
-            class="pagefind-component-results"
-            id="pagefind-results-region"
-            data-testid="pagefind-results-region"
-          >
-            <pagefind-summary instance={pagefindInstanceName}
-            ></pagefind-summary>
-            <pagefind-results instance={pagefindInstanceName}
-            ></pagefind-results>
+          <div id="search-hits">
+            {#if hasSearched && rawResults.length === 0}
+              <div id="hits-empty">
+                {t("search.empty", { query: submittedQuery })}
+              </div>
+            {:else}
+              <ol>
+                {#each pageHits as hit (hit.url)}
+                  <li class="item">
+                    <a href={hit.url}>
+                      <span class="item-title">
+                        {#each buildTitleSegments(hit.title, submittedQuery) as segment, index (index)}
+                          {#if segment.marked}<mark>{segment.text}</mark>{:else}{segment.text}{/if}
+                        {/each}
+                      </span>
+
+                      {#if hit.excerpt.length > 0}
+                        <!-- 旧版此处是分类面包屑（本站索引无该字段），沿用同一条 70% 字号的副行放命中上下文 -->
+                        <span class="item-excerpt">
+                          {#each hit.excerpt as segment, index (index)}
+                            {#if segment.marked}<mark>{segment.text}</mark>{:else}{segment.text}{/if}
+                          {/each}
+                        </span>
+                      {/if}
+                    </a>
+                  </li>
+                {/each}
+              </ol>
+            {/if}
           </div>
 
-          <div class="pagefind-component-footer">
-            <pagefind-keyboard-hints instance={pagefindInstanceName}
-            ></pagefind-keyboard-hints>
+          <div id="search-pagination">
+            {#if lastPage > 1}
+              <ul class="pagination">
+                <li class="pagination-item" class:disabled-item={currentPage <= 1}>
+                  <button
+                    type="button"
+                    class="page-number"
+                    disabled={currentPage <= 1}
+                    aria-label={t("search.prev")}
+                    onclick={() => goToPage(currentPage - 1)}
+                  >
+                    <span class="i-ri-arrow-left-s-line" aria-hidden="true"></span>
+                  </button>
+                </li>
+
+                {#each paginationItems as item, index (index)}
+                  {#if item === "…"}
+                    <li class="pagination-item space" aria-hidden="true">…</li>
+                  {:else}
+                    <li class="pagination-item" class:current={item === currentPage}>
+                      <button
+                        type="button"
+                        class="page-number"
+                        aria-current={item === currentPage ? "page" : undefined}
+                        onclick={() => goToPage(item)}
+                      >
+                        {item}
+                      </button>
+                    </li>
+                  {/if}
+                {/each}
+
+                <li class="pagination-item" class:disabled-item={currentPage >= lastPage}>
+                  <button
+                    type="button"
+                    class="page-number"
+                    disabled={currentPage >= lastPage}
+                    aria-label={t("search.next")}
+                    onclick={() => goToPage(currentPage + 1)}
+                  >
+                    <span class="i-ri-arrow-right-s-line" aria-hidden="true"></span>
+                  </button>
+                </li>
+              </ul>
+            {/if}
           </div>
-        </div>
-      {/if}
+        {/if}
+      </div>
     </div>
   </div>
 </div>
 
 <style>
+  /* 结构与配色对齐旧版 ShokaX 的 source/css/_common/components/third-party/search.styl */
   .search-shell {
     position: fixed;
     inset: 0;
     z-index: var(--z-search-overlay);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 4.5rem 1rem 1rem;
+    padding: 1.25rem;
     pointer-events: none;
   }
 
@@ -358,321 +599,259 @@
     pointer-events: auto;
   }
 
-  .search-overlay {
+  .search-backdrop {
     position: absolute;
     inset: 0;
     border: 0;
     padding: 0;
     cursor: pointer;
-    background:
-      radial-gradient(circle at top, var(--grey-1-a3), transparent 55%),
-      var(--search-overlay-bg);
-    backdrop-filter: blur(14px) saturate(140%);
-    /* 透明度直接作用于 overlay 自身，使 backdrop-filter 能随 opacity 平滑插值，
-       避免父级 group opacity 导致模糊效果在动画末尾才突现的滞后感 */
+    background: var(--nav-bg);
     opacity: 0;
     transition: opacity 0.3s ease;
   }
 
-  .search-shell-visible .search-overlay {
+  .search-shell-visible .search-backdrop {
     opacity: 1;
   }
 
-  .pagefind-panel {
+  .panel {
     position: relative;
     z-index: var(--z-content);
     display: flex;
-    min-height: min(32rem, calc(100vh - 6rem));
-    max-height: calc(100vh - 6rem);
-    width: min(100%, 72rem);
     flex-direction: column;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--grey-4) 20%, transparent);
-    border-radius: 1.25rem;
-    background: linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--grey-1) 94%, var(--color-cyan-light) 6%),
-      color-mix(in srgb, var(--grey-2) 92%, var(--color-pink-light) 8%)
-    );
-    box-shadow: var(--search-panel-shadow), var(--search-panel-inset);
-    backdrop-filter: blur(20px) saturate(180%);
+    height: 100%;
+    margin: 0 auto;
+    width: 43.75rem;
+    text-shadow: none;
+    /* 旧版 transition.shrinkIn：从 1.1 倍缩回原尺寸 */
     opacity: 0;
-    transform: translateY(-1.5rem) scale(0.98);
+    transform: scale(1.06);
     transition:
       transform 0.35s ease,
-      box-shadow 0.35s ease,
       opacity 0.3s ease;
   }
 
-  .search-shell-visible .pagefind-panel {
+  .search-shell-visible .panel {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    box-shadow:
-      var(--search-panel-shadow-active), var(--search-panel-inset-active);
+    transform: scale(1);
   }
 
-  .search-panel__ornament {
-    position: absolute;
-    left: 1.5rem;
-    top: 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--color-red);
-    pointer-events: none;
-  }
-
-  .search-panel__icon {
-    display: inline-flex;
-    font-size: 1.1rem;
-    opacity: 0.95;
-  }
-
-  .search-panel__glow {
-    height: 0.625rem;
-    width: 4.5rem;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--color-red), transparent);
-    opacity: 0.5;
-  }
-
-  .search-panel__close {
-    position: absolute;
-    right: 1rem;
-    top: 1rem;
-    z-index: var(--z-elevated);
+  .icon,
+  .close-btn {
+    color: var(--grey-5);
+    font-size: 1.125rem;
+    padding: 0 0.625rem;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    height: 2.75rem;
-    width: 2.75rem;
-    border: 1px solid color-mix(in srgb, var(--grey-4) 24%, transparent);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--grey-1) 82%, transparent);
-    color: var(--text-color);
+  }
+
+  .close-btn {
+    border: 0;
+    background: none;
     cursor: pointer;
-    transition:
-      transform 0.2s ease,
-      color 0.2s ease,
-      border-color 0.2s ease,
-      background 0.2s ease,
-      box-shadow 0.2s ease;
+    transition: color 0.2s ease;
   }
 
-  .search-panel__close:hover,
-  .search-panel__close:focus-visible {
-    transform: translateY(-1px) scale(1.03);
-    border-color: color-mix(in srgb, var(--color-red) 30%, var(--grey-4));
-    background: color-mix(in srgb, var(--color-red-a1) 55%, var(--grey-1));
-    color: var(--color-red);
-    box-shadow: var(--search-accent-shadow);
+  .close-btn:hover,
+  .close-btn:focus-visible {
+    color: var(--grey-7);
     outline: none;
   }
 
-  .search-panel__body {
+  .header {
     display: flex;
+    flex: 0 0 auto;
+    background: var(--grey-1-a5);
+    border-radius: 3rem;
+    padding: 0.5rem 1.5rem;
+    margin-bottom: 1.25rem;
+    border: 0.0625rem solid var(--grey-5);
+    font-size: 1.125rem;
+    align-items: center;
+  }
+
+  .search-input-container {
+    flex-grow: 1;
+    min-width: 0;
+  }
+
+  .search-input-container form {
+    padding: 0.125rem;
+  }
+
+  .search-input {
+    background: transparent;
+    border: 0;
+    outline: 0;
+    width: 100%;
+    color: var(--text-color);
+    font: inherit;
+  }
+
+  .search-input::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  .results {
     flex: 1;
     min-height: 0;
-    padding: 1rem;
-    padding-top: 3.75rem;
+    padding: 1.875rem 1.875rem 0.3125rem;
+    border-radius: 0.3125rem;
+    background: var(--grey-1-a7) url("/images/other/search.png") no-repeat bottom right;
+    color: var(--text-color);
+  }
+
+  .results-inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .results hr {
+    margin: 0.625rem 0;
+  }
+
+  #search-stats {
+    flex: 0 0 auto;
+    font-size: 0.875rem;
+  }
+
+  #search-hits {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  #search-hits ol {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  #search-hits .item {
+    margin: 0.9375rem 0;
+  }
+
+  #search-hits .item a {
+    border-bottom: 0.0625rem dashed var(--grey-4);
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  #search-hits .item a:hover,
+  #search-hits .item a:focus-visible {
+    color: var(--color-red);
+    border-color: var(--color-red);
+  }
+
+  /* 对齐旧版 `.item span { font-size: 70%; display: block; }` 的副行样式 */
+  #search-hits .item-excerpt {
+    display: block;
+    font-size: 70%;
+    line-height: 1.7;
+    color: var(--grey-5);
+  }
+
+  #search-hits mark {
+    background: none;
+    color: var(--color-red);
+    font-weight: 700;
+  }
+
+  #search-pagination {
+    flex: 0 0 auto;
+  }
+
+  #search-pagination ul {
+    padding: 0;
+    margin: 1.25rem 0;
+    list-style: none;
+    text-align: center;
+  }
+
+  #search-pagination .pagination {
+    opacity: 1;
+    padding: 0;
+    color: var(--grey-5);
+  }
+
+  #search-pagination .pagination-item {
+    display: inline-block;
+    margin: 0 0.5rem;
+  }
+
+  #search-pagination .space {
+    margin: 0;
+  }
+
+  /* 数字与站内其他分页（Pagination.astro）保持同一套视觉 */
+  #search-pagination .page-number {
+    display: inline-block;
+    padding: 0 0.75rem;
+    border: 0;
+    border-radius: 0.3125rem;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    transition:
+      background 0.2s ease,
+      color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  #search-pagination .page-number:hover {
+    background: linear-gradient(to right, var(--color-pink), var(--color-orange));
+    color: var(--grey-0);
+  }
+
+  #search-pagination .current .page-number {
+    background: linear-gradient(to right, var(--color-pink), var(--color-orange));
+    color: var(--grey-0);
+    cursor: default;
+  }
+
+  #search-pagination .current .page-number:hover {
+    box-shadow: 0 0 0.3125rem var(--primary-color);
+  }
+
+  #search-pagination .disabled-item {
+    color: var(--grey-4);
+    cursor: default;
+  }
+
+  #search-pagination .disabled-item .page-number {
+    cursor: default;
+  }
+
+  #search-pagination .disabled-item .page-number:hover {
+    color: var(--grey-4);
+    background: none;
+    box-shadow: none;
   }
 
   .dev-tip {
     display: grid;
-    flex: 1;
     place-items: center;
-    border: 1px dashed color-mix(in srgb, var(--grey-4) 35%, transparent);
-    border-radius: 1rem;
-    background: linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--grey-0) 84%, transparent),
-      color-mix(in srgb, var(--grey-2) 90%, transparent)
-    );
-    color: var(--text-color);
+    height: 100%;
     line-height: 1.9;
-    padding: 2rem;
     text-align: center;
   }
 
-  .pagefind-component-shell {
-    display: flex;
-    flex: 1;
-    min-height: 0;
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .pagefind-component-shell {
-    --pagefind-ui-scale: 1;
-    --pagefind-ui-primary: var(--color-red);
-    --pagefind-ui-text: var(--text-color);
-    --pagefind-ui-secondary: var(--grey-6);
-    --pagefind-ui-accent: color-mix(in srgb, var(--color-red) 24%, transparent);
-    --pagefind-ui-background: color-mix(
-      in srgb,
-      var(--grey-0) 92%,
-      transparent
-    );
-    --pagefind-ui-background-alt: color-mix(
-      in srgb,
-      var(--grey-1) 92%,
-      transparent
-    );
-    --pagefind-ui-border: color-mix(in srgb, var(--grey-4) 25%, transparent);
-    --pagefind-ui-border-focus: color-mix(
-      in srgb,
-      var(--color-red) 34%,
-      var(--grey-4)
-    );
-    --pagefind-ui-tag: color-mix(in srgb, var(--grey-2) 90%, transparent);
-    --pagefind-ui-link: var(--text-color);
-    --pagefind-ui-link-hover: var(--color-red);
-    --pagefind-ui-border-width: 1px;
-    --pagefind-ui-border-radius: 0.9rem;
-    --pagefind-ui-font: inherit;
-    --pagefind-ui-muted: var(--grey-5);
-    --pagefind-ui-overlay: transparent;
-    --pagefind-ui-backdrop: transparent;
-    overflow: hidden;
-  }
-
-  :global(:root[data-theme="dark"]) .pagefind-component-shell {
-    --pagefind-ui-primary: color-mix(
-      in srgb,
-      var(--color-red) 88%,
-      #ffffff 12%
-    );
-    --pagefind-ui-text: var(--grey-8);
-    --pagefind-ui-secondary: var(--grey-6);
-    --pagefind-ui-accent: color-mix(in srgb, var(--color-red) 35%, transparent);
-    --pagefind-ui-background: color-mix(
-      in srgb,
-      var(--grey-2) 86%,
-      #000000 14%
-    );
-    --pagefind-ui-background-alt: color-mix(
-      in srgb,
-      var(--grey-3) 82%,
-      #000000 18%
-    );
-    --pagefind-ui-border: color-mix(in srgb, var(--grey-5) 56%, transparent);
-    --pagefind-ui-border-focus: color-mix(
-      in srgb,
-      var(--color-red) 52%,
-      var(--grey-5)
-    );
-    --pagefind-ui-tag: color-mix(in srgb, var(--grey-3) 75%, transparent);
-    --pagefind-ui-link: var(--grey-8);
-    --pagefind-ui-link-hover: color-mix(
-      in srgb,
-      var(--color-red) 84%,
-      #fff 16%
-    );
-    --pagefind-ui-muted: var(--grey-6);
-  }
-
-  .pagefind-component-header {
-    flex: 0 0 auto;
-  }
-
-  .pagefind-component-results {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    margin-top: 1rem;
-    overflow: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--grey-4) 80%, transparent)
-      transparent;
-  }
-
-  .pagefind-component-footer {
-    flex: 0 0 auto;
-    margin-top: 0.8rem;
-    opacity: 0.8;
-  }
-
-  .pagefind-component-shell :global(pagefind-input),
-  .pagefind-component-shell :global(pagefind-summary),
-  .pagefind-component-shell :global(pagefind-results),
-  .pagefind-component-shell :global(pagefind-keyboard-hints) {
-    width: 100%;
-  }
-
-  .pagefind-component-shell :global(pagefind-results a) {
-    color: var(--pagefind-ui-link);
-    transition: color 0.2s ease;
-  }
-
-  .pagefind-component-shell :global(pagefind-results a:hover),
-  .pagefind-component-shell :global(pagefind-results a:focus-visible) {
-    color: var(--pagefind-ui-link-hover);
-  }
-
-  .pagefind-component-shell :global(mark) {
-    border-radius: 0.35rem;
-    background: color-mix(in srgb, var(--color-yellow) 30%, transparent);
-    color: inherit;
-    padding: 0.05rem 0.25rem;
-  }
-
-  @media (max-width: 1023px) {
-    .search-shell {
-      padding-top: 4rem;
-    }
-
-    .pagefind-panel {
-      min-height: min(30rem, calc(100vh - 5rem));
-      max-height: calc(100vh - 5rem);
-      border-radius: 1rem;
-    }
-
-    .search-panel__body {
-      padding: 0.875rem;
-      padding-top: 3.5rem;
-    }
-  }
-
   @media (max-width: 768px) {
-    .search-shell {
-      padding: 3.5rem 0.75rem 0.75rem;
-    }
-
-    .search-overlay {
-      backdrop-filter: blur(10px) saturate(125%);
-    }
-
-    .pagefind-panel {
-      min-height: calc(100vh - 4.25rem);
-      max-height: calc(100vh - 4.25rem);
+    .panel {
       width: 100%;
-      border-radius: 0.9rem;
     }
 
-    .search-panel__ornament {
-      left: 1rem;
-      top: 1rem;
-    }
-
-    .search-panel__glow {
-      width: 3rem;
-    }
-
-    .search-panel__close {
-      right: 0.75rem;
-      top: 0.75rem;
-      height: 2.5rem;
-      width: 2.5rem;
-    }
-
-    .search-panel__body {
-      padding-top: 3.25rem;
-    }
-
-    .pagefind-component-footer {
-      margin-top: 0.65rem;
+    .results {
+      padding: 1.25rem 1.25rem 0.3125rem;
     }
   }
 </style>

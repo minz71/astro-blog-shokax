@@ -6,7 +6,7 @@ async function openSearchPanel(page: import("@playwright/test").Page) {
   await page.goto(ROUTES.home);
   await openSearchDialog(page);
 
-  const searchInput = page.locator("pagefind-input input");
+  const searchInput = page.locator(".search-input");
   await expect(searchInput).toBeVisible();
 
   return searchInput;
@@ -20,7 +20,7 @@ test("@critical 搜索可命中公开文章", async ({ page }) => {
   await expect
     .poll(async () => {
       return page
-        .locator("pagefind-results a", {
+        .locator("#search-hits .item a", {
           hasText: SEARCH_TERMS.publicPostTitle,
         })
         .count();
@@ -35,7 +35,7 @@ test("@critical 搜索结果排除加密文章", async ({ page }) => {
 
   await expect
     .poll(async () => {
-      return page.locator(`pagefind-results a[href*="${POSTS.encryptedTest}"]`).count();
+      return page.locator(`#search-hits .item a[href*="${POSTS.encryptedTest}"]`).count();
     })
     .toBe(0);
 
@@ -43,7 +43,7 @@ test("@critical 搜索结果排除加密文章", async ({ page }) => {
 
   await expect
     .poll(async () => {
-      return page.locator(`pagefind-results a[href*="${POSTS.encryptedTest}"]`).count();
+      return page.locator(`#search-hits .item a[href*="${POSTS.encryptedTest}"]`).count();
     })
     .toBe(0);
 });

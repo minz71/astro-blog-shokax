@@ -18,7 +18,7 @@ test("@regression 搜索面板支持按钮关闭并恢复页面滚动", async ({
 
   const searchDialog = await openSearchDialog(page);
 
-  const searchInput = page.locator("pagefind-input input");
+  const searchInput = page.locator(".search-input");
   await expect(searchInput).toBeVisible();
   await expect(searchInput).toBeFocused();
 

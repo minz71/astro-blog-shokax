@@ -189,7 +189,14 @@
   },
   "search": {
     "devModeSkipped": "Development mode is active, so Pagefind loading has been skipped.",
-    "buildHint": "Please run a production build (with index generation) before previewing on-site search."
+    "buildHint": "Please run a production build (with index generation) before previewing on-site search.",
+    "placeholder": "Search posts",
+    "empty": "No results found for “{{query}}”",
+    "stats": "{{hits}} results found in {{time}} ms",
+    "loading": "Searching…",
+    "failed": "Failed to load the search index",
+    "prev": "Prev",
+    "next": "Next"
   },
   "encrypted": {
     "title": "Encrypted Post",
