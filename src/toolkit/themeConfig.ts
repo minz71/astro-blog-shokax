@@ -226,9 +226,13 @@ interface HomeConfig {
     name: string;
 
     /**
-     * 分类封面图（可选）。
-     * - 为该分类指定自定义封面图
-     * - 可填写 public 路径或远程 URL
+     * 分类封面。
+     * - 建议填预设 key：把图放进 src/assets/images/category-cover/，
+     *   key 即 "category-<档名>"（Images.astro 用 import.meta.glob 自动收集），
+     *   走 Astro 资源管线拿到内容哈希的 URL
+     * - 也可填远程 URL
+     * - 不接受 public 路径：本地图必须走预设 key，否则 /credits/ 无法校验署名，
+     *   构建期会直接报错（署名是封面授权条款的硬性要求）
      */
     cover?: string;
   }[];

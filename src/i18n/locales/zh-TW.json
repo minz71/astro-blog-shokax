@@ -290,5 +290,13 @@
     "togglePlayer": "顯示或隱藏播放器",
     "playPause": "播放或暫停",
     "toggleSidebar": "切換側欄"
+  },
+  "credits": {
+    "title": "圖片來源",
+    "description": "本站使用的圖片（封面、頭像等）為繪師作品，依授權條款於此標註原作者與出處。著作權歸原作者所有。",
+    "artistLine": "繪師：{{artist}}",
+    "sourceLabel": "原始出處",
+    "footerLink": "圖片來源",
+    "themeLicensed": "本主題自帶的封面圖與頭像隨主題一起散布，依主題授權使用，不需要單獨署名。"
   }
 }

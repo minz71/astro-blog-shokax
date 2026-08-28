@@ -5,33 +5,88 @@
 当为 string时 Image 组件无法接受，为 object 时无法通过 Zod 校验
 如果后续版本修复了此问题，可以将本函数安全地替换为post.data.cover
 同时部分平台无法正确识别 ts 中导入的 avif，所以使用 astro 文件导出
+—— 这条至今仍然成立：下面的 import.meta.glob 也是「导入 avif」，
+搬到 .ts toolkit 模块就会踩回那个平台 bug，也正因为留在 .astro 里
+才有 buildPresets 必须 export 的提升问题（见下）。
 */
 
 import { sample } from "es-toolkit";
 import type { Post } from "@/toolkit/posts/types";
 import type { ImageMetadata } from "astro";
 
-import cover1 from "@/assets/images/cover-1.avif";
-import cover2 from "@/assets/images/cover-2.avif";
-import cover3 from "@/assets/images/cover-3.avif";
-import cover4 from "@/assets/images/cover-4.avif";
-import cover5 from "@/assets/images/cover-5.avif";
-import cover6 from "@/assets/images/cover-6.avif";
-
 import avatarImg from "@/assets/avatar.avif";
 
-export const covers = [cover1, cover2, cover3, cover4, cover5, cover6];
+// src/assets/images/ 下按用途分三个目录：
+//   cover/          文章／header 轮播封面   → key "cover-<档名>"
+//   category-cover/ 首页分类封面            → key "category-<档名>"
+//   post-cover/     文章自订封面            → 不进预设表，由 frontmatter 的
+//                                            cover: 相对路径经 image() 直接解析
+// 前两者的预设表由下面的 import.meta.glob 自动生成，不需要手写 import ——
+// 加一张封面只要把档案放进对应目录，再去 src/toolkit/coverCredits.ts 补署名。
+// 署名那步刻意保留手动：那是封面授权条款的义务，不是该被自动化掉的摩擦。
+//
+// key 的命名空间来自「目录」，不是档名前缀，所以档名不用再带前缀：
+// cover/1.avif → "cover-1"（写成 cover/cover-1.avif 会得到 "cover-cover-1"）。
+// 这样两个目录里同名的档案也不会在 /credits/ 的合并查找表里互相覆盖。
+//
+// 另外注意三点：
+// 1. import.meta.glob 的 pattern 必须是字面量，且 Vite 不解析 `@` alias，只能写 root 相对路径
+// 2. eager 才会拿到真正的模块（否则是 Promise thunk），import: "default" 直接取 ImageMetadata
+// 3. buildPresets 必须 export —— Astro 只把 frontmatter 里「导出」的绑定提升到模块作用域，
+//    非导出的辅助函数留在组件渲染函数内，被提升的 coverPresets 初始化时会 ReferenceError。
+//    也就是说它只为迁就 Astro 的提升规则而导出，不是给外部调用的 API
+export function buildPresets(
+  prefix: string,
+  modules: Record<string, ImageMetadata>,
+): Record<string, ImageMetadata> {
+  const entries: Array<[string, ImageMetadata]> = Object.entries(modules).map(
+    ([path, image]) => [
+      `${prefix}-${path.slice(path.lastIndexOf("/") + 1).replace(/\.[^.]+$/, "")}`,
+      image,
+    ],
+  );
+  // 自然排序：一般 sort 会把 cover-10 排到 cover-2 前面，
+  // 而这个表存在的意义就是让人随手加第 7 张图。
+  entries.sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }));
+  return Object.fromEntries(entries);
+}
 
-// 统一的封面预设表：用于 fixedCover（固定封面）等需要从配置字符串解析成 ImageMetadata 的场景
+// 统一的封面预设表：用于 fixedCover（固定封面）与 coverUrls 中的预设 key，
+// 需要从配置字符串解析成 ImageMetadata 的场景。
 // 说明：Astro 的 <Image /> 更适合接收 ImageMetadata（静态导入结果），而不是任意字符串。
-export const coverPresets: Record<string, ImageMetadata> = {
-  "cover-1": cover1,
-  "cover-2": cover2,
-  "cover-3": cover3,
-  "cover-4": cover4,
-  "cover-5": cover5,
-  "cover-6": cover6,
-};
+export const coverPresets: Record<string, ImageMetadata> = buildPresets(
+  "cover",
+  import.meta.glob<ImageMetadata>(
+    "/src/assets/images/cover/*.{avif,webp,png,jpg,jpeg}",
+    { eager: true, import: "default" },
+  ),
+);
+
+// 分类封面预设表：只服务 theme.config.ts 的 home.selectedCategories[].cover。
+// 刻意用两条 glob 分开，而不是一条 glob 再按前缀过滤 —— coverPresets 同时是
+// fixedCover 与 coverUrls 的解析表，混进来会让 "category-shokax" 变成合法的
+// 文章封面 key，两个命名空间就纠缠了。目录即命名空间。
+export const categoryCoverPresets: Record<string, ImageMetadata> = buildPresets(
+  "category",
+  import.meta.glob<ImageMetadata>(
+    "/src/assets/images/category-cover/*.{avif,webp,png,jpg,jpeg}",
+    { eager: true, import: "default" },
+  ),
+);
+
+export const covers = Object.values(coverPresets);
+
+/**
+ * 将 home.selectedCategories[].cover 解析为可渲染的图片源。
+ * - 预设 key（如 "category-shokax"）→ 静态导入的 ImageMetadata。
+ * - 其余（远端 URL 等）原样返回字符串。
+ */
+export function resolveCategoryCover(
+  cover?: string,
+): ImageMetadata | string | undefined {
+  if (!cover) return undefined;
+  return categoryCoverPresets[cover] ?? cover;
+}
 
 /**
  * 将 theme.config.ts 中的 fixedCover 字符串解析为可渲染的图片源。

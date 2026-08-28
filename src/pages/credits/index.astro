@@ -1,0 +1,202 @@
+---
+import type { ImageMetadata } from "astro";
+import { Image } from "astro:assets";
+import Layout from "@/layouts/Layout.astro";
+import {
+  coverPresets,
+  categoryCoverPresets,
+  avatar,
+} from "@/components/Images.astro";
+import {
+  COVER_CREDITS,
+  getCoverCredit,
+  isThemeLicensed,
+  THEME_LICENSED_KEYS,
+} from "@/toolkit/coverCredits";
+import { getCoverObjectPosition } from "@/toolkit/coverFocus";
+import themeConfig from "@/theme.config";
+import { t } from "@/i18n";
+
+import "@/styles/post.css";
+
+// 本页展示用的合并查找表。合并只发生在这里：coverPresets 同时是 fixedCover 与
+// coverUrls 的解析表，把分类封面并进去会让它们变成合法的文章封面 key。
+// avatar 不是 config 可解析的预设 key（没人会在 config 里写 "avatar"），
+// 但同样是需要署名的站上图片，所以也并进来受同一套校验保护。
+const creditableImages: Record<string, ImageMetadata> = {
+  ...coverPresets,
+  ...categoryCoverPresets,
+  avatar,
+};
+
+// 署名是授权条款的硬性要求，宁可构建失败也不要静默漏掉某张图。
+// 三个方向都要查 —— 只查其中一个方向的话，漏署名可以静默上站。
+// 主题自带的图走主题授权，不需要个别署名，见 coverCredits 的 THEME_LICENSED_KEYS。
+const missingCredits = Object.keys(creditableImages).filter(
+  (key) => !getCoverCredit(key) && !isThemeLicensed(key),
+);
+if (missingCredits.length > 0) {
+  throw new Error(
+    `[credits] 以下图片缺少作者署名，请在 src/toolkit/coverCredits.ts 补上：${missingCredits.join(", ")}`,
+  );
+}
+
+// 反向：署名找不到对应图片，说明 key 写错或图已删 —— 这类条目本页会静默丢掉，
+// 看起来「署名齐全」其实没有呈现，必须报错。
+const orphanCredits = COVER_CREDITS.filter(
+  (credit) => !creditableImages[credit.key],
+).map((credit) => credit.key);
+if (orphanCredits.length > 0) {
+  throw new Error(
+    `[credits] 以下署名找不到对应图片（key 拼错，或图片不在 Images.astro 收集的目录里）：${orphanCredits.join(", ")}`,
+  );
+}
+
+// 分类封面走 theme.config.ts，不在上面两张预设表里就完全绕过署名校验。
+// 本地图必须填预设 key；远端 URL 无从校验，放行。
+const unresolvedCategoryCovers = (themeConfig.home?.selectedCategories ?? [])
+  .map(({ cover }) => cover)
+  .filter(
+    (cover): cover is string =>
+      !!cover && !creditableImages[cover] && !/^(https?:|data:)/.test(cover),
+  );
+if (unresolvedCategoryCovers.length > 0) {
+  throw new Error(
+    `[credits] 以下分类封面无法校验署名：${unresolvedCategoryCovers.join(", ")}。` +
+      `请把图放到 src/assets/images/category-cover/、在 src/toolkit/coverCredits.ts 补署名（key 为 "category-<档名>"），` +
+      `然后把 theme.config.ts 里的值改成该预设 key。`,
+  );
+}
+
+const entries = COVER_CREDITS.map((credit) => ({
+  credit,
+  image: creditableImages[credit.key],
+}));
+
+const title = t("credits.title");
+const description = t("credits.description");
+// 主题自带的图走主题授权，没有署名条目可列，改说明授权来源，免得页面看起来是空的
+const themeLicensedNote = THEME_LICENSED_KEYS.some((key) => creditableImages[key])
+  ? t("credits.themeLicensed")
+  : "";
+// 一张署名都没有时，description 讲的「逐一标注原作者」并不成立，meta 换成授权说明
+const metaDescription = entries.length > 0 ? description : themeLicensedNote || description;
+---
+
+<Layout pageTitle={title}>
+  <Fragment slot="head">
+    <meta name="description" content={metaDescription} />
+  </Fragment>
+
+  <div class="article wrap">
+    <article class="post block">
+      <div class="body md">
+        <h1>{title}</h1>
+        {entries.length > 0 && <p>{description}</p>}
+        {themeLicensedNote && <p>{themeLicensedNote}</p>}
+
+        {/* 用 div 而非 ul/li：主题给 `.md ul > li` 挂了 ::before 圆点，
+            且该选择器特异性高于主题自带的 .nodot 逃生舱，改用 div 才不必打特异性战争。
+            列表语义用 role 补回。 */}
+        <div class="credit-list" role="list">
+          {
+            entries.map(({ credit, image }) => (
+              <div class="credit-item" role="listitem">
+                <a
+                  href={credit.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="credit-thumb"
+                  tabindex="-1"
+                  aria-hidden="true"
+                >
+                  <Image
+                    src={image}
+                    alt=""
+                    widths={[240, 480]}
+                    sizes="(min-width: 640px) 240px, 45vw"
+                    quality={55}
+                    format="avif"
+                    loading="lazy"
+                    style={`object-position: ${getCoverObjectPosition(image)};`}
+                  />
+                </a>
+                <div class="credit-meta">
+                  <span class="credit-title">{credit.title}</span>
+                  <span class="credit-artist">
+                    {t("credits.artistLine", { artist: credit.artist })}
+                  </span>
+                  {credit.work && <span class="credit-work">{credit.work}</span>}
+                  <a
+                    href={credit.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="credit-source"
+                    title={t("credits.sourceLabel")}
+                  >
+                    {credit.url}
+                  </a>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .credit-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 1.25rem;
+    margin: 1.5rem 0 0;
+  }
+
+  .credit-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  .credit-thumb {
+    display: block;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    background-color: var(--grey-2);
+  }
+
+  .credit-thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .credit-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  .credit-title {
+    font-weight: 600;
+  }
+
+  .credit-work {
+    color: var(--grey-5);
+    font-size: 0.8125rem;
+  }
+
+  /* 网址可能很长，允许在任意字符断行，别把网格撑爆 */
+  .credit-source {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-size: 0.8125rem;
+  }
+</style>

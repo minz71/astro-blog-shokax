@@ -4,6 +4,7 @@ import IndexContent from "../components/IndexContent.astro";
 import Pagination from "../components/Pagination.astro";
 import { getCollection } from "astro:content";
 import themeConfig from "@/theme.config";
+import { resolveCategoryCover } from "@/components/Images.astro";
 import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
 
 // Fetch all posts
@@ -68,10 +69,17 @@ const categories = (themeConfig.home?.selectedCategories ?? []).flatMap(
     const data = categoryMap.get(name);
     if (!data) return [];
 
+    // CategoryCard 用 CSS background-image 渲染封面，只吃字符串。
+    // 预设 key 取静态导入的 .src（内容哈希的原图 URL，不经二次编码 ——
+    // background-image 用不到 srcset，走 <Image /> 只会白白重压一次）。
+    const resolvedCover = resolveCategoryCover(cover);
+    const coverUrl =
+      typeof resolvedCover === "string" ? resolvedCover : resolvedCover?.src;
+
     return [
       {
         name,
-        cover,
+        cover: coverUrl,
         url: `/categories/${name}/`,
         postCount: data.posts.length,
         posts: data.posts.slice(0, 6).map((p) => ({

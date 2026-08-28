@@ -87,6 +87,16 @@ const iconColor = sanitizeThemeColor(
         <span class="author">{author} @ {siteName}</span>
       </div>
 
+      <!-- Cover Image Credits：授权条款要求标注来源与作者，放全站可达的入口 -->
+      <div class="credits block my-2 text-xs">
+        <a
+          href="/credits/"
+          class="text-grey-5 hover:opacity-80 border-b border-dashed"
+        >
+          {t("credits.footerLink")}
+        </a>
+      </div>
+
       <!-- Statistics Section -->
       {
         config.count && (

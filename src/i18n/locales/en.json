@@ -290,5 +290,13 @@
     "togglePlayer": "Show or hide player",
     "playPause": "Play or pause",
     "toggleSidebar": "Toggle sidebar"
+  },
+  "credits": {
+    "title": "Image Credits",
+    "description": "The images used on this site (covers, avatar and so on) are the work of the artists listed below, credited here with their source as required by their licensing terms. All rights remain with the original artists.",
+    "artistLine": "Artist: {{artist}}",
+    "sourceLabel": "Source",
+    "footerLink": "Image credits",
+    "themeLicensed": "The cover images and avatar shipped with this theme are distributed under the theme license and require no separate attribution."
   }
 }
