@@ -9,6 +9,17 @@ import aiContent from "@hyacine/plugin-ai-content";
 import visibilityTitle from "@hyacine/plugin-visibility-title";
 import nyxPlayer from "@hyacine/plugin-nyx-player";
 import articleStatistics from "@hyacine/plugin-article-statistics";
+import themeConfig from "./src/theme.config";
+import sakura from "./src/toolkit/sakuraPlugin";
+
+/*
+ * 插件按轴切：实作与观感预设值属主题（本档与 src/toolkit/*Plugin.ts），
+ * 「换了站点就该跟着换」的值走 theme.config.ts 的 plugins 区块。
+ * 装饰性插件一律 gate 在 theme.config.ts 上、预设不注册。
+ * 详见 AGENTS.md 的「插件的归属」。
+ */
+const sakuraConfig = themeConfig.plugins?.sakura;
+const sakuraEnabled = sakuraConfig?.enable === true;
 
 export default defineConfig({
   injectPoints: {
@@ -84,5 +95,19 @@ export default defineConfig({
       metingUrlSource: "outer",
     }),
     articleStatistics(),
+    // 装饰性插件：没在 theme.config.ts 明确开启就不进 plugins 数组
+    ...(sakuraEnabled
+      ? [
+          sakura({
+            count: 30,
+            xSpeed: 0.5,
+            ySpeed: 0.5,
+            rSpeed: 0.03,
+            direction: "TopRight",
+            zIndex: -1,
+            ...(sakuraConfig?.scriptSrc ? { scriptSrc: sakuraConfig.scriptSrc } : {}),
+          }),
+        ]
+      : []),
   ],
 });

@@ -374,6 +374,27 @@ interface TagCloudConfig {
   endColor?: ThemeColorValue;
 }
 
+interface PluginsConfig {
+  /**
+   * 樱花飘落插件（装饰性，默认关闭）。
+   */
+  sakura?: {
+    /**
+     * 是否启用。
+     * - 默认 false：装饰性插件不该在别人什么都没设定时就出现
+     *   （见 AGENTS.md「插件的归属」）
+     */
+    enable?: boolean;
+
+    /**
+     * 樱花脚本来源。
+     * - 不填则用 sakuraPlugin.ts 里的预设 jsDelivr 位址
+     * - 自架脚本或换 CDN 时在这里覆写
+     */
+    scriptSrc?: string;
+  };
+}
+
 interface DiagnosticsConfig {
   /**
    * 是否屏蔽开发/构建/检查期间由 FSWatcher 触发的
@@ -436,6 +457,12 @@ export interface ShokaXThemeConfig {
    * - 控制站点首次进入时使用的默认明暗模式
    */
   theme?: ThemeConfig;
+
+  /**
+   * 插件的站点专属设定。
+   * - 只放「换一个站点就不成立」的值；观感预设值属主题，写在 hyacine.plugin.ts
+   */
+  plugins?: PluginsConfig;
 
   /**
    * 导航栏配置。
