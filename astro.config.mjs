@@ -36,7 +36,12 @@ function fixDevAvifContentType() {
         }
         const setHeader = res.setHeader.bind(res);
         res.setHeader = (name, value) =>
-          setHeader(name, String(name).toLowerCase() === "content-type" && value === "image/heif" ? "image/avif" : value);
+          setHeader(
+            name,
+            String(name).toLowerCase() === "content-type" && value === "image/heif"
+              ? "image/avif"
+              : value,
+          );
         next();
       });
     },

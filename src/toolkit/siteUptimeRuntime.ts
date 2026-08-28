@@ -21,8 +21,7 @@ export interface SiteUptimeRuntimeOptions {
   targetSelector?: string;
 }
 
-const DEFAULT_TARGET_SELECTOR =
-  ".hyacine-slot-footer-status, .footer-status, #footer .status";
+const DEFAULT_TARGET_SELECTOR = ".hyacine-slot-footer-status, .footer-status, #footer .status";
 
 function formatUnit(value: number, singular: string, plural: string, spaced: boolean): string {
   const unit = value === 1 ? singular : plural;

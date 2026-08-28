@@ -19,9 +19,7 @@ const SNAP_PERCENT = 2;
 
 export const DEFAULT_COVER_POSITION = "center";
 
-export function getCoverObjectPosition(
-  src?: ImageMetadata | string | null,
-): string {
+export function getCoverObjectPosition(src?: ImageMetadata | string | null): string {
   if (!src || typeof src === "string") return DEFAULT_COVER_POSITION;
   const { width, height } = src;
   if (!width || !height) return DEFAULT_COVER_POSITION;
@@ -29,12 +27,8 @@ export function getCoverObjectPosition(
   const ratio = width / height;
   if (ratio >= WIDE_RATIO) return DEFAULT_COVER_POSITION;
 
-  const t = Math.min(
-    Math.max((WIDE_RATIO - ratio) / (WIDE_RATIO - SQUARE_RATIO), 0),
-    1,
-  );
-  const y =
-    CENTER_ANCHOR_PERCENT - (CENTER_ANCHOR_PERCENT - TOP_ANCHOR_PERCENT) * t;
+  const t = Math.min(Math.max((WIDE_RATIO - ratio) / (WIDE_RATIO - SQUARE_RATIO), 0), 1);
+  const y = CENTER_ANCHOR_PERCENT - (CENTER_ANCHOR_PERCENT - TOP_ANCHOR_PERCENT) * t;
   // 差不到 SNAP_PERCENT 的位移人眼看不出来，直接回退到 center，别输出 "center 49%" 这种噪音
   if (y >= CENTER_ANCHOR_PERCENT - SNAP_PERCENT) return DEFAULT_COVER_POSITION;
   return `center ${Math.round(y)}%`;
