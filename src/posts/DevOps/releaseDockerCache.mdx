@@ -1,0 +1,128 @@
+---
+title: "刪除 WSL 環境下的 docker build cache"
+date: 2024-05-31
+updated: 2024-05-31
+tags:
+  - "DevOps"
+  - "Docker"
+  - "WSL"
+categories:
+  - "DevOps"
+---
+
+# 前言
+
+在 WSL 環境下，發現即使將 linux 中的檔案刪除，windows下的磁碟空間也沒有釋放。
+
+# 將Docker Build Cache 刪除
+
+1. 查看目前的建置緩存
+
+```bash
+sudo docker system df
+```
+
+- 可以看到以下輸出
+
+```plain
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          9         8         28.91GB   13.19GB (45%)
+Containers      8         8         3.872GB   0B (0%)
+Local Volumes   1         1         263.9kB   0B (0%)
+Build Cache     64        0         44.79GB   44.79GB
+```
+
+2. 刪除 Build Cache
+
+```bash
+sudo docker builder prune
+```
+
+- 出現刪除警告後輸入y繼續
+
+```plain
+WARNING! This will remove all dangling build cache. Are you sure you want to continue? [y/N]
+```
+
+
+<Note type="warning" title="清理所有停止的容器、未使用的網路、所有未使用的映像檔以及未掛載的 Volume">
+```bash
+sudo docker system prune -a --volumes
+```
+</Note>
+
+
+在這個步驟後發現 windows 下的磁碟空間沒有釋放。
+
+# 釋放虛擬磁碟檔案
+
+1. 將 WSL 關機
+
+```bash
+wsl --shutdown
+```
+
+2. 進入diskpart
+
+```bash
+diskpart
+```
+
+3. 選擇虛擬磁碟
+
+* 查找虛擬磁碟
+
+```ps1
+Get-ChildItem HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss |
+ForEach-Object {
+  $name = $_.GetValue("DistributionName")
+  $base = $_.GetValue("BasePath")
+  [pscustomobject]@{
+    Distro = $name
+    BasePath = $base
+    VHDX = Join-Path $base "ext4.vhdx"
+    Exists = Test-Path (Join-Path $base "ext4.vhdx")
+  }
+}
+```
+
+會輸出像是: 
+
+```
+Distro       BasePath                                                              VHDX
+------       --------                                                              ----
+Ubuntu-24.04 C:\Users\minz\AppData\Local\wsl\{81be070b-aee1-4d66-952e-1a28cf427e45} C:\Users\minz\AppData\Local\wsl\{81be070b-aee1-4d66-…
+```
+
+
+請替換 `minz` 為自己的使用者名稱
+
+```bash
+select vdisk file="C:\Users\minz\AppData\Local\wsl\{81be070b-aee1-4d66-952e-1a28cf427e45}\ext4.vhdx"
+```
+
+4. 以只讀模式附加磁碟
+
+```bash
+attach vdisk readonly
+```
+
+5. 壓縮虛擬磁碟(可能要等一段時間)
+
+```bash
+compact vdisk
+```
+
+6. 卸載虛擬磁碟
+
+```bash
+detach vdisk
+```
+
+7. 離開diskpart
+
+```bash
+exit
+```
+
+磁碟空間已經釋放後，重新啟動 WSL。

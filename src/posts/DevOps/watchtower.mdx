@@ -1,0 +1,64 @@
+---
+title: "Watchtower 自動更新 Docker 容器"
+date: 2025-08-02
+updated: 2025-08-02
+description: "Watchtower 會偵測是否有新的映像可用，然後嘗試安裝新的版本，並使用新版本 image 重新啟動容器。"
+tags:
+  - "Docker"
+  - "DevOps"
+categories:
+  - "DevOps"
+---
+
+import HexoLinksTag from "@/components/post/HexoLinksTag.astro";
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://github.com/containrrr/watchtower",
+      title: "watchtower",
+      desc: "https://github.com/containrrr/watchtower",
+      author: "watchtower",
+      avatar: "https://containrrr.dev/watchtower/images/logo-450px.png",
+      color: "#e9546b",
+    },
+  ]}
+/>
+
+
+## Watchtower 介紹
+
+Watchtower 會偵測是否有新的映像可用，然後嘗試安裝新的版本，並使用新版本 image 重新啟動容器。
+
+## docker-compose 範例
+
+```yaml
+services:
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower:latest
+    restart: always
+    environment:
+      TZ: "Asia/Taipei"
+      WATCHTOWER_ROLLING_RESTART: "true"
+      WATCHTOWER_NOTIFICATION_REPORT: "true"
+      WATCHTOWER_NOTIFICATION_URL: "telegram://XXX:XXX@telegram/?Chats=XXX"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --schedule "0 0 1 * * *" --cleanup app1 app2 app3
+
+```
+
+- --interval 86400 **Poll interval 以秒為間隔檢查**
+- --schedule  使用 6 欄位的 [Cron expression](https://pkg.go.dev/github.com/robfig/cron@v1.2.0?tab=doc#hdr-CRON_Expression_Format)  例如:"0 0 1 * * *" 每天1點檢查
+- --cleanup 容器名稱
+
+說明文檔: https://containrrr.dev/watchtower/arguments/
+
+:::info
+在 arm 平台使用需要注意 image 有沒有提供 arm 架構
+如果該 image 只有 x86 版本也會 watchtower 拉取
+並出現無法執行 image 錯誤
+[GitHub issue #1309](https://github.com/containrrr/watchtower/issues/1309)
+:::

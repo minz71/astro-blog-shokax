@@ -1,0 +1,95 @@
+---
+title: "Anthropic 的大語言模型 Claude"
+date: 2025-03-07
+updated: 2025-03-07
+description: "Anthropic 是一家專注於人工智慧研究的公司，由 OpenAI 前研究副總裁 Dario Amodei 和 GPT-3 論文的第一作者 Tom Brown 等人共同創立，主要產品是 Claude 語言模型 LLM，在程式碼領域表現很好。"
+tags:
+  - "Claude"
+  - "llm"
+  - "Anthropic"
+categories:
+  - "AI"
+---
+
+import HexoLinksTag from "@/components/post/HexoLinksTag.astro";
+
+# Anthropic 介紹
+* 是一家位於美國加州舊金山的人工智慧安全研究公司
+* 主要開發 Claude 語言模型
+* 該公司成立於**2021**年
+* 由 OpenAI 前研究副總裁 Dario Amodei 和 GPT-3 論文的第一作者 Tom Brown 等人共同創立
+
+## Anthropic 主要投資者
+
+* Amazon
+* Google
+* Menlo Ventures
+
+:::info
+在 Alameda Research 破產後，持有的約 8% 的股份，大部分的出售給 [UAE 及其主權財富基金](https://www.cnbc.com/2024/03/25/ftx-estate-sells-majority-stake-in-startup-anthropic-for-884-million.html)
+:::
+
+關於 Anthropic 的融資，可以參考 [這裡](https://tracxn.com/d/companies/anthropic/__SzoxXDMin-NK5tKB7ks8yHr6S9Mz68pjVCzFEcGFZ08/funding-and-investors)。
+
+# 使用 Claude 的語言模型
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://claude.ai/",
+      title: "Claude",
+      desc: "https://claude.ai/",
+      author: "Claude",
+      avatar: "https://claude.ai/favicon.ico",
+      color: "#e9546b",
+    },
+  ]}
+/>
+
+## 在網頁上使用
+在 https://claude.ai/ 註冊一個帳號，**驗證手機號碼**後就可以使用(也有可能不需要驗證)。
+
+:::info
+以下是 2025/03/07 的資訊，由於模型更新速度很快，之後可能會有所變動。
+:::
+
+目前免費板使用的模型是 `Sonnet 3.7 Sonnet`，[付費方案](https://support.anthropic.com/zh-TW/articles/8325610-claude-pro%E7%9A%84%E5%83%B9%E6%A0%BC%E6%98%AF%E5%A4%9A%E5%B0%91)每個月 20 美元，可以在使用更長的上下文，以及新推出的進階思考功能。
+
+:::info
+如果使用模型的人數過多，免費用戶的網頁版將**降級**，可能會提供提供較低階模型(Haiku)。
+:::
+
+:::info
+可以查看目前的服務狀態
+https://status.anthropic.com/
+:::
+
+## 使用API
+[Claude 網站上使用](https://support.anthropic.com/zh-TW/articles/8114521-%E6%88%91%E5%A6%82%E4%BD%95%E5%AD%98%E5%8F%96claude-api)
+[Amazon Bedrock Claude](https://aws.amazon.com/tw/bedrock/claude/)
+[Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude)
+
+[Token 計算說明](https://docs.anthropic.com/en/docs/build-with-claude/token-counting#count-tokens-in-basic-messages)
+[線上版 Token 計算](https://lunary.ai/anthropic-tokenizer)
+
+# Claude 系列
+
+有以下 3 個系列
+1. Opus 系列
+目前的 Opus 3 是2024年2月推出的模型，在文學上可能較出色，目前不是很強的模型，可以期待未來推出新版本。
+
+2. Sonnet 系列
+Sonnet 3.7 是不錯的模型，目前寫程式的表現不錯，也可以進行推理，提升回答的品質。
+
+3. Haiku 系列
+Haiku 3.5 的價格比之前 Haiku 3 更貴，要更好的品質使用 Sonnet 3.5 即可，若是要更低的價格可以使用 GPT-4o mini，因此，感覺沒有使用 Haiku 3.5 的理由。
+
+# Anthropic Prompt
+
+* Anthropic 有提供 prompt 範例
+* 可以點選右下角的 Ask AI ，直接讓 AI 告訴你適合的提示詞
+https://docs.anthropic.com/zh-TW/prompt-library/library
+
+* 網頁版的官方提示詞
+Anthropic 有公開網頁版的 system prompt 提示詞，可以提升模型表現的提示詞。
+https://docs.anthropic.com/en/release-notes/system-prompts

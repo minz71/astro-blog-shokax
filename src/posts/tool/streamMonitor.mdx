@@ -1,0 +1,139 @@
+---
+title: "將iPad變成電腦第二螢幕和手寫板"
+date: 2025-03-20
+updated: 2025-03-20
+tags:
+  - "sunshine"
+  - "Parsec VDD"
+  - "Moonlight"
+---
+
+import HexoLinksTag from "@/components/post/HexoLinksTag.astro";
+
+# 介紹
+將電腦的畫面串流到平板上顯示，讓平板成為電腦的額外螢幕。
+首先建立一個虛擬螢幕，之後使用 sunshine 將這個螢幕串流到 moonlight。
+
+# 虛擬螢幕驅動
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://github.com/nomi-san/parsec-vdd",
+      title: "parsec-vdd",
+      desc: "https://github.com/nomi-san/parsec-vdd",
+      author: "parsec-vdd",
+      avatar:
+        "https://raw.githubusercontent.com/nomi-san/parsec-vdd/refs/heads/main/app/Resources/icon.ico",
+      color: "#e9546b",
+    },
+  ]}
+/>
+
+
+parsec-vdd 可以在你的 Windows 上建立一個虛擬的螢幕。
+
+1. 安裝 Parsec VDD
+   - 在 [Gitgub Releases](https://github.com/nomi-san/parsec-vdd/releases) 頁面找到對應的系統版本
+   - 適用於 Windows 的安裝檔案 `ParsecVDisplay-v0.45-setup.exe`
+
+2. 設置 Parsec VDD
+   1. 在 Custom 添加 iPad 的解析度 (例如 iPad Pro 11" 2388 * 1668)
+   2. 點擊 Add Display 添加一個虛擬螢幕
+   3. 在螢幕點擊右鍵可以設定解析度等
+
+# Sunshine
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://github.com/LizardByte/Sunshine",
+      title: "Sunshine",
+      desc: "https://github.com/LizardByte/Sunshine",
+      author: "Sunshine",
+      avatar: "https://app.lizardbyte.dev/Sunshine/assets/img/navbar-avatar.png",
+      color: "#e9546b",
+    },
+  ]}
+/>
+
+
+Sunshine 是一個開源的串流伺服器。
+
+1. 安裝 Sunshine
+   - 在 [Github Releases](https://github.com/LizardByte/Sunshine/releases) 頁面找到對應的系統版本
+   - 適用於 Windows 的安裝檔案 `sunshine-windows-installer.exe`
+
+2. 設定 Sunshine
+   1. 開啟 Sunshine 的 Web UI，http://localhost:47990
+   2. 設置使用者名稱與密碼
+   3. 設定輸出的螢幕，首先開啟 `Troubleshooting` 頁面查看 `device_id`
+:::info
+   虛擬螢幕的 friendly_name 是 ParsecVDA
+   :::
+   <img src="/images/tools/streamMonitor/sunshine_Troubleshooting.webp" alt="" style="width: 70%;" />
+   4. 回到 `Configuration` 頁面，填入剛剛的 `device_id`
+   <img src="/images/tools/streamMonitor/sunshine_Configuration.webp" alt="" style="width: 70%;" />
+
+
+:::info
+修改sunshine使用者名稱跟密碼
+使用系統管理員開啟 powershell，替換 `username` `password`，輸入以下指令
+```shell
+.\sunshine.exe --creds username password
+```
+:::
+
+# Moonlight
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://moonlight-stream.org/",
+      title: "Moonlight",
+      desc: "https://moonlight-stream.org/",
+      author: "Moonlight",
+      avatar: "https://moonlight-stream.org/images/moonlight.svg",
+      color: "#e9546b",
+    },
+  ]}
+/>
+
+
+Moonlight 是一個用於串流遊戲與桌面的開源專案。
+
+可以在 [App Store](https://apps.apple.com/tw/app/moonlight-game-streaming/id1000551566) 或 [Google Play](https://play.google.com/store/apps/details?id=com.limelight) 下載
+
+* IOS 設備在 APP 開啟時需要允許`想要尋找並連接你區域網路上的裝置`
+* 點擊右上角的 Setting 可以調整解析度、Frame Rate、關閉虛擬搖桿
+<img src="/images/tools/streamMonitor/moonlight_setting.webp" alt="" style="width: 70%;" />
+* 確保設備與主機在同一網路
+* Moonlight 會自動搜索區域網路的伺服器(如果沒有自動顯示，可以手動輸入主機 IP 地址)
+* 首次連接時需要在 Sunshine 輸入 pin 配對
+* 連接成功後即可開始串流
+
+## 修改的 android 版本
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://github.com/ClassicOldSong/moonlight-android",
+      title: "Moonlight",
+      desc: "https://github.com/ClassicOldSong/moonlight-android",
+      author: "Moonlight",
+      avatar:
+        "https://raw.githubusercontent.com/ClassicOldSong/moonlight-android/refs/heads/moonlight-noir/store-assets/lime_layer.svg",
+      color: "#e9546b",
+    },
+  ]}
+/>
+
+
+* 提供對於辦公用途，許多好用的功能，[詳細可以參考](https://github.com/ClassicOldSong/moonlight-android/blob/moonlight-noir/README.md#features)
+
+* 有更好的手寫筆模式(手寫筆為輸入，手指觸控為縮放)
+1. 在設定頁開啟將 `Touchscreen Mode` 設定`Disabled`
+<img src="/images/tools/streamMonitor/Moonlight_android_setting.webp" alt="" style="width: 70%;" />
+
+2. 到連接的螢幕中的 `Quick Menu` 啟用 `Enable Pan/Zoom`
+<img src="/images/tools/streamMonitor/Moonlight_android_setting2.webp" alt="" style="width: 70%;" />

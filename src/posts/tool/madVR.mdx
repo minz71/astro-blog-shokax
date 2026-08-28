@@ -1,0 +1,131 @@
+---
+title: "madVR 安裝教學"
+date: 2024-02-29
+updated: 2024-02-29
+tags:
+  - "madVR"
+---
+
+import HexoLinksTag from "@/components/post/HexoLinksTag.astro";
+
+## MadVR 介紹
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://madshi.net/index.htm",
+      title: "madVR",
+      desc: "DirectShow video renderer",
+      author: "madVR",
+      avatar: "https://madshi.net/madshi256.gif",
+      color: "#e9546b",
+    },
+  ]}
+/>
+
+
+* 官方網站上沒有madVR的下載連結
+
+Change Log: https://forum.doom9.org/showthread.php?t=146228
+下載頁面: https://www.videohelp.com/software/madVR
+所有版本: https://www.videohelp.com/software/madVR/old-versions#download
+
+:::info
+如果之前安裝過其他版本的madVR，建議先解除安裝舊版本。
+:::
+
+:::warning
+本文沒有針對HDR設定的教學
+:::
+## LAVFilter 解碼器
+
+1. 下載[LAVFilter 解碼器](https://github.com/Nevcairiel/LAVFilters/releases)
+
+<img src="/images/tools/madVR/installLAV.webp" alt="" style="width: 70%;" />
+
+2. 依圖片設定LAVFilter
+
+<img src="/images/tools/madVR/LAVsetup.webp" alt="" style="width: 70%;" />
+
+:::info
+音訊建議使用 LAV Audio Decoder
+:::
+
+## PotPlayer 設定
+1. 安裝PotPlayer (MPC-BE也可以使用madVR)
+
+2. 到**偏好設定**在右下角初始化
+
+3. 濾鏡/解編碼器 > 內建視訊處理設定 選擇 "不使用"
+<img src="/images/tools/madVR/setup1.webp" alt="" style="width: 70%;" />
+
+4. 濾鏡/解編碼器 > 全域濾鏡優先順序 新增系統慮鏡 "LAV Video Decoder" 優先順序選擇強制啟用
+<img src="/images/tools/madVR/setup2.webp" alt="" style="width: 70%;" />
+
+5. 視訊 > 視訊渲染方式 > madVR
+:::info
+PotPlayer使用獨佔模式可能有全螢幕下時間軸不顯示的Bug
+:::
+<img src="/images/tools/madVR/setup3.webp" alt="" style="width: 70%;" />
+
+6. 音訊 > 預設輸出裝置 內建WASAPI
+<img src="/images/tools/madVR/setup4.webp" alt="" style="width: 70%;" />
+
+:::info
+音訊 > 標準化 > 取消勾選 (依需求設定)
+<img src="/images/tools/madVR/setup5.webp" alt="" style="width: 70%;" />
+:::
+
+## NVIDIA 顯卡設定
+1. 管理3D設定 > 新增PotPlayer > 垂直同步: 開啟 > 電源管理模式: 慣用的最大效能
+<img src="/images/tools/madVR/NVIDIA.webp" alt="" style="width: 70%;" />
+2. NVIDIA色彩設置
+
+## 安裝madVR
+1. 將下載的madVR解壓縮
+
+2. 用系統管理員模式執行install.bat
+<img src="/images/tools/madVR/madVR1.webp" alt="" style="width: 70%;" />
+
+3. 出現成功安裝
+<img src="/images/tools/madVR/madVR2.webp" alt="" style="width: 70%;" />
+
+## 設置madVR
+1. madHcCtrl 用來設置
+
+2. 將螢幕設定為 Digital Monitor / TV 並設定10bit
+<img src="/images/tools/madVR/madVR3.webp" alt="" style="width: 70%;" />
+
+3. 開啟去色帶功能
+<img src="/images/tools/madVR/madVR5.webp" alt="" style="width: 70%;" />
+
+4. 由於片源的幀數通常為24，螢幕的刷新率通常不是24的整數倍，因此建議開啟smooth motion功能。
+<img src="/images/tools/madVR/madVR4.webp" alt="" style="width: 70%;" />
+
+5. scaling algorithms
+|效能要求| chroma upscaling | image downscaling | image upscaling |
+|:---:|:---:|:---:|:---:|
+| 低      | Cubic (Bicubic50) | Cubic (Bicubic50) + LL | Lanczos (3 taps) + SL |
+| 中      | Cubic (Bicubic50) + AR | Cubic (Bicubic50) + LL + AR (relaxed) | Jinc + AR + SL |
+| 高      | super-xbr (100) + AR | SSIM (1D – 100%) + LL + AR (relaxed) | NGU Sharp (medium) |
+LL = "scale in linear light"
+SL = "scale in sigmoidal light"
+AR = "activate anti-ringing filter"
+NGU Sharp 除了選擇 "luma doubling" 品質以外，其餘全部保留默認的 "let madVR decide" 即可
+
+:::info
+這裡對性能要求的高低並不絕對等同於畫質的高低
+:::
+
+"低" 檔設置的品質其實已經相當好了
+"高" 檔設置在一些低品質片源上反而有可能放大片源瑕疵
+**推薦 "中" 檔設置在畫質、功耗和泛用性之間較為平衡的選擇**
+
+## K-Lite Codec Pack Full
+* 包含 MPC-HC 和 madVR 的安裝包
+
+https://codecguide.com/download_k-lite_codec_pack_full.htm
+
+## 參考資料
+1. https://vcb-s.com/archives/16609
+2. https://lysandria1985.blogspot.com/2013/01/3-madvr.html

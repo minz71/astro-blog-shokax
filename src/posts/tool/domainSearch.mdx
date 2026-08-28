@@ -1,0 +1,106 @@
+---
+title: "域名搜尋工具"
+date: 2024-06-26
+updated: 2024-06-26
+tags:
+  - "domain"
+  - "TLD-LIST"
+  - "eu.org"
+  - "cloudflare"
+---
+
+import HexoLinksTag from "@/components/post/HexoLinksTag.astro";
+
+# TLD-LIST
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://zh-hant.tld-list.com/",
+      title: "TLD-LIST",
+      desc: "域名搜尋工具",
+      author: "TLD-LIST",
+      avatar: "https://zh-hant.tld-list.com/favicon.ico",
+      color: "#e9546b",
+    },
+  ]}
+/>
+
+
+## 功能
+* 查詢可使用的域名
+
+* 域名供應商的比價工具
+
+* 查看域名供應商評價
+
+* 首頁
+![首頁](/images/tools/domainSearch/1.png)
+
+
+* 搜尋結果
+![搜尋結果](/images/tools/domainSearch/2.png)
+
+# 二級域名
+
+頂級域名(TLD): 例如 `.com` `.org` `.net` 等。
+二級域名: 位於頂級域名之前,例如 **example**.com 中的 `example`。
+三級域名: 位於二級域名之前,例如 **blog**.example.com 中的 `blog`。
+
+
+:::info
+大多數2級域名是不能添加至[Cloudflare](https://www.cloudflare.com/)
+不過 eu.org 可以添加
+:::
+
+# 註冊 eu.org
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://nic.eu.org/",
+      title: "nic.eu.org",
+      desc: "免費eu.org域名",
+      author: "nic.eu.org",
+      avatar: "",
+      color: "#e9546b",
+    },
+  ]}
+/>
+
+
+:::danger
+eu.org 對於新域名的審核需要一段時間，或是不再通過審核了。
+:::
+
+1. https://nic.eu.org/arf/en/contact/create/ 
+2. 填寫 Contact Information 
+Name: 要有空格
+Address: 至少填入 line 1 跟 line 2
+phone: 可以不填寫
+Private: 建議打勾
+
+3. 註冊後到信箱點擊驗證連結
+需要一段時間才能收到驗證信，可能是幾天。
+
+4. https://nic.eu.org/arf/en/login/ 註冊完成後在這裡登入
+5. 點擊 `new domain`
+6. 先填入你想要的 domain name
+後綴需要 eu.org，例如 minzz.eu.org
+名稱如果被註冊過會顯示`Domain already exists`，可以試試其他名稱。
+7. 在 Name servers 這個欄位填入 cloudflare 提供的 nameserver
+8. 需要等待一段時間後才會生效，可能是幾天。
+
+
+# 使用 Cloudflare 的範例
+
+1. 添加網站
+![添加網站](/images/tools/domainSearch/cfAddWebsite.webp)
+2. 輸入 domain name
+![輸入 domain name](/images/tools/domainSearch/cfAddWebsite2.webp)
+3. 選擇 Free 套餐
+4. 添加一筆 DNS 紀錄
+5. 找到 cloudflare 提供的 nameserver
+![cloudflare 提供的 nameserver](/images/tools/domainSearch/cfAddNS.webp)
+6. 在 nic.eu.org 的 Name servers 欄位填入
+![nic.eu.org 的 Name servers 欄位](/images/tools/domainSearch/euorgNS.webp)
