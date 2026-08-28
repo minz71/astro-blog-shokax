@@ -288,7 +288,7 @@ const jsonLdHtml = JSON.stringify(jsonLd).replaceAll("<", "\\u003c");
           {post.data.tags?.map((tag) => (
             <meta property="article:tag" content={tag} />
           ))}
-          <script type="application/ld+json" set:html={jsonLdHtml} />
+          <script is:inline type="application/ld+json" set:html={jsonLdHtml} />
         </>
       )
     }
