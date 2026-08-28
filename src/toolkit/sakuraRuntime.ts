@@ -10,7 +10,7 @@ export interface SakuraRuntimeOptions {
 
 declare global {
   interface Window {
-    __shokaxSakuraBound?: boolean;
+    shokaxSakuraBound?: boolean;
     sakuraConfig?: {
       sakura: number;
       xSpeed: number;
@@ -25,7 +25,7 @@ declare global {
 const SAKURA_SCRIPT_ID = "shokax-sakura-script";
 
 const startSakura = (options: SakuraRuntimeOptions) => {
-  if (typeof window === "undefined" || window.__shokaxSakuraBound) {
+  if (typeof window === "undefined" || window.shokaxSakuraBound) {
     return;
   }
 
@@ -39,7 +39,7 @@ const startSakura = (options: SakuraRuntimeOptions) => {
     zIndex: options.zIndex,
   };
 
-  window.__shokaxSakuraBound = true;
+  window.shokaxSakuraBound = true;
 
   if (document.getElementById(SAKURA_SCRIPT_ID)) {
     return;

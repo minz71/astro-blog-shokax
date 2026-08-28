@@ -8,7 +8,12 @@ import { DEFAULT_LOCALE } from "@/toolkit/i18n/resolveLocale";
  * local("Microsoft YaHei") + size-adjust，一旦排在这些之前，
  * 繁中站的子集外字会全部渲染成简中字形。
  */
-const SC_FALLBACK = ['"Microsoft YaHei"', '"PingFang SC"', '"Noto Sans SC"', '"Source Han Sans SC"'];
+const SC_FALLBACK = [
+  '"Microsoft YaHei"',
+  '"PingFang SC"',
+  '"Noto Sans SC"',
+  '"Source Han Sans SC"',
+];
 
 const LANG_FALLBACK: Record<Locale, readonly string[]> = {
   "zh-CN": SC_FALLBACK,

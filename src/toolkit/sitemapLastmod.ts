@@ -29,9 +29,7 @@ function extractFrontmatterBlock(raw: string): string | undefined {
 }
 
 function extractDate(frontmatter: string, key: string): Date | undefined {
-  const match = frontmatter.match(
-    new RegExp(`^${key}:[ \\t]*(.+?)[ \\t]*$`, "m"),
-  );
+  const match = frontmatter.match(new RegExp(`^${key}:[ \\t]*(.+?)[ \\t]*$`, "m"));
   if (!match) {
     return undefined;
   }
@@ -78,16 +76,12 @@ export function buildPostLastmodMap(postsDir: string): Map<string, string> {
       continue;
     }
 
-    const lastmod =
-      extractDate(frontmatter, "updated") ?? extractDate(frontmatter, "date");
+    const lastmod = extractDate(frontmatter, "updated") ?? extractDate(frontmatter, "date");
     if (!lastmod) {
       continue;
     }
 
-    const id = toPostId(
-      relative(postsDir, file).replaceAll("\\", "/"),
-      frontmatter,
-    );
+    const id = toPostId(relative(postsDir, file).replaceAll("\\", "/"), frontmatter);
     lastmodByPath.set(normalizePathname(toPostHref(id)), lastmod.toISOString());
   }
 
@@ -103,9 +97,7 @@ export function createSitemapSerializer(postsDir: string) {
   return <T extends SitemapItemLike>(item: T): T => {
     lastmodByPath ??= buildPostLastmodMap(postsDir);
 
-    const lastmod = lastmodByPath.get(
-      normalizePathname(new URL(item.url).pathname),
-    );
+    const lastmod = lastmodByPath.get(normalizePathname(new URL(item.url).pathname));
     if (lastmod) {
       item.lastmod = lastmod;
     }

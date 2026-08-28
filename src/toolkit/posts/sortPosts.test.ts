@@ -38,12 +38,12 @@ describe("sortPosts", () => {
   });
 
   it("should sort posts by updated or date in descending order", () => {
-    const posts = [olderPost, updatedPost].sort(comparePostsByOrderDateDesc);
+    const posts = [olderPost, updatedPost].toSorted(comparePostsByOrderDateDesc);
     expect(posts.map((post) => post.id)).toEqual(["updated", "older"]);
   });
 
   it("should sort posts by updated or date in ascending order", () => {
-    const posts = [olderPost, updatedPost].sort(comparePostsByOrderDateAsc);
+    const posts = [olderPost, updatedPost].toSorted(comparePostsByOrderDateAsc);
     expect(posts.map((post) => post.id)).toEqual(["older", "updated"]);
   });
 });

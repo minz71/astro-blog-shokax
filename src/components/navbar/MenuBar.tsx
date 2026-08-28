@@ -20,7 +20,12 @@ function MenuBar(props: MenuBarProps) {
 
   return (
     <ul class="m-0 pb-2.5 pt-2.5 p-is-0 flex w-full">
-      <NavLinkItem class="menu-title" href="/" text={props.name} ariaLabel={`${props.name} ${t("nav.home")}`} />
+      <NavLinkItem
+        class="menu-title"
+        href="/"
+        text={props.name}
+        ariaLabel={`${props.name} ${t("nav.home")}`}
+      />
       <For each={navLinks()} fallback={null}>
         {(item) =>
           item.dropbox?.enable ? (

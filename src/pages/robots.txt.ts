@@ -6,10 +6,7 @@ export const GET: APIRoute = () => {
   const lines = ["User-agent: *", "Allow: /"];
 
   if (themeConfig.siteUrl) {
-    lines.push(
-      "",
-      `Sitemap: ${new URL("sitemap-index.xml", themeConfig.siteUrl).toString()}`,
-    );
+    lines.push("", `Sitemap: ${new URL("sitemap-index.xml", themeConfig.siteUrl).toString()}`);
   }
 
   return new Response(`${lines.join("\n")}\n`, {

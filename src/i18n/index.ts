@@ -37,7 +37,7 @@ export async function initI18n(locale: Locale = currentLocale) {
       lng: locale,
       fallbackLng: DEFAULT_LOCALE,
       resources,
-      initImmediate: false, // 同步初始化，避免 SSR 输出出现竞态
+      initAsync: false, // 同步初始化，避免 SSR 输出出现竞态（i18next 26 起改名，dev 用的 initImmediate 已失效）
       interpolation: {
         escapeValue: false, // React/Astro already handles escaping
       },
@@ -58,7 +58,7 @@ export function getT(locale: Locale = currentLocale) {
       lng: locale,
       fallbackLng: DEFAULT_LOCALE,
       resources,
-      initImmediate: false, // 同步初始化，避免 SSR 输出出现竞态
+      initAsync: false, // 同步初始化，避免 SSR 输出出现竞态（i18next 26 起改名，dev 用的 initImmediate 已失效）
       interpolation: {
         escapeValue: false,
       },
