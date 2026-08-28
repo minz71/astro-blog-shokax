@@ -61,7 +61,7 @@ import { installProcessWarningFilter } from "./src/toolkit/suppressWatcherWarnin
 import themeConfig from "./src/theme.config.ts";
 import { createSitemapSerializer } from "./src/toolkit/sitemapLastmod";
 
-const site = themeConfig.siteUrl || undefined;
+const site = themeConfig.siteUrl;
 
 // ── sitemap 排除加密文章 ────────────────────────────────────────────────
 // 加密文章内容构建后为密文，不应被搜索引擎收录（页面自身也带 noindex）。

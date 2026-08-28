@@ -376,6 +376,17 @@ interface TagCloudConfig {
 
 interface PluginsConfig {
   /**
+   * 页脚「已运行时长」插件。
+   */
+  siteUptime?: {
+    /**
+     * 站点上线时间（ISO 8601），例："2022-08-01T00:00:00Z"。
+     * - 不填则不注册该插件：没有起算点，运行时长没有意义
+     */
+    siteCreatedAt?: string;
+  };
+
+  /**
    * 樱花飘落插件（装饰性，默认关闭）。
    */
   sakura?: {
@@ -440,7 +451,7 @@ export interface ShokaXThemeConfig {
    * - 请填写完整网址，例如 "https://blog.example.com"
    * - 留空时 astro.config.mjs 的 site 会是 undefined
    */
-  siteUrl?: string;
+  siteUrl: string;
 
   /**
    * 网站语言设置。
@@ -557,15 +568,23 @@ const DEFAULT_THEME_COLORS = {
   friend: "var(--color-blue)",
 } as const satisfies Record<string, ThemeColorValue>;
 
-function normalizeSiteUrl(siteUrl?: string) {
+/**
+ * 解析站点网址。
+ *
+ * 空值或解析失败一律回退到预设值而不是 undefined：这个值同时喂 canonical、
+ * og:url、JSON-LD 与 RSS，让它变成 undefined 只会让整站静默丢失这些标记。
+ */
+function normalizeSiteUrl(siteUrl?: string): string {
   const normalizedSiteUrl = siteUrl?.trim();
-  if (!normalizedSiteUrl) return undefined;
+  if (!normalizedSiteUrl) return DEFAULT_THEME_CONFIG.siteUrl;
 
   try {
     return new URL(normalizedSiteUrl).toString().replace(/\/$/, "");
   } catch {
-    console.warn(`[theme.config] Invalid siteUrl: ${siteUrl}`);
-    return undefined;
+    console.warn(
+      `[theme.config] Invalid siteUrl: ${siteUrl} — falling back to ${DEFAULT_THEME_CONFIG.siteUrl}`,
+    );
+    return DEFAULT_THEME_CONFIG.siteUrl;
   }
 }
 

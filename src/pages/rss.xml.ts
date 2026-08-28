@@ -24,7 +24,9 @@ export async function GET(context: APIContext) {
     description,
     // 项目路由要求保留尾斜杠
     trailingSlash: true,
-    site: context.site ?? "https://preview.astro.kaitaku.xyz",
+    // 不写死网域：context.site 已由 astro.config 从 themeConfig.siteUrl 取得，
+    // 这里只是同一来源的兜底，避免 fallback 指向别人的站点。
+    site: context.site ?? themeConfig.siteUrl,
     items: published.map((post) => ({
       title: post.data.title,
       description:

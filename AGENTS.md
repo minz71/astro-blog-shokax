@@ -112,10 +112,12 @@ Hyacine 插件**按轴切，不按档案切**，分三层：
 
 ### 站点网址
 
-`themeConfig.siteUrl` 的预设值是主题示范站的网址，**`cloudflare` 必须在
-`theme.config.ts` 覆写它**。它不只喂 `astro.config` 的 `site`：canonical、
-`og:url`、JSON-LD 的 `url` / `mainEntityOfPage`、`robots.txt` 的 `Sitemap` 行
-全部取自这个值。没覆写就发布，等于把每一页的 canonical 指向别人的网域。
+`themeConfig.siteUrl` 不只喂 `astro.config` 的 `site`：canonical、`og:url`、
+JSON-LD 的 `url` / `mainEntityOfPage`、`robots.txt` 的 `Sitemap` 行全部取自它。
+指错网域等于把每一页的 canonical 交给别人，搜索引擎会据此把本站剔出索引。
+
+预设值是 `https://blog.minz.li`。上游预设的 `preview.astro.kaitaku.xyz` 是
+**别人的网域**，不可留。站点如需其他网址，在 `cloudflare` 的 `theme.config.ts` 覆写。
 
 ### 封面图片与署名
 
