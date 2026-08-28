@@ -159,6 +159,10 @@ export default defineConfig({
   },
   // 插件的站点侧设定值（实作在 dev，见 AGENTS.md 的「插件的归属」）
   plugins: {
+    // 不顯示「這篇文章發布較早」提醒
+    articleAgeWarning: {
+      enable: false,
+    },
     siteUptime: {
       siteCreatedAt: "2022-08-01T00:00:00Z",
     },
