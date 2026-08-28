@@ -81,6 +81,7 @@
     "@unocss/transformer-directives": "^66.7.4",
     "css-tree": "3.2.1",
     "git-cliff": "^2.13.1",
+    "github-slugger": "^2.0.0",
     "jiti": "2.7.0",
     "jsdom": "^30.0.1",
     "oxfmt": "^0.57.0",

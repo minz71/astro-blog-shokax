@@ -176,6 +176,14 @@ import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro"
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
+    {
+      Astro.site && (
+        <link
+          rel="canonical"
+          href={new URL(Astro.url.pathname, Astro.site).toString()}
+        />
+      )
+    }
 
     <script>
       import "virtual:hyacine/runtime";

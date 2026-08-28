@@ -99,8 +99,8 @@ const isNoReprint = license === "NOREPRINT";
           </span>
           <span class="text">{t("post.updatedAt")} </span>
           <time
+          {/* dateModified microdata 已移至 PostHeader，避免重复 */}
             title={`${t("post.updatedAt")}: ${updated.toLocaleString(currentLocale)}`}
-            itemprop="dateModified"
             datetime={updated.toISOString()}
           >
             {formatDate(updated)}

@@ -59,6 +59,7 @@ import Font from "vite-plugin-font";
 
 import { installProcessWarningFilter } from "./src/toolkit/suppressWatcherWarning";
 import themeConfig from "./src/theme.config.ts";
+import { createSitemapSerializer } from "./src/toolkit/sitemapLastmod";
 
 const site = themeConfig.siteUrl || undefined;
 
@@ -126,6 +127,9 @@ export default defineConfig({
     // P3 完成：全部组件已迁移至 SolidJS
     solid(),
     sitemap({
+      // 文章页输出 <lastmod>（frontmatter updated，缺席时回退 date）。
+      // 复用上面的 POSTS_DIR：config 被 bundle 后 import.meta.url 会指错。
+      serialize: createSitemapSerializer(POSTS_DIR),
       filter: (url) => {
         // 排除加密文章（`/posts/<slug>/` 形式）
         const path = new URL(url).pathname.replace(/^\/+|\/+$/g, "");

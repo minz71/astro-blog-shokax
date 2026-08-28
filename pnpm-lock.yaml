@@ -172,6 +172,9 @@ importers:
       git-cliff:
         specifier: ^2.13.1
         version: 2.13.1
+      github-slugger:
+        specifier: ^2.0.0
+        version: 2.0.0
       jiti:
         specifier: 2.7.0
         version: 2.7.0
