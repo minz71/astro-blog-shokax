@@ -6,6 +6,7 @@ import { getCollection } from "astro:content";
 import themeConfig from "@/theme.config";
 import type { CollectionEntry } from "astro:content";
 import type { GetStaticPaths } from "astro";
+import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
 
 export const getStaticPaths = (async ({ paginate }) => {
   const allPosts = await getCollection("posts");
@@ -14,8 +15,7 @@ export const getStaticPaths = (async ({ paginate }) => {
   const regularPosts = publishedPosts
     .filter((post) => !post.data.sticky)
     .toSorted(
-      (a, b) =>
-        new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
+      comparePostsByOrderDateDesc,
     );
 
   const pageSize = themeConfig.home?.pageSize ?? 10;

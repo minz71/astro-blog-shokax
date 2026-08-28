@@ -20,6 +20,7 @@ import { wrapRenderedCodeBlocks } from "@/toolkit/wrapRenderedCodeBlocks";
 import { wrapRenderedImages } from "@/toolkit/wrapRenderedImages";
 import { wrapCodeGroups } from "@/toolkit/wrapCodeGroups";
 import { wrapExternalLinks } from "@/toolkit/wrapExternalLinks";
+import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
 
 import "@/styles/post.css";
 
@@ -35,7 +36,7 @@ export async function getStaticPaths() {
   const posts = await getCollection("posts");
   const sortedPosts = posts
     .filter((post) => !post.data.draft)
-    .toSorted((a, b) => b.data.date.getTime() - a.data.date.getTime());
+    .toSorted(comparePostsByOrderDateDesc,);
 
   const container = await createPostContentContainer();
 

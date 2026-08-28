@@ -6,12 +6,13 @@ import { toCategoryHref, toPostHref } from "@/toolkit/posts/url";
 import { fmtNum } from "@/toolkit/tools/fmtNum";
 import { t } from "@/i18n";
 import "../../../../styles/collapse.css";
+import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
 
 export async function getStaticPaths() {
   const allPosts = await getCollection("posts");
   const publishedPosts = allPosts
     .filter((post) => !post.data.draft)
-    .toSorted((a, b) => b.data.date.getTime() - a.data.date.getTime());
+    .toSorted(comparePostsByOrderDateDesc,);
 
   const structuredPosts = structurePostsByDate(publishedPosts, {
     daily: false,
