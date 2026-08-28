@@ -380,6 +380,18 @@ interface TagCloudConfig {
 
 interface PluginsConfig {
   /**
+   * 文章过旧提醒。上游预设开启（180 天），站点可关。
+   */
+  articleAgeWarning?: {
+    /** 是否启用，默认 true（沿用上游行为） */
+    enable?: boolean;
+    /** 超过多少天显示提醒 */
+    maxAgeDays?: number;
+    /** 自订提醒文案 */
+    message?: string;
+  };
+
+  /**
    * 音乐播放器。上游预设为开启并带自己的歌单，站点要自己决定。
    */
   nyxPlayer?: {

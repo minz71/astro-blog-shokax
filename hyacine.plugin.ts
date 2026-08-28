@@ -32,6 +32,11 @@ const uptimeText = localeMessages[resolveLocale(themeConfig.locale)].footer.site
 const siteCreatedAt = themeConfig.plugins?.siteUptime?.siteCreatedAt?.trim();
 
 // 站点可覆写的插件设定：主题只给示范预设值，实际值走 theme.config.ts
+// 文章过旧提醒：上游无条件注册，这里让站点能关掉（官方插件没有 enable 选项，
+// 所以只能靠不进 plugins 数组）
+const ageWarningConfig = themeConfig.plugins?.articleAgeWarning ?? {};
+const ageWarningEnabled = ageWarningConfig.enable !== false;
+
 const nyxPlayerOverrides = themeConfig.plugins?.nyxPlayer ?? {};
 const visibilityTitleOverrides = themeConfig.plugins?.visibilityTitle ?? {};
 
@@ -70,9 +75,14 @@ export default defineConfig({
       count: 16,
       radius: 80,
     }),
-    articleAgeWarning({
-      maxAgeDays: 180,
-    }),
+    ...(ageWarningEnabled
+      ? [
+          articleAgeWarning({
+            maxAgeDays: ageWarningConfig.maxAgeDays ?? 180,
+            ...(ageWarningConfig.message ? { message: ageWarningConfig.message } : {}),
+          }),
+        ]
+      : []),
     vercount(),
     analytics({
       googleAnalytics: {
