@@ -29,15 +29,6 @@ const resources = {
 export const currentLocale = resolveLocale(themeConfig.locale);
 
 /**
- * 当前语言的整份讯息物件。
- *
- * 需要整块结构（例如 siteUptime 的 units）而不是单一字串时用它：
- * i18next 的 t(key, { returnObjects: true }) 回传 any，得靠断言才拿得到型别，
- * 这里直接从 resources 取，型别由 LocaleMessages 保证。
- */
-export const messages: LocaleMessages = resources[currentLocale].translation;
-
-/**
  * Initialize i18n with the locale from theme config
  */
 export async function initI18n(locale: Locale = currentLocale) {

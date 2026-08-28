@@ -11,7 +11,13 @@ import articleStatistics from "@hyacine/plugin-article-statistics";
 import themeConfig from "./src/theme.config";
 import sakura from "./src/toolkit/sakuraPlugin";
 import siteUptime from "./src/toolkit/siteUptimePlugin";
-import { messages } from "./src/i18n";
+// 只能用相对路径：这个档案由 hyacine 的设定载入器读取，解析不了 @/ 别名
+// （theme.config.ts 开头那行注解讲的是同一件事）。
+import { resolveLocale } from "./src/toolkit/i18n/resolveLocale";
+import zhCN from "./src/i18n/locales/zh-CN.json";
+import zhTW from "./src/i18n/locales/zh-TW.json";
+import ja from "./src/i18n/locales/ja.json";
+import en from "./src/i18n/locales/en.json";
 
 /*
  * 插件按轴切：实作与观感预设值属主题（本档与 src/toolkit/*Plugin.ts），
@@ -19,7 +25,8 @@ import { messages } from "./src/i18n";
  * 装饰性插件一律 gate 在 theme.config.ts 上、预设不注册。
  * 详见 AGENTS.md 的「插件的归属」。
  */
-const uptimeText = messages.footer.siteUptime;
+const localeMessages = { "zh-CN": zhCN, "zh-TW": zhTW, ja, en };
+const uptimeText = localeMessages[resolveLocale(themeConfig.locale)].footer.siteUptime;
 
 // 没有上线时间就不注册：运行时长没有起算点，显示不出有意义的结果
 const siteCreatedAt = themeConfig.plugins?.siteUptime?.siteCreatedAt?.trim();
