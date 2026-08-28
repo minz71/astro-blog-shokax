@@ -31,6 +31,10 @@ const uptimeText = localeMessages[resolveLocale(themeConfig.locale)].footer.site
 // 没有上线时间就不注册：运行时长没有起算点，显示不出有意义的结果
 const siteCreatedAt = themeConfig.plugins?.siteUptime?.siteCreatedAt?.trim();
 
+// 站点可覆写的插件设定：主题只给示范预设值，实际值走 theme.config.ts
+const nyxPlayerOverrides = themeConfig.plugins?.nyxPlayer ?? {};
+const visibilityTitleOverrides = themeConfig.plugins?.visibilityTitle ?? {};
+
 const sakuraConfig = themeConfig.plugins?.sakura;
 const sakuraEnabled = sakuraConfig?.enable === true;
 
@@ -101,6 +105,7 @@ export default defineConfig({
       leaveTitle: "👀 你先忙，我等你回来~",
       returnTitle: "🎉 欢迎回来！",
       restoreDelay: 3000,
+      ...visibilityTitleOverrides,
     }),
     nyxPlayer({
       enable: true,
@@ -114,6 +119,7 @@ export default defineConfig({
       darkModeTarget: ":root[data-theme=dark]",
       metingBaseURL: "https://meting.api.zkz098.cn/",
       metingUrlSource: "outer",
+      ...nyxPlayerOverrides,
     }),
     articleStatistics(),
     // 装饰性插件：没在 theme.config.ts 明确开启就不进 plugins 数组

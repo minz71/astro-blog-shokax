@@ -376,6 +376,24 @@ interface TagCloudConfig {
 
 interface PluginsConfig {
   /**
+   * 音乐播放器。上游预设为开启并带自己的歌单，站点要自己决定。
+   */
+  nyxPlayer?: {
+    enable?: boolean;
+    urls?: { name: string; url: string }[];
+  };
+
+  /**
+   * 页面失焦/聚焦时的标题切换。文案属站点个性，主题预设只是示范。
+   */
+  visibilityTitle?: {
+    enable?: boolean;
+    leaveTitle?: string;
+    returnTitle?: string;
+    restoreDelay?: number;
+  };
+
+  /**
    * 页脚「已运行时长」插件。
    */
   siteUptime?: {
