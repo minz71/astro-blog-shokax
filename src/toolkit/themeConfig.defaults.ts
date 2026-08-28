@@ -2,6 +2,7 @@ import type { ShokaXThemeConfig } from "./themeConfig";
 
 export const DEFAULT_THEME_CONFIG: ShokaXThemeConfig = {
   siteName: "ShokaX",
+  siteUrl: "https://preview.astro.kaitaku.xyz",
   locale: "zh-CN",
   nav: [
     {

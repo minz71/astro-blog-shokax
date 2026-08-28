@@ -202,6 +202,16 @@ interface WidgetsConfig {
   recentCommentsServerURL?: string;
 }
 
+interface ThemeConfig {
+  /**
+   * 默认主题模式。
+   * - "light"：默认浅色
+   * - "dark"：默认深色
+   * - "system"：跟随系统
+   */
+  defaultMode?: "light" | "dark" | "system";
+}
+
 interface HomeConfig {
   /**
    * 首页精选分类。
@@ -404,6 +414,14 @@ export interface ShokaXThemeConfig {
   siteName: string;
 
   /**
+   * 站点完整网址。
+   * - 用于生成文章永久链接、友链示例片段等绝对 URL
+   * - 请填写完整网址，例如 "https://blog.example.com"
+   * - 留空时 astro.config.mjs 的 site 会是 undefined
+   */
+  siteUrl?: string;
+
+  /**
    * 网站语言设置。
    * - "zh-CN"：简体中文
    * - "zh-TW"：繁体中文
@@ -412,6 +430,12 @@ export interface ShokaXThemeConfig {
    * - 默认为 "zh-CN"
    */
   locale?: Locale;
+
+  /**
+   * 主题外观配置。
+   * - 控制站点首次进入时使用的默认明暗模式
+   */
+  theme?: ThemeConfig;
 
   /**
    * 导航栏配置。
@@ -506,7 +530,21 @@ const DEFAULT_THEME_COLORS = {
   friend: "var(--color-blue)",
 } as const satisfies Record<string, ThemeColorValue>;
 
-function normalizeThemeConfigColors(config: ShokaXThemeConfig): ShokaXThemeConfig {
+function normalizeSiteUrl(siteUrl?: string) {
+  const normalizedSiteUrl = siteUrl?.trim();
+  if (!normalizedSiteUrl) return undefined;
+
+  try {
+    return new URL(normalizedSiteUrl).toString().replace(/\/$/, "");
+  } catch {
+    console.warn(`[theme.config] Invalid siteUrl: ${siteUrl}`);
+    return undefined;
+  }
+}
+
+function normalizeThemeConfig(config: ShokaXThemeConfig): ShokaXThemeConfig {
+  config.siteUrl = normalizeSiteUrl(config.siteUrl);
+
   if (config.footer?.icon) {
     config.footer.icon.color = sanitizeThemeColor(
       config.footer.icon.color,
@@ -627,7 +665,7 @@ function mergeThemeConfig<T>(defaults: T, overrides?: ThemeUserConfig<T>): T {
 }
 
 export function defineConfig(config: ShokaXThemeUserConfig = {}): ShokaXThemeConfig {
-  return normalizeThemeConfigColors(
+  return normalizeThemeConfig(
     mergeThemeConfig<ShokaXThemeConfig>(DEFAULT_THEME_CONFIG, config),
   );
 }

@@ -60,6 +60,8 @@ import Font from "vite-plugin-font";
 import { installProcessWarningFilter } from "./src/toolkit/suppressWatcherWarning";
 import themeConfig from "./src/theme.config.ts";
 
+const site = themeConfig.siteUrl || undefined;
+
 // ── sitemap 排除加密文章 ────────────────────────────────────────────────
 // 加密文章内容构建后为密文，不应被搜索引擎收录（页面自身也带 noindex）。
 // sitemap integration 的 filter 拿不到 content collection，这里在配置期
@@ -106,7 +108,7 @@ if (themeConfig.diagnostics?.suppressFsWatcherMaxListenersWarning !== false) {
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://preview.astro.kaitaku.xyz",
+  site,
   trailingSlash: "always",
   build: {
     format: "directory",
