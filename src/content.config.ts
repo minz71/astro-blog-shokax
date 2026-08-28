@@ -67,6 +67,16 @@ const posts = defineCollection({
       draft: z.boolean().optional(),
       cover: z.union([image(), z.string()]).optional(),
       sticky: z.boolean().optional(),
+
+      /**
+       * 本文含 client island（例如 <Component client:load />）。
+       *
+       * container API 无法把 astro-island 的 component-url 解析成建置后带 hash
+       * 的资源路径，所以这类文章不能走 container 预渲染，改在页面模板里直接
+       * 渲染 <Content />。主题只提供这个开关，不认识任何一篇具体文章
+       *（见 AGENTS.md「文章专属组件」）。
+       */
+      clientIsland: z.boolean().optional(),
       license: z
         .enum([
           "CC-BY-4.0",

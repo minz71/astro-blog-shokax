@@ -73,14 +73,19 @@ export async function getStaticPaths() {
 
       const { Content, headings } = await render(post);
 
-      const renderedHtml = wrapExternalLinks(
-        wrapRenderedImages(
-          wrapCodeGroups(
-            wrapRenderedCodeBlocks(await container.renderToString(Content)),
-          ),
-        ),
-        { siteUrl: import.meta.env.SITE },
-      );
+      // 带 client island 的文章不走 container 预渲染，见 clientIsland 栏位说明
+      const hasClientIsland = post.data.clientIsland === true;
+
+      const renderedHtml = hasClientIsland
+        ? ""
+        : wrapExternalLinks(
+            wrapRenderedImages(
+              wrapCodeGroups(
+                wrapRenderedCodeBlocks(await container.renderToString(Content)),
+              ),
+            ),
+            { siteUrl: import.meta.env.SITE },
+          );
 
       if (post.data.encrypted && post.data.password) {
         isEncrypted = true;
@@ -183,6 +188,16 @@ const {
   encryptedToc,
   headings,
 } = Astro.props as Props;
+
+/**
+ * 带 client island 的文章：container API 解析不出 astro-island 的
+ * component-url，所以 getStaticPaths 那边不预渲染，改在这里拿 Content 直接交给
+ * 模板。主题只看 frontmatter 栏位，不认识任何一篇具体文章。
+ */
+const hasClientIsland = post.data.clientIsland === true;
+const { Content: PostContent } = hasClientIsland
+  ? await render(post)
+  : { Content: undefined };
 
 // Build TOC from headings (加密文章的 TOC 在前端解密后更新)
 const toc: TocItem[] = isEncrypted
@@ -356,6 +371,10 @@ const jsonLdHtml = JSON.stringify(jsonLd).replaceAll("<", "\\u003c");
                 encryptedToc={encryptedToc}
                 title={post.data.title}
               />
+            ) : hasClientIsland && PostContent ? (
+              <div class="post-content">
+                <PostContent />
+              </div>
             ) : (
               <div class="post-content" set:html={renderedContentHtml ?? ""} />
             )
