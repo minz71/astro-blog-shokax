@@ -75,6 +75,9 @@ const fontStacks = buildFontStacks({
  * 一切，一旦变数被别人覆写，那段脚本就是把污染值固化到 body 上的注入点。
  * body 的 font-family 由下面这条规则直接给字面堆叠即可。
  */
+// 播放器是否启用：与 hyacine.plugin.ts 的 gate 同一个来源
+const nyxPlayerEnabled = themeConfig.plugins?.nyxPlayer?.enable === true;
+
 const criticalFontCss = [
   `:root{--shokax-font:${fontStacks.body};--shokax-mono:${fontStacks.mono}}`,
   `body{font-family:${fontStacks.body}}`,
@@ -292,7 +295,9 @@ import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro"
       <MermaidDiagram client:idle />
       <ImageZoom client:idle />
     </div>
-    <FloatingToolbar client:idle hasNyxPlayer={true} />
+    {/* 写死 true 会让 SSR 一定渲出播放器按钮，插件关掉时得等 hydrate 后才被
+        侦测改掉——闪一下，没 hydrate 就一直留着两颗按不动的按钮。 */}
+    <FloatingToolbar client:idle hasNyxPlayer={nyxPlayerEnabled} />
     <HyacineOutlet name="layout-bottom" />
   </body>
 </html>
