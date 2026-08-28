@@ -27,7 +27,7 @@
   color: var(--text-color);
   box-shadow: inset 0 -0.0325rem 0 var(--grey-9-a1);
   font-family: var(
-    --pf-mono,
+    --shokax-mono,
     ui-monospace,
     SFMono-Regular,
     Menlo,
@@ -897,7 +897,7 @@ code-block pre,
 code-block pre code,
 code-block pre span {
   font-family: var(
-    --pf-mono,
+    --shokax-mono,
     ui-monospace,
     SFMono-Regular,
     Menlo,

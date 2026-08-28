@@ -35,7 +35,7 @@ function createTokenResolver(): (token: MermaidColorToken) => string {
 function readFontFamily(): string | undefined {
   const family = globalThis
     .getComputedStyle(document.documentElement)
-    .getPropertyValue("--pf-font")
+    .getPropertyValue("--shokax-font")
     .trim();
   return family || undefined;
 }

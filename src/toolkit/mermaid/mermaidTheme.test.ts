@@ -59,7 +59,7 @@ describe("buildMermaidThemeVariables", () => {
     const withoutFont = buildMermaidThemeVariables(() => "");
     expect(withoutFont.fontFamily).toBeUndefined();
 
-    // 运行时传进来的是 --pf-font 的完整堆叠，不是单一字体名，
+    // 运行时传进来的是 --shokax-font 的完整堆叠，不是单一字体名，
     // 这里用中性的假字体名，换正文字体时这个测试不该跟着改。
     const fontStack = '"Example Sans", "Example Fallback", sans-serif';
     const withFont = buildMermaidThemeVariables(() => "", {

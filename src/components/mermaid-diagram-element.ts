@@ -539,7 +539,7 @@ const MERMAID_CSS = `
   .error-source {
     margin: 0; padding: 0.75rem; border-radius: 0.375rem;
     background-color: var(--surface-code-header); color: var(--text-color-muted);
-    font-family: var(--pf-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace);
+    font-family: var(--shokax-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace);
     font-size: 0.85rem; overflow-x: auto;
   }
   /* 只隐藏 shadow 内的容器；slot 分发进来的 <pre> 选择器够不到 */

@@ -64,10 +64,19 @@ const fontStacks = buildFontStacks({
  *（DOMContentLoaded 是 1224ms），配上 font-display: optional 必然错过时机，
  * 表现就是「首访没字体、二访才有」。
  *
- * --pf-font / --pf-mono 供其余样式消费。
+ * --shokax-font / --shokax-mono 供其余样式消费。
+ *
+ * 变数名不能用 --pf-*：那是 Pagefind 的命名空间（--pf-background、--pf-border…，
+ * 其中就有 --pf-font）。pagefind-component-ui 的 CSS 以 <link> 载入，排在这段
+ * inline style 之后，会把 :root 上的 --pf-font 覆写成它自己的系统字堆叠，
+ * 整站字体就静默退回系统字。
+ *
+ * 也不要再写「读回 --shokax-font 再塞进 body.style」的脚本：inline style 胜过
+ * 一切，一旦变数被别人覆写，那段脚本就是把污染值固化到 body 上的注入点。
+ * body 的 font-family 由下面这条规则直接给字面堆叠即可。
  */
 const criticalFontCss = [
-  `:root{--pf-font:${fontStacks.body};--pf-mono:${fontStacks.mono}}`,
+  `:root{--shokax-font:${fontStacks.body};--shokax-mono:${fontStacks.mono}}`,
   `body{font-family:${fontStacks.body}}`,
 ].join("");
 
@@ -277,16 +286,6 @@ import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro"
     </div>
     <script>
       import "@/toolkit/initMdxComponents";
-    </script>
-    <script>
-      // 字体堆叠已由 <style is:inline> 在解析阶段写入 --pf-font / body，
-      // 这里只在 pagereveal 后补一次，供未套用到该规则的动态节点继承。
-      const applyFontStack = () => {
-        const stack = getComputedStyle(document.documentElement).getPropertyValue("--pf-font").trim();
-        if (stack) document.body.style.fontFamily = stack;
-      };
-      document.addEventListener("pagereveal", applyFontStack);
-      document.addEventListener("DOMContentLoaded", applyFontStack);
     </script>
     <div class="hidden">
       <CodeBlock client:idle />
