@@ -37,7 +37,12 @@ const siteCreatedAt = themeConfig.plugins?.siteUptime?.siteCreatedAt?.trim();
 const ageWarningConfig = themeConfig.plugins?.articleAgeWarning ?? {};
 const ageWarningEnabled = ageWarningConfig.enable !== false;
 
-const nyxPlayerOverrides = themeConfig.plugins?.nyxPlayer ?? {};
+// 音乐播放器预设关闭：它要向 music.163.com 取歌单，那是 http（非 https）请求且会
+// 回 404 与第三方 cookie，Lighthouse 的 best-practices 直接从 96 掉到 74（实测
+// 未改动的 upstream main 也是 74）。依 AGENTS.md，依赖第三方服务的装饰性插件
+// 一律 gate 在 theme.config.ts 上、预设不注册。
+const nyxPlayerConfig = themeConfig.plugins?.nyxPlayer ?? {};
+const nyxPlayerEnabled = nyxPlayerConfig.enable === true;
 const visibilityTitleOverrides = themeConfig.plugins?.visibilityTitle ?? {};
 
 const sakuraConfig = themeConfig.plugins?.sakura;
@@ -117,20 +122,24 @@ export default defineConfig({
       restoreDelay: 3000,
       ...visibilityTitleOverrides,
     }),
-    nyxPlayer({
-      enable: true,
-      urls: [
-        {
-          name: "默认歌单",
-          url: "https://music.163.com/m/playlist?id=12834717281&creatorId=12676493230",
-        },
-      ],
-      preset: "shokax",
-      darkModeTarget: ":root[data-theme=dark]",
-      metingBaseURL: "https://meting.api.zkz098.cn/",
-      metingUrlSource: "outer",
-      ...nyxPlayerOverrides,
-    }),
+    ...(nyxPlayerEnabled
+      ? [
+          nyxPlayer({
+            enable: true,
+            urls: [
+              {
+                name: "默认歌单",
+                url: "https://music.163.com/m/playlist?id=12834717281&creatorId=12676493230",
+              },
+            ],
+            preset: "shokax",
+            darkModeTarget: ":root[data-theme=dark]",
+            metingBaseURL: "https://meting.api.zkz098.cn/",
+            metingUrlSource: "outer",
+            ...nyxPlayerConfig,
+          }),
+        ]
+      : []),
     articleStatistics(),
     // 装饰性插件：没在 theme.config.ts 明确开启就不进 plugins 数组
     ...(sakuraEnabled

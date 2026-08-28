@@ -392,7 +392,10 @@ interface PluginsConfig {
   };
 
   /**
-   * 音乐播放器。上游预设为开启并带自己的歌单，站点要自己决定。
+   * 音乐播放器（预设关闭）。
+   *
+   * 它要向 music.163.com 取歌单——http 请求、404、第三方 cookie，
+   * Lighthouse best-practices 会从 96 掉到 74。要用就在这里显式开启。
    */
   nyxPlayer?: {
     enable?: boolean;
