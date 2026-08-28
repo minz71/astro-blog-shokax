@@ -3,6 +3,9 @@ import { For } from "solid-js";
 import type { NavItemType } from "./NavTypes";
 import DropBox from "./DropBox.tsx";
 import NavLinkItem from "./NavLinkItem.tsx";
+import { currentLocale, getT } from "@/i18n";
+
+const t = getT(currentLocale);
 
 const DESKTOP_NAV_LINK =
   "desktop-only inline-block before:rounded-0.5 before:bg-current before:content-empty before:absolute before:bottom-0 before:left-50% before:transform-translate-x--50% before:transition-all before:transition-duration-400 before:transition-ease-in-out before:h-0.75 before:w-0 hover:before:w-60%";
@@ -17,7 +20,7 @@ function MenuBar(props: MenuBarProps) {
 
   return (
     <ul class="m-0 pb-2.5 pt-2.5 p-is-0 flex w-full">
-      <NavLinkItem class="menu-title" href="/" text={props.name} ariaLabel={`${props.name} 首页`} />
+      <NavLinkItem class="menu-title" href="/" text={props.name} ariaLabel={`${props.name} ${t("nav.home")}`} />
       <For each={navLinks()} fallback={null}>
         {(item) =>
           item.dropbox?.enable ? (

@@ -1,14 +1,14 @@
 ---
 import { Image } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
-import { getT } from "@/i18n";
+import { currentLocale, getT } from "@/i18n";
 
 interface Props {
   post: CollectionEntry<"posts">;
 }
 
 const { post } = Astro.props;
-const t = getT();
+const t = getT(currentLocale);
 const postUrl = `/posts/${post.id}/`;
 const publicDescription =
   post.data.description || post.body?.slice(0, 300) || "";

@@ -61,18 +61,18 @@ function formatDate(date: Date): string {
 }
 ---
 
-<Layout pageTitle={`${year} 年 ${month} 月归档`}>
+<Layout pageTitle={t("archive.monthTitle", { year, month })}>
   <div class="wrap">
     <div class="timeline">
       <h2 class="item header">
         <a href="/archives/">{t("archive.all")}</a>
         <small>/</small>
         <a href={`/archives/${year}/`}>
-          {year} 年
+          {year} {t("archive.year")}
         </a>
         <small>/</small>
-        {month} 月
-        <small>归档</small>
+        {month} {t("archive.month")}
+        <small>{t("archive.title")}</small>
       </h2>
 
       {

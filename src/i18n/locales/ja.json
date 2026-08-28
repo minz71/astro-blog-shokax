@@ -5,7 +5,8 @@
     "categories": "カテゴリ",
     "tags": "タグ",
     "archives": "アーカイブ",
-    "statistics": "統計"
+    "statistics": "統計",
+    "mainAria": "メインナビゲーション"
   },
   "post": {
     "wordCount": "文字数",
@@ -62,7 +63,9 @@
     "nice": "なかなか良いです",
     "ok": "まずまずです",
     "emh": "うーん..",
-    "keepTrying": "この調子で続けましょう"
+    "keepTrying": "この調子で続けましょう",
+    "yearTitle": "{{year}}年のアーカイブ",
+    "monthTitle": "{{year}}年{{month}}月のアーカイブ"
   },
   "statistics": {
     "title": "記事統計",
@@ -128,7 +131,9 @@
       "contents": "目次",
       "related": "関連",
       "overview": "サイト"
-    }
+    },
+    "menuAria": "サイドバーメニュー",
+    "stateAria": "サイト統計ナビゲーション"
   },
   "footer": {
     "poweredBy": "Powered by",
@@ -141,11 +146,13 @@
     "noRecentComments": "まだコメントはありません。最初のひとことをどうぞ",
     "recentCommentsLoadFailed": "最新コメントの読み込みに失敗しました。後でもう一度お試しください。",
     "commentAnonymous": "匿名ユーザー",
-    "walineNotConfigured": "Waline のサーバー URL が設定されていません"
+    "walineNotConfigured": "Waline のサーバー URL が設定されていません",
+    "shokaxRepoAria": "ShokaX GitHub プロジェクト"
   },
   "pagination": {
     "prev": "前へ",
-    "next": "次へ"
+    "next": "次へ",
+    "pageTitle": "{{page}}ページ目"
   },
   "button": {
     "readMore": "続きを読む",
@@ -180,7 +187,8 @@
     "title": "モーメント",
     "noContent": "モーメントはまだありません",
     "publishedAt": "公開日",
-    "imageAlt": "モーメント画像 {{index}}"
+    "imageAlt": "モーメント画像 {{index}}",
+    "description": "モーメント - 日々のひとこまを記録"
   },
   "imageZoom": {
     "dialog": "画像プレビュー",
@@ -240,5 +248,29 @@
       "send": "送信",
       "restart": "再開"
     }
+  },
+  "friends": {
+    "title": "リンク集",
+    "description": "カード形式で表示し、サイトプレビューとテーマカラーに対応。",
+    "rules": "リンクのルール",
+    "snippetTitle": "リンク設定の例",
+    "snippetHint": "本サイトを追加する際は、以下の内容をご自身の links 設定に追記してください。",
+    "list": "リンク一覧",
+    "comments": "コメント"
+  },
+  "about": {
+    "title": "アバウト",
+    "description": "アバウトページ"
+  },
+  "ai": {
+    "similarPosts": "AI おすすめ · 関連記事",
+    "similarPostsAria": "AI による関連記事のおすすめ"
+  },
+  "toolbar": {
+    "scrollTop": "トップへ戻る",
+    "goToComments": "コメントへ移動",
+    "togglePlayer": "プレイヤーを表示/非表示",
+    "playPause": "再生/一時停止",
+    "toggleSidebar": "サイドバーを切替"
   }
 }

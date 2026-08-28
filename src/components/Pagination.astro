@@ -1,5 +1,5 @@
 ---
-import { getT } from "@/i18n";
+import { currentLocale, getT } from "@/i18n";
 import { buildPaginationItems } from "@/toolkit/posts/buildPaginationItems";
 
 interface Props {
@@ -34,7 +34,7 @@ const prevHref = safeCurrent > 1 ? getHref(safeCurrent - 1) : undefined;
 const nextHref = safeCurrent < safeLast ? getHref(safeCurrent + 1) : undefined;
 
 const items = buildPaginationItems(safeCurrent, safeLast);
-const t = getT();
+const t = getT(currentLocale);
 ---
 
 {

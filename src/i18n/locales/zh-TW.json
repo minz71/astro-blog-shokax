@@ -5,7 +5,8 @@
     "categories": "分類",
     "tags": "標籤",
     "archives": "歸檔",
-    "statistics": "統計"
+    "statistics": "統計",
+    "mainAria": "主導航"
   },
   "post": {
     "wordCount": "字數統計",
@@ -62,7 +63,9 @@
     "nice": "不錯",
     "ok": "還行",
     "emh": "嗯..",
-    "keepTrying": "繼續努力"
+    "keepTrying": "繼續努力",
+    "yearTitle": "{{year}} 年歸檔",
+    "monthTitle": "{{year}} 年 {{month}} 月歸檔"
   },
   "statistics": {
     "title": "文章統計",
@@ -128,7 +131,9 @@
       "contents": "目錄",
       "related": "相關",
       "overview": "站點"
-    }
+    },
+    "menuAria": "側欄選單導航",
+    "stateAria": "站點統計導航"
   },
   "footer": {
     "poweredBy": "由",
@@ -141,11 +146,13 @@
     "noRecentComments": "暫無留言，快來搶沙發吧～",
     "recentCommentsLoadFailed": "最新留言載入失敗，請稍後再試",
     "commentAnonymous": "匿名使用者",
-    "walineNotConfigured": "Waline 服務位址尚未配置"
+    "walineNotConfigured": "Waline 服務位址尚未配置",
+    "shokaxRepoAria": "ShokaX GitHub 專案"
   },
   "pagination": {
     "prev": "上一頁",
-    "next": "下一頁"
+    "next": "下一頁",
+    "pageTitle": "第{{page}}頁"
   },
   "button": {
     "readMore": "閱讀更多",
@@ -180,7 +187,8 @@
     "title": "動態",
     "noContent": "暫無動態",
     "publishedAt": "發佈於",
-    "imageAlt": "動態圖片 {{index}}"
+    "imageAlt": "動態圖片 {{index}}",
+    "description": "動態 - 記錄生活的點滴"
   },
   "imageZoom": {
     "dialog": "圖片預覽",
@@ -240,5 +248,29 @@
       "send": "發送",
       "restart": "重新開始"
     }
+  },
+  "friends": {
+    "title": "友鏈",
+    "description": "卡片式展示，支援站點預覽與主題色點綴。",
+    "rules": "友鏈規則",
+    "snippetTitle": "友鏈配置範例",
+    "snippetHint": "新增本站時，請將下面內容追加到自己的 links 配置中。",
+    "list": "友鏈清單",
+    "comments": "留言區"
+  },
+  "about": {
+    "title": "關於",
+    "description": "關於頁面"
+  },
+  "ai": {
+    "similarPosts": "AI 推薦 · 相近文章",
+    "similarPostsAria": "AI 相近文章推薦"
+  },
+  "toolbar": {
+    "scrollTop": "回到頂部",
+    "goToComments": "前往留言區",
+    "togglePlayer": "顯示或隱藏播放器",
+    "playPause": "播放或暫停",
+    "toggleSidebar": "切換側欄"
   }
 }

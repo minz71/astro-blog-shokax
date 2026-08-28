@@ -20,7 +20,7 @@ function SidebarState(props: SidebarStateProps) {
     <>
       {hasStats() && (
         <nav
-          aria-label="站点统计导航"
+          aria-label={t("sidebar.stateAria")}
           class="state flex justify-center leading-[1.4] mt-2.5 overflow-hidden text-center whitespace-nowrap"
         >
           {state().posts > 0 && (

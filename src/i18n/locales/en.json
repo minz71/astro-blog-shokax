@@ -5,7 +5,8 @@
     "categories": "Categories",
     "tags": "Tags",
     "archives": "Archives",
-    "statistics": "Statistics"
+    "statistics": "Statistics",
+    "mainAria": "Main navigation"
   },
   "post": {
     "wordCount": "Word Count",
@@ -62,7 +63,9 @@
     "nice": "Nice",
     "ok": "OK",
     "emh": "Hmm..",
-    "keepTrying": "Keep it up"
+    "keepTrying": "Keep it up",
+    "yearTitle": "{{year}} Archives",
+    "monthTitle": "{{year}}-{{month}} Archives"
   },
   "statistics": {
     "title": "Article Statistics",
@@ -128,7 +131,9 @@
       "contents": "Contents",
       "related": "Related",
       "overview": "Overview"
-    }
+    },
+    "menuAria": "Sidebar menu",
+    "stateAria": "Site statistics"
   },
   "footer": {
     "poweredBy": "Powered by",
@@ -141,11 +146,13 @@
     "noRecentComments": "No comments yet. Start a conversation!",
     "recentCommentsLoadFailed": "Failed to load recent comments. Please try again later.",
     "commentAnonymous": "Anonymous",
-    "walineNotConfigured": "Waline server URL is not configured"
+    "walineNotConfigured": "Waline server URL is not configured",
+    "shokaxRepoAria": "ShokaX GitHub project"
   },
   "pagination": {
     "prev": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "pageTitle": "Page {{page}}"
   },
   "button": {
     "readMore": "Read More",
@@ -180,7 +187,8 @@
     "title": "Moments",
     "noContent": "No moments available",
     "publishedAt": "Published on",
-    "imageAlt": "Moment image {{index}}"
+    "imageAlt": "Moment image {{index}}",
+    "description": "Moments - little snippets of life"
   },
   "imageZoom": {
     "dialog": "Image preview",
@@ -240,5 +248,29 @@
       "send": "Send",
       "restart": "Restart"
     }
+  },
+  "friends": {
+    "title": "Friends",
+    "description": "Card-style links with site previews and theme colors.",
+    "rules": "Link Rules",
+    "snippetTitle": "Link Config Example",
+    "snippetHint": "To add this site, append the following to your own links config.",
+    "list": "Links",
+    "comments": "Comments"
+  },
+  "about": {
+    "title": "About",
+    "description": "About page"
+  },
+  "ai": {
+    "similarPosts": "AI Picks · Similar Posts",
+    "similarPostsAria": "AI similar post recommendations"
+  },
+  "toolbar": {
+    "scrollTop": "Back to top",
+    "goToComments": "Go to comments",
+    "togglePlayer": "Show or hide player",
+    "playPause": "Play or pause",
+    "toggleSidebar": "Toggle sidebar"
   }
 }

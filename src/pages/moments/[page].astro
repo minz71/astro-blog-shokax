@@ -6,6 +6,7 @@ import { getCollection } from "astro:content";
 import themeConfig from "@/theme.config";
 import type { CollectionEntry } from "astro:content";
 import type { GetStaticPaths } from "astro";
+import { t } from "@/i18n";
 
 export const getStaticPaths = (async ({ paginate }) => {
   const allMoments = await getCollection("moments");
@@ -29,7 +30,7 @@ const { page } = Astro.props as {
   };
 };
 
-const pageTitle = `动态 - 第${page.currentPage}页`;
+const pageTitle = `${t("moments.title")} - ${t("pagination.pageTitle", { page: page.currentPage })}`;
 
 // 分页导航
 const paginationNavigation = {
@@ -52,7 +53,7 @@ const paginationNavigation = {
   navigation={paginationNavigation}
 >
   <Fragment slot="head">
-    <meta name="description" content="动态 - 记录生活的点滴" />
+    <meta name="description" content={t("moments.description")} />
   </Fragment>
 
   <MomentsContent moments={page.data} />

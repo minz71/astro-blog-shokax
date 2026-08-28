@@ -1,6 +1,9 @@
 import { createSignal, onCleanup, onMount } from "solid-js";
 
 import { sidebarOpen, toggleSidebar } from "@/stores/sidebarSignal";
+import { currentLocale, getT } from "@/i18n";
+
+const t = getT(currentLocale);
 
 const scrollToComments = () => {
   const target = document.querySelector("#comments");
@@ -113,7 +116,7 @@ function FloatingToolbar(props: FloatingToolbarProps) {
         <button
           type="button"
           onclick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          aria-label="返回顶部"
+          aria-label={t("toolbar.scrollTop")}
         >
           <i class="i-ri-arrow-up-line"></i>
         </button>
@@ -121,7 +124,7 @@ function FloatingToolbar(props: FloatingToolbarProps) {
       </li>
       {hasComments() && (
         <li class="tool">
-          <button type="button" onclick={scrollToComments} aria-label="前往评论区">
+          <button type="button" onclick={scrollToComments} aria-label={t("toolbar.goToComments")}>
             <i class="i-ri-chat-1-line"></i>
           </button>
         </li>
@@ -129,12 +132,12 @@ function FloatingToolbar(props: FloatingToolbarProps) {
       {hasNyxPlayer() && (
         <>
           <li class="tool">
-            <button id="nyx-show-btn" type="button" aria-label="显示或隐藏播放器">
+            <button id="nyx-show-btn" type="button" aria-label={t("toolbar.togglePlayer")}>
               <i class="i-ri-music-2-line"></i>
             </button>
           </li>
           <li class="tool">
-            <button id="nyx-play-btn" type="button" aria-label="播放或暂停">
+            <button id="nyx-play-btn" type="button" aria-label={t("toolbar.playPause")}>
               <i class="i-ri-play-circle-line"></i>
             </button>
           </li>
@@ -144,7 +147,7 @@ function FloatingToolbar(props: FloatingToolbarProps) {
         <button
           type="button"
           onclick={toggleSidebarOnMobile}
-          aria-label="切换侧栏"
+          aria-label={t("toolbar.toggleSidebar")}
           aria-pressed={sidebarOpen()}
           class={sidebarOpen() ? "active" : ""}
         >
