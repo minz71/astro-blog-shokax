@@ -21,8 +21,9 @@ function getPreferredTheme(win: Window): ThemeMode {
   return win.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light";
 }
 
-function getDefaultTheme(win: Window): ThemeMode {
-  const defaultMode = themeConfig.theme?.defaultMode ?? "system";
+export type ThemeDefaultMode = "light" | "dark" | "system";
+
+function getDefaultTheme(win: Window, defaultMode: ThemeDefaultMode): ThemeMode {
   if (defaultMode === "light" || defaultMode === "dark") {
     return defaultMode;
   }
@@ -33,8 +34,16 @@ export function applyTheme(doc: Document, theme: ThemeMode) {
   doc.documentElement.dataset.theme = theme;
 }
 
-export function initTheme(doc: Document, win: Window): ThemeMode {
-  const theme = getStoredTheme(win) ?? getDefaultTheme(win);
+/**
+ * defaultMode 是参数而不是直接读 themeConfig：站点把它设成 light 之后，
+ * 「无储存值时跟随系统」这条行为就变得不可测——测试会跟着站点设定红掉。
+ */
+export function initTheme(
+  doc: Document,
+  win: Window,
+  defaultMode: ThemeDefaultMode = themeConfig.theme?.defaultMode ?? "system",
+): ThemeMode {
+  const theme = getStoredTheme(win) ?? getDefaultTheme(win, defaultMode);
   applyTheme(doc, theme);
   return theme;
 }

@@ -109,7 +109,7 @@ describe("theme helpers", () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     } as any;
 
-    const theme = initTheme(doc, win);
+    const theme = initTheme(doc, win, "system");
 
     expect(theme).toBe("dark");
     expect(attrs.get("data-theme")).toBe("dark");
