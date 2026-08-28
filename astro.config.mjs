@@ -7,6 +7,41 @@ import { hyacinePlugin } from "@hyacine/plugin-astro";
 import { satteri } from "@astrojs/markdown-satteri";
 import sitemap from "@astrojs/sitemap";
 import esToolkitPlugin from "vite-plugin-es-toolkit";
+
+/**
+ * dev server 专用：把 /_image 的 AVIF 回应的 Content-Type 从 image/heif 改回
+ * image/avif。
+ *
+ * sharp 0.35 把 AVIF 输出的 format 报成 "heif"（AVIF 是 HEIF 容器的一种），
+ * Astro 的图片端点据此设 Content-Type，浏览器不解 image/heif，`pnpm dev` 下
+ * 所有经过 <Image /> 的 AVIF 都成破图。只有 f=avif 受影响，webp/png/jpeg 正常。
+ *
+ * 建置产物不受影响：那时图片是实体档案，Content-Type 由静态主机按副档名给。
+ * 所以这个修正 apply: "serve"，不进生产。
+ */
+function fixDevAvifContentType() {
+  return {
+    name: "shokax:fix-dev-avif-content-type",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url?.startsWith("/_image")) {
+          next();
+          return;
+        }
+        const format = new URLSearchParams(req.url.split("?")[1] ?? "").get("f");
+        if (format !== "avif") {
+          next();
+          return;
+        }
+        const setHeader = res.setHeader.bind(res);
+        res.setHeader = (name, value) =>
+          setHeader(name, String(name).toLowerCase() === "content-type" && value === "image/heif" ? "image/avif" : value);
+        next();
+      });
+    },
+  };
+}
 import { transformerColorizedBrackets } from "@shikijs/colorized-brackets";
 import {
   transformerMetaHighlight,
@@ -185,6 +220,7 @@ export default defineConfig({
         },
       }),
       esToolkitPlugin(),
+      fixDevAvifContentType(),
     ],
   },
   markdown: {
