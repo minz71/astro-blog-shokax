@@ -169,8 +169,11 @@ export default defineConfig({
       injectReset: true,
     }),
     // P3 完成：全部组件已迁移至 SolidJS
-    solid(),
-    // include 限定范围：避免 react renderer 去接管主题的 .tsx（那些是 Solid）
+    // 两个 JSX renderer 共存时，两边都必须划范围——只给 react 设 include 不够：
+    // solid 仍然认领所有 .tsx，于是 mdx 里的 react 元件报
+    // 「NoMatchingRenderer: No valid renderer was found for the .tsx file extension」。
+    // dev server 才会现形：client:only 在建置时不做 SSR，产物看不出来。
+    solid({ exclude: ["**/components/mdx/**"] }),
     react({ include: ["**/components/mdx/**"] }),
     sitemap({
       // 文章页输出 <lastmod>（frontmatter updated，缺席时回退 date）。
