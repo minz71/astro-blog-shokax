@@ -26,7 +26,7 @@
   border-radius: 0.375rem;
   color: var(--text-color);
   box-shadow: inset 0 -0.0325rem 0 var(--grey-9-a1);
-  font-family: "Maple Mono", "Courier New", Courier, monospace;
+  font-family: var(--pf-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace);
   font-size: 0.875em;
   line-height: 1.45;
   white-space: break-spaces;
@@ -835,4 +835,24 @@
 
 .article .md h6 .anchor::after {
   content: "6";
+}
+
+/**
+ * 代码块的等宽字体必须写在文档层。
+ *
+ * 1. <code-block> 是 customElement，它的 shadow tree 样式（含 :host pre）够不到
+ *    slot 进来的 light DOM <pre>；
+ * 2. 就算靠 .content-wrapper 的继承下来，UnoCSS preflight 对 pre / code 有显式
+ *    声明，会把继承值盖掉 —— 实测 <pre> 的 computed font-family 就是 preflight
+ *    的 ui-monospace 那串。
+ *
+ * 所以在这里用足够高的特异度直接指定。
+ */
+.md pre.astro-code,
+.md pre.astro-code code,
+.md pre.astro-code span,
+code-block pre,
+code-block pre code,
+code-block pre span {
+  font-family: var(--pf-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace);
 }

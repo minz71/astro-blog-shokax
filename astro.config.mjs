@@ -178,7 +178,10 @@ export default defineConfig({
       Font.vite({
         scanFiles: ["src/**/*.{tsx,ts,js,jsx,md,mdx,json,astro}"],
         css: {
-          fontDisplay: "optional",
+          // optional 只给约 100ms 的封锁期且没有 swap 期：字体没赶上就这次载入
+          // 永久用 fallback，之后到了也不换。子集被切成 20+ 个 woff2，冷快取
+          // 首访几乎不可能全部赶上，表现就是「首访没字体、二访才有」。
+          fontDisplay: "swap",
         },
       }),
       esToolkitPlugin(),

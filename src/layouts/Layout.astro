@@ -41,6 +41,35 @@ import { resolveHeaderCovers } from "@/toolkit/headerCover";
 import Footer from "@/components/footer/Footer.astro";
 import type { ImageMetadata } from "astro";
 import { currentLocale } from "@/i18n";
+import { css as huninnCss, fontFamilyFallback } from "@/assets/fonts/jf-openhuninn-2.1.ttf?subsets";
+import { css as mapleCss } from "@/assets/fonts/MapleMono-CN-Regular.ttf?subsets";
+import { buildFontStacks } from "@/toolkit/fontStack";
+
+/**
+ * 字体名由 vite-plugin-font 在构建期从字体文件里读出来（jf-openhuninn-2.1、
+ * Maple Mono CN），metric 对齐字体名还带构建期 hash —— 都不能写死在 CSS 里，
+ * 否则插件或字体文件一改就静默失效。
+ */
+const fontStacks = buildFontStacks({
+  locale: currentLocale,
+  primaryFamily: huninnCss.family,
+  monoFamily: mapleCss.family,
+  metricFallback: fontFamilyFallback,
+});
+
+/**
+ * 必须以 is:inline 直接进 <head>：字体堆叠要在解析阶段就出现在 CSS 里，
+ * 浏览器才会尽早发起 woff2 请求。旧实现是在 DOMContentLoaded 时用 JS 写
+ * body.style.fontFamily，实测线上首个 woff2 要到 2425ms 才开始下载
+ *（DOMContentLoaded 是 1224ms），配上 font-display: optional 必然错过时机，
+ * 表现就是「首访没字体、二访才有」。
+ *
+ * --pf-font / --pf-mono 供其余样式消费。
+ */
+const criticalFontCss = [
+  `:root{--pf-font:${fontStacks.body};--pf-mono:${fontStacks.mono}}`,
+  `body{font-family:${fontStacks.body}}`,
+].join("");
 
 // Accept sidebar props from child pages
 interface PostMeta {
@@ -176,6 +205,7 @@ import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro"
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
+    <style is:inline set:html={criticalFontCss} />
     {
       Astro.site && (
         <link
@@ -247,16 +277,14 @@ import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro"
       import "@/toolkit/initMdxComponents";
     </script>
     <script>
-      import { css } from "@/assets/fonts/LXGWWenKai-Regular.ttf?subsets";
-
-      document.addEventListener("pagereveal", () => {
-        document.body.style.fontFamily = css.family as string;
-        document.documentElement.style.setProperty("--pf-font", css.family as string);
-      });
-      document.addEventListener("DOMContentLoaded", () => {
-        document.body.style.fontFamily = css.family as string;
-        document.documentElement.style.setProperty("--pf-font", css.family as string);
-      });
+      // 字体堆叠已由 <style is:inline> 在解析阶段写入 --pf-font / body，
+      // 这里只在 pagereveal 后补一次，供未套用到该规则的动态节点继承。
+      const applyFontStack = () => {
+        const stack = getComputedStyle(document.documentElement).getPropertyValue("--pf-font").trim();
+        if (stack) document.body.style.fontFamily = stack;
+      };
+      document.addEventListener("pagereveal", applyFontStack);
+      document.addEventListener("DOMContentLoaded", applyFontStack);
     </script>
     <div class="hidden">
       <CodeBlock client:idle />
