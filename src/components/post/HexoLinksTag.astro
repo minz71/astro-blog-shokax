@@ -1,0 +1,43 @@
+---
+export interface HexoLinkItem {
+  url: string;
+  title: string;
+  desc: string;
+  author?: string;
+  avatar?: string;
+  color?: string;
+}
+
+interface Props {
+  links: HexoLinkItem[];
+}
+
+const { links } = Astro.props as Props;
+---
+
+<div class="hexo-links links">
+  {
+    links.map((link) => {
+      const imageStyle = link.avatar
+        ? `--hexo-link-image: url("${link.avatar}"); --hexo-link-color: ${link.color || "var(--block-color, #666)"};`
+        : `--hexo-link-color: ${link.color || "var(--block-color, #666)"};`;
+
+      return (
+        <a
+          class="item"
+          href={link.url}
+          target="_blank"
+          rel="noreferrer"
+          style={imageStyle}
+          aria-label={link.title}
+        >
+          <span class="image" aria-hidden="true" />
+          <span class="info">
+            <span class="title">{link.title}</span>
+            <span class="desc">{link.desc}</span>
+          </span>
+        </a>
+      );
+    })
+  }
+</div>

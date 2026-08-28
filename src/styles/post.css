@@ -1,5 +1,7 @@
 /* Post Page Styles - Migrated from hexo-theme-shokaX */
 
+@import "./hexo-links-tag.css";
+
 /* Post Block */
 .post.block {
   padding: 0 2rem;
