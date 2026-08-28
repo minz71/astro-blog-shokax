@@ -30,20 +30,75 @@ export interface CoverCredit {
   work?: string;
 }
 
-export const COVER_CREDITS: CoverCredit[] = [];
+export const COVER_CREDITS: CoverCredit[] = [
+  {
+    key: "cover-1",
+    title: "🐦🐦",
+    artist: "Hotaruzzzz",
+    url: "https://www.pixiv.net/artworks/77240141",
+    work: "リズと青い鳥",
+  },
+  {
+    key: "cover-2",
+    title: "在逃春天——",
+    artist: "TID",
+    url: "https://www.pixiv.net/artworks/124928964",
+    work: "インフィニティニキ",
+  },
+  {
+    key: "cover-3",
+    title: "☆",
+    artist: "白夜ReKi",
+    url: "https://www.pixiv.net/artworks/61621237",
+  },
+  {
+    key: "cover-4",
+    title: "龍の巫女",
+    artist: "さくらしおり",
+    url: "https://www.pixiv.net/artworks/77684861",
+    work: "天宮こころ",
+  },
+  {
+    key: "cover-5",
+    title: "小豆沢こはね",
+    artist: "-AKOvO-",
+    url: "https://www.pixiv.net/artworks/145952531",
+    work: "プロジェクトセカイ",
+  },
+  {
+    key: "cover-6",
+    title: "Warmth",
+    artist: "Rosuuri",
+    url: "https://www.pixiv.net/artworks/73232099",
+  },
+  {
+    key: "category-shokax",
+    title: "bouquet",
+    artist: "紫妃ひなこ",
+    url: "https://www.pixiv.net/artworks/73568416",
+  },
+  {
+    key: "category-cs",
+    title: "瑞希",
+    artist: "ije",
+    url: "https://www.pixiv.net/artworks/145558422",
+    work: "プロジェクトセカイ",
+  },
+  {
+    key: "avatar",
+    title: "8k感谢",
+    artist: "-AKOvO-",
+    url: "https://www.pixiv.net/artworks/88491475",
+  },
+];
 
 /**
  * 随主题散布、走主题授权的图片 key：不需要个别署名，/credits/ 的校验会跳过。
  * 站点换掉其中任何一张时，把该 key 从这里移走并在 COVER_CREDITS 补上署名。
  */
 export const THEME_LICENSED_KEYS: readonly string[] = [
-  "cover-1",
-  "cover-2",
-  "cover-3",
-  "cover-4",
-  "cover-5",
-  "cover-6",
-  "avatar",
+  // 本站已把全部封面与头像换成自己挑的图，所以豁免清单是空的——
+  // 每一张都在上面的 COVER_CREDITS 里有署名（见 AGENTS.md「封面图片与署名」）。
 ];
 
 export function getCoverCredit(key: string): CoverCredit | undefined {
