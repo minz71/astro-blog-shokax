@@ -110,6 +110,13 @@ Hyacine 插件**按轴切，不按档案切**，分三层：
 
 看到 `dev` 的主题档案里出现具体文章 slug，就是这条线划错了。
 
+### 站点网址
+
+`themeConfig.siteUrl` 的预设值是主题示范站的网址，**`cloudflare` 必须在
+`theme.config.ts` 覆写它**。它不只喂 `astro.config` 的 `site`：canonical、
+`og:url`、JSON-LD 的 `url` / `mainEntityOfPage`、`robots.txt` 的 `Sitemap` 行
+全部取自这个值。没覆写就发布，等于把每一页的 canonical 指向别人的网域。
+
 ### 封面图片与署名
 
 > 本节描述目标状态。`coverCredits.ts` 与 `src/assets/images/cover/` 的目录结构

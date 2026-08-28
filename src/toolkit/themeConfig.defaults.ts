@@ -2,6 +2,16 @@ import type { ShokaXThemeConfig } from "./themeConfig";
 
 export const DEFAULT_THEME_CONFIG: ShokaXThemeConfig = {
   siteName: "ShokaX",
+  /**
+   * ⚠️ 这是主题示范站的网址，任何实际站点都必须在 theme.config.ts 覆写。
+   *
+   * 它现在不只是 astro.config 的 site：canonical、og:url、JSON-LD 的 url 与
+   * mainEntityOfPage、robots.txt 的 Sitemap 行全都取这个值。没覆写就上线，
+   * 等于把自己每一页的 canonical 指向别人的网域。
+   *
+   * 留在这里是因为 dev 的示范站需要它才生成得出 sitemap；按分支规则
+   * （见 AGENTS.md「插件的归属」的判准）站点网址本来就该由 cloudflare 提供。
+   */
   siteUrl: "https://preview.astro.kaitaku.xyz",
   locale: "zh-CN",
   nav: [
