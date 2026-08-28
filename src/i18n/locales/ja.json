@@ -298,5 +298,17 @@
     "sourceLabel": "出典",
     "footerLink": "画像のクレジット",
     "themeLicensed": "このテーマに同梱されているカバー画像とアバターはテーマのライセンスに従って配布されており、個別のクレジット表記は不要です。"
+  },
+  "mermaid": {
+    "label": "図",
+    "loading": "図を描画中…",
+    "error": "図の描画に失敗しました",
+    "copy": "図のソースをコピー",
+    "copied": "コピーしました",
+    "zoomIn": "拡大",
+    "zoomOut": "縮小",
+    "reset": "拡大率をリセット",
+    "fullscreen": "全画面表示",
+    "exitFullscreen": "全画面を終了"
   }
 }

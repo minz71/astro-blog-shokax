@@ -298,5 +298,17 @@
     "sourceLabel": "原始出處",
     "footerLink": "圖片來源",
     "themeLicensed": "本主題自帶的封面圖與頭像隨主題一起散布，依主題授權使用，不需要單獨署名。"
+  },
+  "mermaid": {
+    "label": "圖表",
+    "loading": "圖表載入中…",
+    "error": "圖表渲染失敗",
+    "copy": "複製圖表原始碼",
+    "copied": "已複製",
+    "zoomIn": "放大",
+    "zoomOut": "縮小",
+    "reset": "還原縮放",
+    "fullscreen": "全螢幕檢視",
+    "exitFullscreen": "退出全螢幕"
   }
 }

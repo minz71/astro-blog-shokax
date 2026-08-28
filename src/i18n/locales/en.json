@@ -298,5 +298,17 @@
     "sourceLabel": "Source",
     "footerLink": "Image credits",
     "themeLicensed": "The cover images and avatar shipped with this theme are distributed under the theme license and require no separate attribution."
+  },
+  "mermaid": {
+    "label": "Diagram",
+    "loading": "Rendering diagram…",
+    "error": "Failed to render diagram",
+    "copy": "Copy diagram source",
+    "copied": "Copied",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "reset": "Reset zoom",
+    "fullscreen": "Enter fullscreen",
+    "exitFullscreen": "Exit fullscreen"
   }
 }

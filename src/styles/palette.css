@@ -75,6 +75,29 @@
   --bp-touch-max: 1023px;
 
   --codeblock-shadow: 0.5rem 0.5rem 1rem var(--grey-3);
+
+  /* mermaid 图表配色：需被 JS 解析成 hex 喂给 mermaid，请只写字面色值（勿用 var()） */
+  --mermaid-surface: oklch(1 0 0);
+  --mermaid-node-bg: oklch(0.958 0.028 340);
+  --mermaid-node-border: oklch(0.752 0.13 350);
+  --mermaid-node-text: oklch(0.38 0.035 340);
+  --mermaid-secondary-bg: oklch(0.958 0.026 200);
+  --mermaid-secondary-border: oklch(0.723 0.086 210);
+  --mermaid-tertiary-bg: oklch(0.963 0.033 100);
+  --mermaid-tertiary-border: oklch(0.8 0.098 90);
+  --mermaid-cluster-bg: oklch(0.978 0.008 340);
+  --mermaid-cluster-border: oklch(0.86 0.026 340);
+  --mermaid-note-bg: oklch(0.968 0.048 95);
+  --mermaid-note-border: oklch(0.822 0.096 90);
+  --mermaid-line: oklch(0.615 0.062 340);
+  --mermaid-text: oklch(0.321 0 0);
+  --mermaid-title: oklch(0.579 0.24 22.2);
+  --mermaid-error: oklch(0.579 0.24 22.2);
+
+  --mermaid-card-bg: var(--mermaid-surface);
+  --mermaid-card-header-bg: var(--surface-code-header);
+  --mermaid-card-border: var(--grey-3);
+  --mermaid-card-shadow: var(--codeblock-shadow);
   --codeblock-dot-red: oklch(0.62 0.2 16.9);
   --codeblock-dot-yellow: oklch(0.74 0.14 73);
   --codeblock-dot-green: oklch(0.66 0.11 138);
@@ -231,6 +254,29 @@
   --surface-inline-code-border: oklch(0.43 0.018 274);
 
   --codeblock-shadow: none;
+
+  /* mermaid 图表配色（暗色）：同样只写字面色值 */
+  --mermaid-surface: oklch(0.252 0 0);
+  --mermaid-node-bg: oklch(0.335 0.032 340);
+  --mermaid-node-border: oklch(0.63 0.115 350);
+  --mermaid-node-text: oklch(0.912 0.012 340);
+  --mermaid-secondary-bg: oklch(0.328 0.028 210);
+  --mermaid-secondary-border: oklch(0.612 0.075 215);
+  --mermaid-tertiary-bg: oklch(0.336 0.03 95);
+  --mermaid-tertiary-border: oklch(0.652 0.086 90);
+  --mermaid-cluster-bg: oklch(0.305 0.012 320);
+  --mermaid-cluster-border: oklch(0.452 0.03 340);
+  --mermaid-note-bg: oklch(0.342 0.038 95);
+  --mermaid-note-border: oklch(0.605 0.08 90);
+  --mermaid-line: oklch(0.735 0.058 340);
+  --mermaid-text: oklch(0.901 0 0);
+  --mermaid-title: oklch(0.706 0.152 21.6);
+  --mermaid-error: oklch(0.706 0.152 21.6);
+
+  --mermaid-card-bg: var(--mermaid-surface);
+  --mermaid-card-header-bg: var(--surface-code-header);
+  --mermaid-card-border: var(--grey-2);
+  --mermaid-card-shadow: none;
   --codeblock-action-color: var(--text-color-muted);
   --codeblock-action-hover-color: var(--text-color);
   --codeblock-collapse-gradient-end: var(--surface-code);

@@ -194,6 +194,7 @@ const widgetPosts = createWidgetPosts(posts);
 
 // Import custom elements definitions
 import CodeBlock from "@/components/CodeBlock";
+import MermaidDiagram from "@/components/MermaidDiagram";
 import ImageZoom from "@/components/ImageZoom";
 import SearchPage from "@/components/search/SearchPage";
 import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro";
@@ -289,6 +290,7 @@ import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro"
     </script>
     <div class="hidden">
       <CodeBlock client:idle />
+      <MermaidDiagram client:idle />
       <ImageZoom client:idle />
     </div>
     <FloatingToolbar client:idle hasNyxPlayer={true} />

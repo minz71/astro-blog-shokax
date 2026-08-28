@@ -66,6 +66,7 @@ import spanDirective from "./src/satteri-plugins/span-directive.ts";
 import satteriBreaks from "./src/satteri-plugins/breaks.ts";
 import satteriIns from "./src/satteri-plugins/ins.ts";
 import satteriKatex from "./src/satteri-plugins/katex.ts";
+import satteriMermaid from "./src/satteri-plugins/mermaid.ts";
 import satteriAutolinkHeadings from "./src/satteri-plugins/autolink-headings.ts";
 import satteriAutoImport from "./src/satteri-plugins/auto-import.ts";
 import satteriEmoji from "./src/satteri-plugins/emoji.ts";
@@ -255,6 +256,7 @@ export default defineConfig({
         satteriBreaks(),
         satteriIns(),
         satteriKatex(),
+        satteriMermaid(),
         satteriEmoji(),
         satteriRubyDirective(),
         noteDirective(),
