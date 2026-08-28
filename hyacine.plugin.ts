@@ -1,5 +1,4 @@
 import { defineConfig } from "@hyacine/plugin-core";
-import siteUptime from "@hyacine/plugin-site-uptime";
 import mouseFirework from "@hyacine/plugin-mouse-firework";
 import articleAgeWarning from "@hyacine/plugin-article-age-warning";
 import vercount from "@hyacine/plugin-vercount";
@@ -11,6 +10,8 @@ import nyxPlayer from "@hyacine/plugin-nyx-player";
 import articleStatistics from "@hyacine/plugin-article-statistics";
 import themeConfig from "./src/theme.config";
 import sakura from "./src/toolkit/sakuraPlugin";
+import siteUptime from "./src/toolkit/siteUptimePlugin";
+import { messages } from "./src/i18n";
 
 /*
  * 插件按轴切：实作与观感预设值属主题（本档与 src/toolkit/*Plugin.ts），
@@ -18,6 +19,11 @@ import sakura from "./src/toolkit/sakuraPlugin";
  * 装饰性插件一律 gate 在 theme.config.ts 上、预设不注册。
  * 详见 AGENTS.md 的「插件的归属」。
  */
+const uptimeText = messages.footer.siteUptime;
+
+// 没有上线时间就不注册：运行时长没有起算点，显示不出有意义的结果
+const siteCreatedAt = themeConfig.plugins?.siteUptime?.siteCreatedAt?.trim();
+
 const sakuraConfig = themeConfig.plugins?.sakura;
 const sakuraEnabled = sakuraConfig?.enable === true;
 
@@ -37,10 +43,18 @@ export default defineConfig({
     },
   },
   plugins: [
-    siteUptime({
-      siteCreatedAt: "2024-01-01T00:00:00Z",
-      prefixText: "本站已运行",
-    }),
+    // 页脚运行时长：文案全走 i18n，官方 @hyacine/plugin-site-uptime 把
+    // 「天/小时/分/秒」写死成简体中文，繁中与英文站会显示错误单位。
+    ...(siteCreatedAt
+      ? [
+          siteUptime({
+            siteCreatedAt,
+            prefixText: uptimeText.prefix,
+            spaced: uptimeText.spaced,
+            units: uptimeText.units,
+          }),
+        ]
+      : []),
     mouseFirework({
       count: 16,
       radius: 80,

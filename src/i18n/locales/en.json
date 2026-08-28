@@ -147,7 +147,25 @@
     "recentCommentsLoadFailed": "Failed to load recent comments. Please try again later.",
     "commentAnonymous": "Anonymous",
     "walineNotConfigured": "Waline server URL is not configured",
-    "shokaxRepoAria": "ShokaX GitHub project"
+    "shokaxRepoAria": "ShokaX GitHub project",
+    "siteUptime": {
+      "prefix": "This site has been online for",
+      "spaced": true,
+      "units": {
+        "year": "year",
+        "years": "years",
+        "month": "month",
+        "months": "months",
+        "day": "day",
+        "days": "days",
+        "hour": "hour",
+        "hours": "hours",
+        "minute": "minute",
+        "minutes": "minutes",
+        "second": "second",
+        "seconds": "seconds"
+      }
+    }
   },
   "pagination": {
     "prev": "Previous",

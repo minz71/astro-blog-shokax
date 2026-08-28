@@ -147,7 +147,25 @@
     "recentCommentsLoadFailed": "最新评论加载失败，请稍后重试",
     "commentAnonymous": "匿名用户",
     "walineNotConfigured": "Waline 服务地址未配置",
-    "shokaxRepoAria": "ShokaX GitHub 项目"
+    "shokaxRepoAria": "ShokaX GitHub 项目",
+    "siteUptime": {
+      "prefix": "该站点已经存在了",
+      "spaced": false,
+      "units": {
+        "year": "年",
+        "years": "年",
+        "month": "月",
+        "months": "月",
+        "day": "日",
+        "days": "日",
+        "hour": "小时",
+        "hours": "小时",
+        "minute": "分钟",
+        "minutes": "分钟",
+        "second": "秒",
+        "seconds": "秒"
+      }
+    }
   },
   "pagination": {
     "prev": "上一页",

@@ -60,9 +60,6 @@ importers:
       '@hyacine/plugin-nyx-player':
         specifier: ^0.1.0
         version: 0.1.0
-      '@hyacine/plugin-site-uptime':
-        specifier: ^0.2.1
-        version: 0.2.1
       '@hyacine/plugin-vercount':
         specifier: ^0.2.0
         version: 0.2.0
@@ -886,10 +883,6 @@ packages:
 
   '@hyacine/plugin-nyx-player@0.1.0':
     resolution: {integrity: sha512-7M+yCdqzoFw3kMYJakcoShI9CnH5fBtYr3TW7qNvUoQ5YzlHD82Jlad9NlZ3qJmlzJhNsdUej1hkGmQ6OrExfA==}
-    engines: {node: '>=24'}
-
-  '@hyacine/plugin-site-uptime@0.2.1':
-    resolution: {integrity: sha512-nbk9cRqEbpZXzvuhSRo4/9v7nHyJFdJHvmzwBJf52xvtADWUQALR/a4d5kIIVt0eN5i2FhJUpuBNsc2SVQEilQ==}
     engines: {node: '>=24'}
 
   '@hyacine/plugin-vercount@0.2.0':
@@ -6332,11 +6325,6 @@ snapshots:
       '@hyacine/plugin-core': 0.2.0
       nyx-player-solid: 0.1.5
       solid-js: 1.9.15
-
-  '@hyacine/plugin-site-uptime@0.2.1':
-    dependencies:
-      '@hyacine/contract': 0.1.1
-      '@hyacine/plugin-core': 0.2.0
 
   '@hyacine/plugin-vercount@0.2.0':
     dependencies:

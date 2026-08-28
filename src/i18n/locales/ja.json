@@ -147,7 +147,25 @@
     "recentCommentsLoadFailed": "最新コメントの読み込みに失敗しました。後でもう一度お試しください。",
     "commentAnonymous": "匿名ユーザー",
     "walineNotConfigured": "Waline のサーバー URL が設定されていません",
-    "shokaxRepoAria": "ShokaX GitHub プロジェクト"
+    "shokaxRepoAria": "ShokaX GitHub プロジェクト",
+    "siteUptime": {
+      "prefix": "このサイトの稼働時間",
+      "spaced": false,
+      "units": {
+        "year": "年",
+        "years": "年",
+        "month": "ヶ月",
+        "months": "ヶ月",
+        "day": "日",
+        "days": "日",
+        "hour": "時間",
+        "hours": "時間",
+        "minute": "分",
+        "minutes": "分",
+        "second": "秒",
+        "seconds": "秒"
+      }
+    }
   },
   "pagination": {
     "prev": "前へ",

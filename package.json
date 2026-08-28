@@ -42,7 +42,6 @@
     "@hyacine/plugin-core": "^0.2.0",
     "@hyacine/plugin-mouse-firework": "^0.2.0",
     "@hyacine/plugin-nyx-player": "^0.1.0",
-    "@hyacine/plugin-site-uptime": "^0.2.1",
     "@hyacine/plugin-vercount": "^0.2.0",
     "@hyacine/plugin-visibility-title": "^0.1.0",
     "@hyacine/plugin-waline-comments": "^0.1.0",
