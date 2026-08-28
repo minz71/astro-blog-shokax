@@ -30,7 +30,7 @@ import "@/styles/code-block-light.css";
 import "@/styles/mdx-components.css";
 
 import Loading from "@/components/Loading.astro";
-import { covers, resolveFixedCover } from "@/components/Images.astro";
+import { covers, resolveFixedCover , coverPresets} from "@/components/Images.astro";
 import FloatingToolbar from "@/components/FloatingToolbar";
 import TwoColumnLayout from "@/layouts/TwoColumnLayout.astro";
 import ThreeColumnLayout from "@/layouts/ThreeColumnLayout.astro";
@@ -129,6 +129,7 @@ const headerCovers = advancedCarousel
   ? await resolveHeaderCovers({
       coverUrls: coverConfig.coverUrls,
       fallbackCovers: covers,
+      presets: coverPresets,
     })
   : [];
 const resolvedHeaderCover = pageCover ?? fixedCover;

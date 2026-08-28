@@ -4,7 +4,7 @@ import PostSegments from "./postSegments/PostSegments.astro";
 import CategoryCards from "./categoryCard/CategoryCards";
 import Divider from "./Divider.astro";
 import { transformIndexPosts } from "@/toolkit/posts/transformIndexPosts";
-import { covers, getPostCover } from "./Images.astro";
+import { covers, getPostCover , coverPresets} from "./Images.astro";
 import { resolveHeaderCovers } from "@/toolkit/headerCover";
 import { t } from "@/i18n";
 import themeConfig from "@/theme.config";
@@ -42,6 +42,7 @@ const headerCovers = advancedCarousel
   ? await resolveHeaderCovers({
       coverUrls: coverConfig.coverUrls,
       fallbackCovers: covers,
+      presets: coverPresets,
     })
   : [];
 
