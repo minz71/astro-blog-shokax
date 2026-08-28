@@ -6,6 +6,9 @@ import { defineConfig } from "astro/config";
 import { hyacinePlugin } from "@hyacine/plugin-astro";
 import { satteri } from "@astrojs/markdown-satteri";
 import sitemap from "@astrojs/sitemap";
+// react 只为 src/posts/tool/local_code_copy.mdx 的 client island 引入。
+// 依 AGENTS.md「文章专属组件」，这个 renderer 与 react 依赖只存在于 cloudflare。
+import react from "@astrojs/react";
 import esToolkitPlugin from "vite-plugin-es-toolkit";
 
 /**
@@ -167,6 +170,8 @@ export default defineConfig({
     }),
     // P3 完成：全部组件已迁移至 SolidJS
     solid(),
+    // include 限定范围：避免 react renderer 去接管主题的 .tsx（那些是 Solid）
+    react({ include: ["**/components/mdx/**"] }),
     sitemap({
       // 文章页输出 <lastmod>（frontmatter updated，缺席时回退 date）。
       // 复用上面的 POSTS_DIR：config 被 bundle 后 import.meta.url 会指错。

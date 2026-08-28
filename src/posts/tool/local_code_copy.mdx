@@ -1,0 +1,32 @@
+---
+title: "本地檔案內容複製工具"
+description: "一個可在本機讀取資料夾、瀏覽檔案結構，並複製檔案內容的前端工具。"
+date: 2026-04-27
+# 本文嵌了一个 client island，不能走 container 预渲染（机制见 dev 的
+# content.config.ts 的 clientIsland 栏位说明）
+clientIsland: true
+---
+
+import LocalFolderCopyTool from "@/components/mdx/LocalFolderCopyTool.astro";
+
+<LocalFolderCopyTool />
+
+檔案會在瀏覽器中讀取。本工具不會主動上傳檔案內容。
+
+雖然現在的 AI agent 或是 cli 工具很強大，但是在使用網頁版 AI 聊天頁面協助程式碼開發時，這個工具可以方便地提供程式碼或文字上下文給 AI 作為參考。
+
+## 略過清單設定
+
+- 點擊右上角的 **設定** 可以管理略過清單，會被標記為 **已略過**，避免瀏覽器載入大型目錄（如 `node_modules` 或 `.git`）時崩潰。
+- 可以新增或刪除這些略過規則，設定會儲存於瀏覽器 (LocalStorage) 中。若變更了設定，需重新「選擇資料夾」才會套用新規則。
+
+## 輸出限制
+
+1. 每個檔案內容前後會自動加上路徑跟檔名的標記，`----- BEGIN FILE: src/index.ts -----`。
+2. 依檔案內容判斷是否為可複製的文字資料，非純文字內容會被略過，並顯示略過提示。
+3. 單一檔案大小超過 700KB 將被略過；若總複製內容超過 5,000,000 個字元，輸出將會在達到上限時截斷，避免剪貼簿或瀏覽器卡住。
+
+## token 計算工具
+
+- OpenAI Tokenizer https://platform.openai.com/tokenizer
+- Claude Tokenizer https://claude-tokenizer.vercel.app/
