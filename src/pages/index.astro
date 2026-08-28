@@ -61,24 +61,27 @@ publishedPosts.forEach((post) => {
   });
 });
 
-// Transform categories for CategoryCards component
-const categories = Array.from(categoryMap.entries())
-  .filter(([name, _]) =>
-    themeConfig.home?.selectedCategories?.some((cat) => cat.name === name),
-  )
-  .map(([name, data]) => ({
-    name,
-    cover: themeConfig.home?.selectedCategories?.find(
-      (cat) => cat.name === name,
-    )?.cover,
-    url: `/categories/${name}/`,
-    postCount: data.posts.length,
-    posts: data.posts.slice(0, 6).map((p) => ({
-      title: p.title,
-      url: `/posts/${p.slug}/`,
-    })),
-  }))
-  .toSorted((a, b) => b.postCount - a.postCount);
+// Transform categories for CategoryCards component.
+// Keep the config array order so selectedCategories controls card order directly.
+const categories = (themeConfig.home?.selectedCategories ?? []).flatMap(
+  ({ name, cover }) => {
+    const data = categoryMap.get(name);
+    if (!data) return [];
+
+    return [
+      {
+        name,
+        cover,
+        url: `/categories/${name}/`,
+        postCount: data.posts.length,
+        posts: data.posts.slice(0, 6).map((p) => ({
+          title: p.title,
+          url: `/posts/${p.slug}/`,
+        })),
+      },
+    ];
+  },
+);
 
 let pageTitle = themeConfig.home?.title?.customTitle ?? "";
 
