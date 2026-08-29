@@ -1,0 +1,29 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import LinksContent, { frontmatter as linksFrontmatter } from "@/content/links.mdx";
+
+import "@/styles/post.css";
+
+interface LinksFrontmatter {
+  title?: string;
+  description?: string;
+}
+
+const frontmatter = (linksFrontmatter ?? {}) as LinksFrontmatter;
+const title = frontmatter.title || "連結";
+const description = frontmatter.description || "";
+---
+
+<Layout pageTitle={title}>
+  <Fragment slot="head">
+    {description && <meta name="description" content={description} />}
+  </Fragment>
+
+  <div class="article wrap">
+    <article class="post block">
+      <div class="body md">
+        <LinksContent />
+      </div>
+    </article>
+  </div>
+</Layout>
