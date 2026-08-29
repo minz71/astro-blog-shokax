@@ -202,6 +202,21 @@ interface WidgetsConfig {
   recentCommentsServerURL?: string;
 }
 
+interface IconsConfig {
+  /**
+   * 浏览器分页图示（favicon）。
+   * - 例："/favicon.ico"、"/favicon.svg"
+   * - 档案要放在 public/ 底下，且必须真的存在
+   */
+  favicon?: string;
+
+  /**
+   * iOS 加入主画面时用的图示。
+   * - 例："/apple-touch-icon.png"，建议 180x180
+   */
+  appleTouchIcon?: string;
+}
+
 interface ThemeConfig {
   /**
    * 默认主题模式。
@@ -499,6 +514,17 @@ export interface ShokaXThemeConfig {
    * - 默认为 "zh-CN"
    */
   locale?: Locale;
+
+  /**
+   * 网站图示。
+   *
+   * 不填就不输出 <link rel="icon">——这是刻意的预设。主题本身不附图示档，
+   * 而浏览器在没有 <link> 时会隐式去要 /favicon.ico，那个请求就算 404 也不会
+   * 进 console；反过来，指着一个不存在的档案才会每页留下一个 console error。
+   *
+   * 路径填 public/ 底下的绝对路径，例如 "/favicon.ico"。type 由副档名自动带出。
+   */
+  icons?: IconsConfig;
 
   /**
    * 主题外观配置。

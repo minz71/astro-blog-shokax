@@ -75,6 +75,31 @@ const fontStacks = buildFontStacks({
  * 一切，一旦变数被别人覆写，那段脚本就是把污染值固化到 body 上的注入点。
  * body 的 font-family 由下面这条规则直接给字面堆叠即可。
  */
+/**
+ * 网站图示。
+ *
+ * 原本这里写死 <link rel="icon" type="image/svg+xml" href="/favicon.svg">，
+ * 但 repo 里从来没有 public/favicon.svg——main、dev、cloudflare 三个分支都没有。
+ * 于是每一页都多一个 404，Lighthouse 的 errors-in-console 常态失败。这个 404
+ * 早就有人知道：package.json 的 check-links 专门带了 --exclude favicon.svg。
+ *
+ * 改成由 theme.config 的 icons 指定，没设定就不输出 <link>：浏览器会隐式去要
+ * /favicon.ico，那个请求即使 404 也不会进 console。主题本身不附图示档，所以
+ * 预设保持不输出，站点在自己的 theme.config.ts 填实际路径。
+ */
+const ICON_MIME: Record<string, string> = {
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+  ".png": "image/png",
+  ".webp": "image/webp",
+};
+const iconsConfig = themeConfig.icons ?? {};
+const faviconHref = iconsConfig.favicon;
+const faviconType = faviconHref
+  ? ICON_MIME[faviconHref.slice(faviconHref.lastIndexOf(".")).toLowerCase()]
+  : undefined;
+const appleTouchIconHref = iconsConfig.appleTouchIcon;
+
 // 播放器是否启用：与 hyacine.plugin.ts 的 gate 同一个来源
 const nyxPlayerEnabled = themeConfig.plugins?.nyxPlayer?.enable === true;
 
@@ -217,7 +242,8 @@ import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro"
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {faviconHref && <link rel="icon" type={faviconType} href={faviconHref} />}
+    {appleTouchIconHref && <link rel="apple-touch-icon" href={appleTouchIconHref} />}
     <meta name="generator" content={Astro.generator} />
     <style is:inline set:html={criticalFontCss} />
     {
