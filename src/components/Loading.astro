@@ -396,7 +396,19 @@
 </style>
 
 <script>
-  const MINIMUM_LOADING_TIME = 500;
+  /**
+   * 遮罩最短显示时间。
+   *
+   * #loading 是全屏 position: fixed 的不透明遮罩，它盖住内容的期间 LCP 一直
+   * 在等——实测每一页的 LCP 有 89~95% 是 render delay，而不是图片下载
+   * （Load Delay 0ms / Load Time 0ms）。原本写死 500ms，等于在 DOMContentLoaded
+   * 之后再白等半秒：首页桌机 Lighthouse performance 87、LCP 2.26s；改成 0 之后
+   * 90 / 1.91s；把遮罩整个拿掉是 93 / 1.55s（剩下的 0.4s 是下面的 opacity 过渡）。
+   *
+   * 留成具名常数而不是直接删掉 setTimeout：想把「载入动画至少露脸多久」调回来
+   * 的人，得先看到它要付的代价。
+   */
+  const MINIMUM_LOADING_TIME = 0;
 
   // TODO: 仅在第一次访问时显示加载动画
   window.addEventListener("DOMContentLoaded", () => {
