@@ -10,7 +10,6 @@ import React, {
   type ChangeEvent,
   type KeyboardEvent as RKeyboardEvent,
 } from "react";
-import "@/styles/local-folder-copy-tool.css";
 
 /**
  * showDirectoryPicker 不在 lib.dom 里。原本放在 src/types/file-system-access.d.ts，

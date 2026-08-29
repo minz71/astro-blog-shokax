@@ -1,5 +1,11 @@
 ---
 import LocalFolderCopyToolReact from "./LocalFolderCopyTool.tsx";
+
+// 样式从 .tsx 搬到这里：client:only 的元件 Astro 无法静态归属，它的 CSS 会被
+// 注入到**每一页**（实测 125/125 页都载入 LocalFolderCopyTool.css，连带它第一
+// 行的 Google Fonts @import 在手机版每页 render-block 771ms）。.astro 元件的
+// 样式才是按页归属的，只有真正用到它的那篇文章会载入。
+import "@/styles/local-folder-copy-tool.css";
 ---
 
 <LocalFolderCopyToolReact client:only="react" />
