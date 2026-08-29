@@ -14,6 +14,17 @@ export const DEFAULT_THEME_CONFIG: ShokaXThemeConfig = {
    */
   siteUrl: "https://blog.minz.li",
   locale: "zh-CN",
+  /**
+   * 主题预设图示，档案在 public/favicon.svg。
+   *
+   * 这里必须有值：没有 <link rel="icon"> 时浏览器会隐式去要 /favicon.ico，
+   * 那个 404 一样会进 console（实测 Lighthouse 的 errors-in-console 会抓到，
+   * best-practices 停在 96）。所以「不输出 link」并不能免掉 404，得真的给一个
+   * 存在的档案。站点要换自己的图示，在 theme.config.ts 的 icons 覆写。
+   */
+  icons: {
+    favicon: "/favicon.svg",
+  },
   nav: [
     {
       href: "/",

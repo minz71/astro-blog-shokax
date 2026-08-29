@@ -83,9 +83,14 @@ const fontStacks = buildFontStacks({
  * 于是每一页都多一个 404，Lighthouse 的 errors-in-console 常态失败。这个 404
  * 早就有人知道：package.json 的 check-links 专门带了 --exclude favicon.svg。
  *
- * 改成由 theme.config 的 icons 指定，没设定就不输出 <link>：浏览器会隐式去要
- * /favicon.ico，那个请求即使 404 也不会进 console。主题本身不附图示档，所以
- * 预设保持不输出，站点在自己的 theme.config.ts 填实际路径。
+ * 改成由 theme.config 的 icons 指定。预设指向 public/favicon.svg（主题自附）。
+ *
+ * 注意「不输出 <link> 就没事」是错的：没有 <link> 时浏览器会隐式去要
+ * /favicon.ico，那个 404 一样会进 console——实测 dev-v2 拿掉 link 之后
+ * best-practices 仍停在 96，errors-in-console 抓的就是这个隐式请求。
+ * 所以要免掉 404，必须真的指向一个存在的档案。
+ *
+ * 站点有自己的图示就在 theme.config.ts 的 icons 覆写（本站指回 favicon.ico）。
  */
 const ICON_MIME: Record<string, string> = {
   ".svg": "image/svg+xml",
