@@ -5,6 +5,13 @@ export default defineConfig({
   siteName: "minz的筆記本",
   locale: "zh-TW",
   siteUrl: "https://blog.minz.li",
+  // 本站图示：public/favicon.ico（32x32 猫）与 public/apple-touch-icon.png。
+  // 主题预设不输出 <link rel="icon">（它不附图示档），所以这里要指明；
+  // apple-touch-icon.png 先前一直躺在 public/ 里没有任何地方引用。
+  icons: {
+    favicon: "/favicon.ico",
+    appleTouchIcon: "/apple-touch-icon.png",
+  },
   theme: {
     defaultMode: "light",
   },
