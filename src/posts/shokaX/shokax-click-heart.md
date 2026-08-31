@@ -19,7 +19,7 @@ ShokaX Astro 預設就有點擊特效：`hyacine.plugin.ts` 中啟用了 `@hyaci
 
 # 做法
 
-## 1. 移除預設的煙火插件 `@hyacine/mouse-firework` 
+## 1. 移除預設的煙火插件 `@hyacine/mouse-firework`
 
 因為該插件只支援固定形狀，編輯根目錄的 `hyacine.plugin.ts`，刪掉 `@hyacine/mouse-firework` 的 import 與 `plugins` 中的呼叫：
 
@@ -48,7 +48,11 @@ export default defineConfig({
 
 ```js
 import { init as init_LocalMouseFireworkRuntime } from ".../mouseFireworkRuntime.ts";
-init_LocalMouseFireworkRuntime({ "colors": ["rgba(255,182,185,.9)" /* ... */], "count": 6, "radius": 20 });
+init_LocalMouseFireworkRuntime({
+  colors: ["rgba(255,182,185,.9)" /* ... */],
+  count: 6,
+  radius: 20,
+});
 ```
 
 所以愛心形狀無法透過選項傳遞，只能寫死在 runtime 檔裡。manifest 這層透過 `options` 對外開放的就只有 `colors` / `count` / `radius`：
@@ -195,12 +199,12 @@ export const init: PluginInitFunction<MouseFireworkRuntimeOptions> = (options) =
         duration: [1600, 2400],
         shapeOptions: {
           radius: [options.radius * 0.7, options.radius * 1.15],
-          alpha: [0.85, 1],                                       
+          alpha: [0.85, 1],
         },
         moveOptions: {
           emitRadius: [60, 160],
-          radius: [options.radius * 0.3, options.radius * 0.6],  
-          alphaChange: true,                                     
+          radius: [options.radius * 0.3, options.radius * 0.6],
+          alphaChange: true,
           alpha: 0,
           alphaEasing: "easeOutQuad",
           alphaDuration: [1200, 2000],
@@ -239,12 +243,8 @@ export default defineConfig({
       // ...
     }),
     MouseFirework({
-      // 可自訂參數 參考文檔 https://github.com/D-Sketon/mouse-firework 
-      colors: [
-        "rgba(255,182,185,.9)",
-        "rgba(250,227,217,.9)",
-        "rgba(138,198,209,.9)",
-      ],
+      // 可自訂參數 參考文檔 https://github.com/D-Sketon/mouse-firework
+      colors: ["rgba(255,182,185,.9)", "rgba(250,227,217,.9)", "rgba(138,198,209,.9)"],
       count: 6,
       radius: 20,
     }),
@@ -252,4 +252,4 @@ export default defineConfig({
 });
 ```
 
-完成，重新啟動 `bun run dev`，點擊頁面就能看到愛心的效果了。
+完成，重新啟動 `pnpm run dev`，點擊頁面就能看到愛心的效果了。

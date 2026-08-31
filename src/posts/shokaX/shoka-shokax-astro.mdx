@@ -86,20 +86,20 @@ ShokaX 是 Shoka 的精神續作。在 Astro 上的重寫版本，使用 Astro +
 ```bash
 git clone --depth=1 https://github.com/theme-shoka-x/astro-blog-shokax.git
 cd ./astro-blog-shokax
-bun install
-bun run dev
+pnpm install
+pnpm run dev
 ```
 
-## 部署前：bun run build 產出什麼
+## 部署前：pnpm run build 產出什麼
 
 說明文件: https://docs.astro.kaitaku.xyz/start/deploy/
 
-執行 `bun run build` 後產物在 `dist/` 資料夾，為純靜態網站，可部署到任何靜態託管平台。
+執行 `pnpm run build` 後產物在 `dist/` 資料夾，為純靜態網站，可部署到任何靜態託管平台。
 
 :::warning
-`bun run build` 是兩個步驟：`build:site`（`astro build`）加上 `build:index`（`pagefind`）。
+`pnpm run build` 是兩個步驟：`build:site`（`astro build`）加上 `build:index`（`pagefind`）。
 站內搜尋的索引是 Pagefind 在 build 時掃描 `dist/` 產生的，
-所以在 CI 上**一定要呼叫 `bun run build`**，只跑 `astro build` 會讓搜尋功能失效。
+所以在 CI 上**一定要呼叫 `pnpm run build`**，只跑 `astro build` 會讓搜尋功能失效。
 :::
 
 ## 部署到 Cloudflare Worker
@@ -117,7 +117,7 @@ bun run dev
 | 設定項目                            | 值                | 說明                                                                              |
 | ----------------------------------- | ----------------- | --------------------------------------------------------------------------------- |
 | Project name                        | 自訂              | 同時是 Worker 名稱，預設網址會是 `<專案名>.<你的子網域>.workers.dev`              |
-| Build command                       | `bun run build`   | 不需要自己加 `bun install`，Cloudflare 會先裝好依賴，見下方                        |
+| Build command                       | `pnpm run build`   | 不需要自己加 `pnpm install`，Cloudflare 會先裝好依賴，見下方                        |
 | Deploy command                      | `npx wrangler deploy` | 預設值，前提是倉庫裡有 wrangler 設定檔；沒有的話見下方                        |
 | Builds for non-production branches  | 依需求            | 勾選後非正式分支的 commit 會跑 `npx wrangler versions upload`，產生預覽版本而不影響正式部署 |
 
@@ -177,7 +177,7 @@ flowchart LR
     B --> C
     subgraph GA["GitHub Actions"]
         direction TB
-        C["bun install"] --> D["bun run build"]
+        C["pnpm install"] --> D["pnpm run build"]
         D --> E["上傳 dist/<br/>為 Pages artifact"]
     end
     E --> F["GitHub Pages<br/>你的網域"]
@@ -226,23 +226,29 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v7
 
-      # 2. 設置 Bun 環境
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+      # 2. 設置 pnpm 與 Node.js
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
         with:
-          bun-version: latest
+          version: 11.22.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
 
       # 3. build 之前，configure-pages 會把 Pages 的設定注入建置環境
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
-      # 4. 依照 bun.lock 安裝依賴。
+      # 4. 依照 pnpm-lock.yaml 安裝依賴。
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       # 5. 建置站點並產生 Pagefind 搜尋索引
       - name: Build
-        run: bun run build
+        run: pnpm run build
 
       # 6. 上傳 dist/ 目錄下的產物（編譯後的靜態網頁）作為 Pages artifact
       - name: Upload artifact
@@ -277,7 +283,7 @@ jobs:
 ```mermaid title="倉庫隱藏的部署流程（免費方案）"
 flowchart LR
     A["編輯文章<br/>git push"] --> B["私人倉庫<br/>Astro 原始碼"]
-    B --> C["GitHub Actions<br/>bun run build"]
+    B --> C["GitHub Actions<br/>pnpm run build"]
     C -->|"用 PAT 推送 dist/"| D["公開倉庫<br/>靜態產物"]
     D --> E["GitHub Pages<br/>你的網域"]
 ```
@@ -328,16 +334,22 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v7
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
         with:
-          bun-version: latest
+          version: 11.22.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: bun run build
+        run: pnpm run build
 
       # 用剛才存進 Secrets 的 `API_TOKEN_GITHUB` 進行身份驗證
       # 把 `dist/` 推送到公開倉庫（例如 `minz71/minz71.github.io`）的 `main` 分支
