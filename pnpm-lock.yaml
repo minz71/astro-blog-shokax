@@ -57,9 +57,6 @@ importers:
       '@hyacine/plugin-core':
         specifier: ^0.2.0
         version: 0.2.0
-      '@hyacine/plugin-mouse-firework':
-        specifier: ^0.2.0
-        version: 0.2.0
       '@hyacine/plugin-nyx-player':
         specifier: ^0.1.0
         version: 0.1.0
@@ -108,6 +105,9 @@ importers:
       mermaid:
         specifier: ^11.17.2
         version: 11.17.2
+      mouse-firework:
+        specifier: 0.3.0
+        version: 0.3.0
       node-emoji:
         specifier: ^2.2.0
         version: 2.2.0
@@ -923,10 +923,6 @@ packages:
 
   '@hyacine/plugin-core@0.2.0':
     resolution: {integrity: sha512-ikwScr23yme8mFC/yr+pbz20y5aIy4GvnmoiuCZDWBLMz/bdwx3Lj1dN3etBw7sQe/ur4bWO7lq/BEpnHoO8hg==}
-    engines: {node: '>=24'}
-
-  '@hyacine/plugin-mouse-firework@0.2.0':
-    resolution: {integrity: sha512-GVPETwY7pXm6fDQcFtvR+m9cfa223YKNt1taMJIQ1/ZXH/adqsGYk4UrmsZZh3ke+b2imKCSaxvWqAq0vI+xMg==}
     engines: {node: '>=24'}
 
   '@hyacine/plugin-nyx-player@0.1.0':
@@ -4361,6 +4357,9 @@ packages:
   mlly@1.8.2:
     resolution: {integrity: sha512-d+ObxMQFmbt10sretNDytwt85VrbkhhUA/JBGm1MPaWJ65Cl4wOgLaB1NYvJSZ0Ef03MMEU/0xpPMXUIQ29UfA==}
 
+  mouse-firework@0.3.0:
+    resolution: {integrity: sha512-jlXC4m1QXDceFRKrTkRc84SmJANITEW2c8WeacKmSgIA5rJ1mz6tPZW2Kildd8AdiPsWdpnLIUcpiN1P6dIimg==}
+
   mrmime@2.0.1:
     resolution: {integrity: sha512-Y3wQdFg2Va6etvQ5I82yUhGdsKrcYox6p7FfL1LbK2J4V01F9TGlepTIhnK24t7koZibmg82KGglhA1XK5IsLQ==}
     engines: {node: '>=10'}
@@ -6767,11 +6766,6 @@ snapshots:
       '@hyacine/contract': 0.1.1
       es-toolkit: 1.51.0
       zod: 4.4.3
-
-  '@hyacine/plugin-mouse-firework@0.2.0':
-    dependencies:
-      '@hyacine/contract': 0.1.1
-      '@hyacine/plugin-core': 0.2.0
 
   '@hyacine/plugin-nyx-player@0.1.0':
     dependencies:
@@ -10696,6 +10690,8 @@ snapshots:
       pathe: 2.0.3
       pkg-types: 1.3.1
       ufo: 1.6.4
+
+  mouse-firework@0.3.0: {}
 
   mrmime@2.0.1: {}
 

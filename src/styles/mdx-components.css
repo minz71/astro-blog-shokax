@@ -427,6 +427,16 @@ span.label {
   display: none;
 }
 
+@media (max-width: 567px) {
+  .md .quiz-group .quiz-item {
+    padding-left: 2.4rem;
+  }
+
+  .md .quiz-group .quiz-item::before {
+    left: 0;
+  }
+}
+
 .md ruby.ruby-annotation {
   padding: 0 0.2rem;
   ruby-align: center;

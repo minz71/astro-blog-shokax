@@ -7,9 +7,12 @@ interface SidebarContentsProps {
   isActive?: boolean;
 }
 
+const HEADING_OFFSET = 100;
+
 function SidebarContents(props: SidebarContentsProps) {
   const [activeIndex, setActiveIndex] = createSignal(0);
   const [currentItems, setCurrentItems] = createSignal<Set<number>>(new Set());
+  let containerElement: HTMLDivElement | undefined;
 
   const toc = () => props.toc ?? [];
 
@@ -24,90 +27,111 @@ function SidebarContents(props: SidebarContentsProps) {
     return classes.join(" ");
   };
 
-  const handleTocClick = (event: MouseEvent, id: string, index: number) => {
-    event.preventDefault();
-    const target = document.getElementById(id);
-    if (target) {
-      const scrollTop = target.offsetTop - 100;
-      window.scrollTo({ top: scrollTop, behavior: "smooth" });
-      setActiveIndex(index);
-    }
+  const scrollActiveItemIntoView = () => {
+    if (!props.isActive || !containerElement) return;
+
+    requestAnimationFrame(() => {
+      const scrollContainer = containerElement?.closest(".panels > .inner");
+      const activeElement = containerElement?.querySelector<HTMLElement>(".toc-item.active");
+      if (!(scrollContainer instanceof HTMLElement) || !activeElement) return;
+
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const activeRect = activeElement.getBoundingClientRect();
+      if (activeRect.top >= containerRect.top && activeRect.bottom <= containerRect.bottom) return;
+
+      scrollContainer.scrollTo({
+        top:
+          scrollContainer.scrollTop +
+          activeRect.top -
+          containerRect.top -
+          scrollContainer.clientHeight / 4,
+        behavior: "smooth",
+      });
+    });
   };
 
   const activateNavByIndex = (index: number): void => {
-    if (index < 0 || index >= toc().length) {
-      return;
-    }
+    const items = toc();
+    if (index < 0 || index >= items.length) return;
 
     setActiveIndex(index);
     const next = new Set<number>([index]);
+    let currentToc = items[index];
 
-    // 更新父级项（level 更小的祖先）
-    let currentToc = toc()[index];
     for (let i = index - 1; i >= 0; i--) {
-      if (toc()[i].level < currentToc.level) {
+      if (items[i].level < currentToc.level) {
         next.add(i);
-        currentToc = toc()[i];
+        currentToc = items[i];
       }
     }
 
     setCurrentItems(next);
+    scrollActiveItemIntoView();
+  };
+
+  const handleTocClick = (event: MouseEvent, id: string, index: number) => {
+    event.preventDefault();
+    const target = document.getElementById(id);
+    if (!target) return;
+
+    const scrollTop = target.getBoundingClientRect().top + window.scrollY - HEADING_OFFSET;
+    window.scrollTo({ top: scrollTop, behavior: "smooth" });
+    activateNavByIndex(index);
   };
 
   onMount(() => {
-    if (typeof window === "undefined" || toc().length === 0) {
-      return;
-    }
+    if (typeof window === "undefined" || toc().length === 0) return;
 
-    // 获取所有 section 元素
-    const sections: HTMLElement[] = toc()
-      .map((item) => document.getElementById(item.id))
-      .filter((el): el is HTMLElement => Boolean(el));
+    const sections: Array<{ index: number; element: HTMLElement }> = [];
+    toc().forEach((item, index) => {
+      const element = document.getElementById(item.id);
+      if (element) sections.push({ index, element });
+    });
+    if (sections.length === 0) return;
 
-    if (sections.length === 0) {
-      return;
-    }
-
-    const findIndex = (entries: IntersectionObserverEntry[]): number => {
-      let above: HTMLElement | undefined;
-
-      for (const e of entries) {
-        if (e.boundingClientRect.top <= 0) {
-          if (e.target instanceof HTMLElement) {
-            above = e.target;
-          }
-        } else {
-          break;
-        }
+    const findIndex = (): number => {
+      let index = sections[0]?.index ?? 0;
+      for (const section of sections) {
+        if (section.element.getBoundingClientRect().top - HEADING_OFFSET > 2) break;
+        index = section.index;
       }
-
-      if (above) {
-        const si = sections.indexOf(above);
-        return si >= 0 ? si : 0;
-      }
-      return 0;
+      return index;
     };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // 原实现中 activeLock 恒为 null，等价于始终激活
-        const index = findIndex(entries);
-        activateNavByIndex(index);
-      },
-      { rootMargin: "0px 0px -100% 0px", threshold: 0 },
-    );
+    let lastIndex = -1;
+    let animationFrame = 0;
+    const update = () => {
+      const index = findIndex();
+      if (index === lastIndex) return;
+      lastIndex = index;
+      activateNavByIndex(index);
+    };
+    const scheduleUpdate = () => {
+      if (animationFrame !== 0) return;
+      animationFrame = requestAnimationFrame(() => {
+        animationFrame = 0;
+        update();
+      });
+    };
 
-    sections.forEach((element) => {
-      observer.observe(element);
-    });
+    update();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
 
     onCleanup(() => {
-      observer.disconnect();
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      if (animationFrame !== 0) cancelAnimationFrame(animationFrame);
     });
   });
 
   return (
-    <div class="contents">
+    <div
+      class="contents"
+      ref={(element) => {
+        containerElement = element;
+      }}
+    >
       {toc().length > 0 ? (
         <ol class="toc">
           <For each={toc()}>
@@ -119,7 +143,7 @@ function SidebarContents(props: SidebarContentsProps) {
                 <a
                   href={`#${item.id}`}
                   class="toc-link"
-                  onclick={(e) => handleTocClick(e, item.id, i())}
+                  onclick={(event) => handleTocClick(event, item.id, i())}
                 >
                   {item.text}
                 </a>

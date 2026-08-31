@@ -7,10 +7,34 @@
   padding: 0 2rem;
 }
 
+@media screen and (max-width: 768px) {
+  .post.block {
+    padding-inline: 0.5rem;
+  }
+}
+
 /* Post Content */
+.post-content,
+.md {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .md {
   word-wrap: break-word;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.post-content > table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.post-content th,
+.post-content td {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .md :not(pre) > code,
@@ -20,12 +44,14 @@
 .md blockquote code,
 .md figcaption code {
   display: inline-block;
+  max-width: 100%;
   padding: 0.12em 0.42em;
   margin: 0 0.12em;
   border: 0.0625rem solid var(--surface-inline-code-border);
   border-radius: 0.375rem;
   color: var(--text-color);
   box-shadow: inset 0 -0.0325rem 0 var(--grey-9-a1);
+  box-decoration-break: clone;
   font-family: var(
     --shokax-mono,
     ui-monospace,
@@ -38,7 +64,8 @@
   font-size: 0.875em;
   line-height: 1.45;
   white-space: break-spaces;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   vertical-align: baseline;
 }
 
