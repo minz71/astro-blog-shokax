@@ -170,6 +170,10 @@ export default defineConfig({
     articleAgeWarning: {
       enable: false,
     },
+    mouseFirework: {
+      // 裝飾性插件由本站明確啟用；dev-v2 的主題預設保持關閉
+      enable: true,
+    },
     siteUptime: {
       siteCreatedAt: "2022-08-01T00:00:00Z",
     },
