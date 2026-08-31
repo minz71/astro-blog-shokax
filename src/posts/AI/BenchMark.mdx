@@ -1,8 +1,8 @@
 ---
 title: "分享一些 AI 模型評測排名網站"
 date: 2025-04-02
-updated: 2026-07-09
-description: "本文介紹了幾個 AI 模型評測網站，涵蓋程式生成、OCR、語音模型、幻覺檢測與長文本理解，提供排行榜以供參考模型的能力。"
+updated: 2026-08-31
+description: "本文介紹多個 AI 模型評測網站，涵蓋程式生成、OCR、語音模型、幻覺檢測與長文本理解等不同任務的排行榜來參考不同模型的能力。"
 tags:
   - "llm"
   - "benchmark"
@@ -17,8 +17,7 @@ categories:
 
 import HexoLinksTag from "@/components/post/HexoLinksTag.astro";
 
-隨著 AI 模型的快速迭代，能力也增強了許多，可以在以下的網站查看各個模型的排名。
-可以得知模型在不同任務中的排名，也可以讓你知道除了 GPT Gemini 以外還有其他的模型。
+隨著 AI 模型快速迭代，如何客觀比較各模型的能力也變得更加重要。本文整理多個 AI 模型評測網站與排行榜，涵蓋程式生成、長文本理解、幻覺檢測、OCR 與語音辨識等不同任務，幫助對比 GPT、Gemini、Claude 及其他模型的在不同任務上的表現。
 
 # 模型綜合評分
 會提供多個面向的排行榜網站
@@ -28,8 +27,6 @@ import HexoLinksTag from "@/components/post/HexoLinksTag.astro";
 LMSYS Org (Large Model Systems Organization)是一個開放的研究組織，由 UC Berkeley 的學生和教師與 UCSD 和 CMU 合作創立。
 旨在通過共同開發開放模型、數據集、系統和評估工具，使大型模型對所有人都能夠接觸和使用。
 希望建立一個開放和透明的平臺，提供語言模型基準數據和評估工具，幫助研究人員和開發者更好地理解和提升他們的模型性能。
-
-### Chatbot Arena
 
 <HexoLinksTag
   links={[
@@ -50,7 +47,7 @@ LMSYS Org (Large Model Systems Organization)是一個開放的研究組織，由
 1. ⚔️ Arena (battle)
 使用者可以輸入問題，會隨機提供不同的模型回答，使用者可以對回答較佳的模型投票，投票後會顯示剛剛回答的模型。
 2. ⚔️ Arena (side-by-side)
-可以讓使用者選擇2個**指定**的模型，使用者可以對回答較佳的模型投票。
+可以讓使用者選擇2個指定的模型，使用者可以對回答較佳的模型投票。
 3. 💬 Direct Chat
 使用者可以直接和模型對話，可以選擇指定的模型。
 
@@ -69,7 +66,7 @@ lmsys.org 每隔一段時間都會發布排行榜，可以做為模型能力的�
 
 ## Artificial Analysis Image Arena Leaderboard
 
-* 採用 Elo 分數
+提供多個總類的評分，近期也有新增成本與能力的座標圖。
 
 <HexoLinksTag
   links={[
@@ -86,6 +83,8 @@ lmsys.org 每隔一段時間都會發布排行榜，可以做為模型能力的�
 
 
 ## Design Arena 
+
+* 採用人類投票評分，具體可以參考下方章節
 
 <HexoLinksTag
   links={[
@@ -117,14 +116,11 @@ lmsys.org 每隔一段時間都會發布排行榜，可以做為模型能力的�
 />
 
 
-LiveBench 是一個用於評估大型語言模型（LLM）的基準測試平台，目標是防止測試集污染並提供客觀評分。
-* 每月更新問題，確保模型沒有見過這些問題
-* 可以自行驗證分數，也可以接入模型 API 進行跑分
+LiveBench 是一個用於評估大型語言模型（LLM）的基準測試平台，透過定期更新資料集，防止測試集污染(模型在訓練時直接背題)。可以自行驗證分數，也可以接入模型 API 進行跑分。
 
 <img src="/images/AI/BenchMark/LiveBench.webp" alt="" title="LiveBench" style="width: 80%;" />
 
-# coding 寫程式排行榜
-基於不同的方式評斷模型寫程式的能力
+# coding agent 寫程式排行榜
 
 ## DeepSWE
 
@@ -198,6 +194,8 @@ LiveBench 是一個用於評估大型語言模型（LLM）的基準測試平台�
 
 ## GSO
 
+* 在禁用網路的情況下，測試**優化程式碼的能力**
+
 <HexoLinksTag
   links={[
     {
@@ -215,33 +213,28 @@ LiveBench 是一個用於評估大型語言模型（LLM）的基準測試平台�
 
 # 幻覺 / 上下文衰減
 
-## Vectara 的模型幻覺排行榜
+各家廠商在 LLM 模型注意力有不同的設計方式，Google 有在 Gemini 技術報告中提到[滑動注意力窗口](https://arxiv.org/pdf/2004.05150)，deepseek 使用 [DeepSeek Sparse Attention](https://arxiv.org/abs/2512.02556)，KIMI 使用 [Kimi Delta Attention](https://arxiv.org/abs/2510.26692)。
+
+* 目標是比較不同模型在不同上下文長度（input token 在 8k , 32k tokens 等）的表現。
+
+## Context Arena
+
+1. OpenAI 的 [OAI-MRCR](https://huggingface.co/datasets/openai/mrcr)
+2. Google Deepmind 的 [GDM-MRCRv2](https://github.com/google-deepmind/eval_hub/blob/master/eval_hub/mrcr_v2/README.md)
 
 <HexoLinksTag
   links={[
     {
-      url: "https://github.com/vectara/hallucination-leaderboard",
-      title: "hallucination-leaderboard",
-      desc: "https://github.com/vectara/hallucination-leaderboard",
-      author: "hallucination-leaderboard",
-      avatar: "https://avatars.githubusercontent.com/u/108304503?s=200&v=4",
+      url: "https://contextarena.ai/?showExtra=true&showMaxCtx=false&showPricing=false&needles=8&showLabels=false",
+      title: "Context Arena",
+      desc: "https://contextarena.ai/",
+      author: "Context Arena",
+      avatar: "https://contextarena.ai/favicon.svg",
       color: "#e9546b",
     },
   ]}
 />
 
-
-透過 [Hughes Hallucination Evaluation Model (HHEM)](https://huggingface.co/vectara/hallucination_evaluation_model) 來測試模型幻覺。
-
-所謂「幻覺」（hallucinated）或「事實不一致」（factually inconsistent），是指**一段文本（待判斷的假設）無法由源文本（給定的證據/前提）所支持**。在檢索增強生成（RAG）的情境中，模型會從資料集中檢索到多段文本（通常稱為事實或上下文），若生成的摘要（假設）與這些源文本（給定的證據/前提）不符，即構成幻覺。  
-
-RAG中一種幻覺類型是，LLM 生成的陳述在現實世界中是正確的，但是並未出現在提供的源文本。
-- 檢索到的事實（前提）：「法國的首都是柏林」(源文本內容)
-- LLM 回答的摘要（假設）：「法國的首都是巴黎」(符合真實世界知識)
-
-:::default
-這表示 LLM 未依賴 RAG 提供的資料，反而仰賴預訓練時學到的知識。  
-:::
 
 ## fiction.live 評估模型在長上下文上的能力
 
@@ -283,126 +276,48 @@ RAG中一種幻覺類型是，LLM 生成的陳述在現實世界中是正確的�
   - 這更貼近小說寫作中對理解潛台詞、伏筆和情感細微變化的要求。
 
 ### 模型評估方式
-- 橫向比較不同模型在不同上下文長度（如 1k, 8k tokens 等）下的表現。
 - 關鍵指標是準確率 (accuracy)，觀察其隨上下文增長而如何變化或衰減。
 - 傳統測試聚焦**從長文中找答案**，而 Fiction.LiveBench 測試**綜合理解能力**。  
   - 模型不僅要能找到某句對話，更要能理解角色關係如何隨時間演變。
 - **更貼近真實寫作需求**，測試結果反映模型在**創作輔助**（如生成連貫的角色分析、維持情節一致性）中的實用性。  
 
-## Context Arena
 
-* 使用 OpenAI 的 MRCR 評分標準 [https://huggingface.co/datasets/openai/mrcr](https://huggingface.co/datasets/openai/mrcr)
+## Vectara 的模型幻覺排行榜
 
 <HexoLinksTag
   links={[
     {
-      url: "https://contextarena.ai/?showExtra=true&showMaxCtx=false&showPricing=false&needles=8&showLabels=false",
-      title: "Context Arena",
-      desc: "https://contextarena.ai/",
-      author: "Context Arena",
-      avatar: "https://contextarena.ai/favicon.svg",
+      url: "https://github.com/vectara/hallucination-leaderboard",
+      title: "hallucination-leaderboard",
+      desc: "https://github.com/vectara/hallucination-leaderboard",
+      author: "hallucination-leaderboard",
+      avatar: "https://avatars.githubusercontent.com/u/108304503?s=200&v=4",
       color: "#e9546b",
     },
   ]}
 />
 
-# 其他 / OCR
+透過 [Hughes Hallucination Evaluation Model (HHEM)](https://huggingface.co/vectara/hallucination_evaluation_model) 來測試模型幻覺。
 
-## OpenRouter Ranking
+所謂「幻覺」（hallucinated）或「事實不一致」（factually inconsistent），是指**一段文本（待判斷的假設）無法由源文本（給定的證據/前提）所提供**。在檢索增強生成（RAG）的情境中，模型會從資料集中檢索到多段文本（通常稱為事實或上下文），若生成的摘要（假設）與這些源文本（給定的證據/前提）不符，即構成幻覺。  
 
-用戶在 OpenRouter 中的模型使用量排行，並不直接代表模型的絕對強弱，而是呈現了用戶願意付費使用的市場偏好
+RAG中一種幻覺類型是，LLM 生成的陳述在現實世界中是正確的，但是並未出現在提供的源文本，這表示 LLM 未依賴 RAG 提供的資料，反而仰賴預訓練時學到的知識。  
+- 檢索到的事實（前提）：「法國的首都是柏林」(源文本內容)
+- LLM 回答的摘要（假設）：「法國的首都是巴黎」(符合真實世界知識)
 
-<HexoLinksTag
-  links={[
-    {
-      url: "https://openrouter.ai/rankings",
-      title: "OpenRouter Ranking",
-      desc: "https://openrouter.ai/rankings",
-      author: "OpenRouter Ranking",
-      avatar: "https://openrouter.ai/favicon.ico",
-      color: "#e9546b",
-    },
-  ]}
-/>
+# 其他
 
-
-## OCR Arena
-
-* OCR 的排行榜
-* 使用 Elo 評分標準
+## EQ-Bench
+角色扮演和分析任務來評估模型的同理心、社交技巧和洞察力，該作者也有測試故事的創意寫作能力。
 
 <HexoLinksTag
   links={[
     {
-      url: "https://www.ocrarena.ai/leaderboard",
-      title: "OCR Arena",
-      desc: "https://www.ocrarena.ai/leaderboard",
-      author: "OCR Arena",
-      avatar: "https://www.ocrarena.ai/favicon.ico?favicon.6066b8fd.ico",
-      color: "#e9546b",
-    },
-  ]}
-/>
-
-## Math Arena
-
-<HexoLinksTag
-  links={[
-    {
-      url: "https://matharena.ai/",
-      title: "Math Arena",
-      desc: "https://matharena.ai/",
-      avatar: "https://matharena.ai/static/images/logo.png",
-      color: "#e9546b",
-    },
-  ]}
-/>
-
-測試架構、測試方式可以查看這篇論文: https://proceedings.neurips.cc/paper_files/paper/2025/file/1d27c01ebd3e3aebe226b44fc970d803-Paper-Datasets_and_Benchmarks_Track.pdf
-
-## EPOCH AI
-
-<HexoLinksTag
-  links={[
-    {
-      url: "https://epoch.ai/benchmarks/weirdml?view=graph&tab=release-date&metric=Accuracy",
-      title: "EPOCH AI",
-      desc: "https://epoch.ai/benchmarks/weirdml?view=graph&tab=release-date&metric=Accuracy",
-      avatar: "https://epoch.ai/assets/logo/logo.svg",
-      color: "#e9546b",
-    },
-  ]}
-/>
-
-* 解機器學習的題目
-
-## STUPID METER
-
-<HexoLinksTag
-  links={[
-    {
-      url: "https://aistupidlevel.info/",
-      title: "STUPID METER",
-      desc: "https://aistupidlevel.info/",
-      color: "#e9546b",
-    },
-  ]}
-/>
-
-* 查看 AI 模型是否出現型能下降(降智)
-
-## Vals.ai
-
-* 針對特定領域的跑分
-
-<HexoLinksTag
-  links={[
-    {
-      url: "https://www.vals.ai/benchmarks",
-      title: "Vals.ai",
-      desc: "https://www.vals.ai/benchmarks",
-      author: "Vals.ai",
-      avatar: "https://www.vals.ai/Icons/vals-icon.svg",
+      url: "https://eqbench.com/",
+      title: "EQ-Bench",
+      desc: "https://eqbench.com/",
+      author: "EQ-Bench",
+      avatar: "https://eqbench.com/images/eqbench_logo_sml.png",
       color: "#e9546b",
     },
   ]}
@@ -425,11 +340,94 @@ RAG中一種幻覺類型是，LLM 生成的陳述在現實世界中是正確的�
   ]}
 />
 
+## Simple Bench
+
+比起複雜、高度專業的 AI 基準測試（Benchmark）相比，其主要特性在於測試日常的人類推論能力與基礎常識，約一般高中程度的普遍知識。
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://simple-bench.com/",
+      title: "Simple Bench",
+      desc: "https://simple-bench.com/",
+      author: "Simple Bench",
+      avatar: "https://simple-bench.com/static/favicon.ico",
+      color: "#e9546b",
+    },
+  ]}
+/>
+
+## OpenRouter Ranking
+
+用戶在 OpenRouter 中的模型使用量排行，並不直接代表模型的絕對強弱，由於模型廠商更傾向提供訂閱方案，該榜單只統計了透過 OpenRouter 付費的用量，官方 App 或網站上的訂閱制使用者並未被計入。反映的更接近開發者與企業在建構應用時的模型選擇，而非一般消費者的使用偏好。
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://openrouter.ai/rankings",
+      title: "OpenRouter Ranking",
+      desc: "https://openrouter.ai/rankings",
+      author: "OpenRouter Ranking",
+      avatar: "https://openrouter.ai/favicon.ico",
+      color: "#e9546b",
+    },
+  ]}
+/>
+
+## OCR Arena
+
+* OCR 文件辨識的排行榜
+* 使用 Elo 評分標準
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://www.ocrarena.ai/leaderboard",
+      title: "OCR Arena",
+      desc: "https://www.ocrarena.ai/leaderboard",
+      author: "OCR Arena",
+      avatar: "https://www.ocrarena.ai/favicon.ico?favicon.6066b8fd.ico",
+      color: "#e9546b",
+    },
+  ]}
+/>
+
+## EPOCH AI
+
+* 解機器學習的題目
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://epoch.ai/benchmarks/weirdml?view=graph&tab=release-date&metric=Accuracy",
+      title: "EPOCH AI",
+      desc: "https://epoch.ai/benchmarks/weirdml?view=graph&tab=release-date&metric=Accuracy",
+      avatar: "https://epoch.ai/assets/logo/logo.svg",
+      color: "#e9546b",
+    },
+  ]}
+/>
+
+
+## STUPID METER
+
+* 查看 AI 模型是否出現型能下降(降智)
+
+<HexoLinksTag
+  links={[
+    {
+      url: "https://aistupidlevel.info/",
+      title: "STUPID METER",
+      desc: "https://aistupidlevel.info/",
+      color: "#e9546b",
+    },
+  ]}
+/>
 
 
 ## speechmap.ai
 
-測試 AI 模型對敏感和爭議性提示的反應。
+* 測試 AI 模型對敏感和爭議性提示的反應。
 
 <HexoLinksTag
   links={[
@@ -444,26 +442,8 @@ RAG中一種幻覺類型是，LLM 生成的陳述在現實世界中是正確的�
   ]}
 />
 
-
-## EQ-Bench 3
-角色扮演和分析任務來評估模型的同理心、社交技巧和洞察力
-
-<HexoLinksTag
-  links={[
-    {
-      url: "https://eqbench.com/",
-      title: "EQ-Bench 3",
-      desc: "https://eqbench.com/",
-      author: "EQ-Bench 3",
-      avatar: "https://eqbench.com/images/eqbench_logo_sml.png",
-      color: "#e9546b",
-    },
-  ]}
-/>
-
-
 ## opper.ai
-* 用戶可以提交自己的任務來跑分
+* 用戶可以提交自己的任務來跑分，可以做為幫產品做模型選型的比較工具
 
 <HexoLinksTag
   links={[
@@ -484,9 +464,9 @@ RAG中一種幻覺類型是，LLM 生成的陳述在現實世界中是正確的�
 <HexoLinksTag
   links={[
     {
-      url: "https://www.tbench.ai/leaderboard/terminal-bench/2.0",
+      url: "https://www.tbench.ai/",
       title: "Terminal Bench",
-      desc: "https://www.tbench.ai/leaderboard/terminal-bench/2.0",
+      desc: "https://www.tbench.ai/",
       author: "Terminal Bench",
       avatar: "https://www.tbench.ai/favicon.ico",
       color: "#e9546b",
@@ -495,30 +475,11 @@ RAG中一種幻覺類型是，LLM 生成的陳述在現實世界中是正確的�
 />
 
 
-## Scale Humanity's Last Exam
-
-Scale 認為傳統基準測試（如 MMLU 和 GPQA）已經沒辦法區分模型的能力，所以推出了「Humanity's Last Exam (HLE)」，截至 2025 年 4 月 3 日，該測試集已完成最終定案與清洗。
-* 所以 2025 年 4 月 3 日之後推出的模型，可以拿這些題目訓練，可能不具有參考價值。
-
-<HexoLinksTag
-  links={[
-    {
-      url: "https://scale.com/leaderboard/humanitys_last_exam",
-      title: "Scale Humanity's Last Exam",
-      desc: "https://scale.com/leaderboard/humanitys_last_exam",
-      author: "Scale Humanity's Last Exam",
-      avatar: "https://scale.com/favicon.ico",
-      color: "#e9546b",
-    },
-  ]}
-/>
-
-
 # Elo評分方式
 
-Elo 原本是由 Arpad Elo 為西洋棋設計的。它的核心概念是：根據對手的強弱來決定勝負後的加減分。贏了強者加的分數多，贏了弱者加的分數少。
+Elo 是由 Arpad Elo 為西洋棋設計的。核心概念是: 根據對手的強弱來決定勝負後的加減分。贏了強者加的分數多，贏了弱者加的分數少。
 
-讓用戶去投票也就是**將評分權交還給社群，透過集體偏好來構建排行榜**。
+讓用戶去投票也就是**將評分權交還給社群，透過集體的社群偏好來構建排行榜**。
 
 * 核心數學模型：Bradley-Terry
 
