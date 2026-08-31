@@ -23,7 +23,7 @@ function SidebarTabs(props: SidebarTabsProps) {
   return (
     <>
       {panels().length > 1 && (
-        <ul class="tab absolute inline-flex pt-[30px] pb-2.5 px-0 m-0 min-h-[30px] list-none">
+        <ul class="tab absolute inline-flex top-0 left-0 right-0 w-fit mx-auto pt-[30px] pb-2.5 px-0 my-0 min-h-[30px] list-none">
           <For each={panels()}>
             {(panel, i) => {
               const iconClass = iconFor(panel.id);

@@ -205,8 +205,6 @@ function Sidebar(props: SidebarProps) {
           />
         </div>
       </aside>
-
-      <div class={`dimmer ${sidebarOpen() ? "active" : ""}`}></div>
     </>
   );
 }

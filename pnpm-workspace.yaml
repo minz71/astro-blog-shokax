@@ -20,7 +20,6 @@ minimumReleaseAgeExclude:
   - "@hyacine/plugin-core@0.2.0"
   - "@hyacine/plugin-astro@0.2.0 || 0.2.1 || 0.2.2"
   - "@hyacine/plugin-site-uptime@0.2.0 || 0.2.1"
-  - "@hyacine/plugin-mouse-firework@0.2.0"
   - "@hyacine/plugin-article-age-warning@0.2.0 || 0.2.1"
   - "@hyacine/plugin-vercount@0.2.0"
   - "@hyacine/plugin-ai-content@0.1.0"

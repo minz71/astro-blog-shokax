@@ -15,6 +15,8 @@ function LeftNavBtn(props: LeftNavBtnProps) {
       class="left-nav-btn border-none bg-transparent flex flex-col cursor-pointer items-center justify-center lg:hidden"
       onclick={handleToggle}
       aria-label="Toggle sidebar"
+      aria-controls="sidebar"
+      aria-expanded={sidebarOpen()}
       type="button"
     >
       <div class="line-height-0 p-5 w-5.5 box-unset">

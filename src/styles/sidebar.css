@@ -17,33 +17,59 @@
   display: none;
 }
 
-/* Tablet/Mobile */
+/* Tablet/Mobile：抽屉固定从左侧滑入 */
 @media (max-width: 1023px) {
   #sidebar {
-    display: none;
+    display: block;
     position: fixed;
-    right: 0;
+    left: 0;
+    right: auto;
+    width: min(17.5rem, 85vw);
+    height: 100dvh;
     background: var(--grey-1);
     box-shadow: var(--shadow-sidebar-mobile);
     z-index: var(--z-sidebar);
-    width: 280px;
-    height: 100%;
+    transform: translateX(-100%);
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      transform 0.3s ease,
+      visibility 0s linear 0.3s;
+    will-change: transform;
+  }
+
+  #sidebar.on {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: rgb(0 0 0 / 50%);
+    cursor: pointer;
+    z-index: var(--z-sidebar-overlay);
+    animation: fadeIn 0.3s ease;
   }
 }
 
-/* 注意：.on 必须放在 media 外——astro 构建管线（疑似 @playform/inline 后处理）会
-   丢弃 media 块内与同选择器其它规则合并时重复出现的 display 声明（实测 #sidebar.on
-   的 display:block 在产物中消失 → 移动端只出遮罩不出菜单）。
-   放顶层后：移动端由 base #sidebar{display:none} + .on{display:block} 控制，
-   宽屏 #sidebar 本就是 static 显示，不受影响。 */
-#sidebar.on {
-  display: block;
+@media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+  #sidebar {
+    transition: none;
+  }
+
+  .sidebar-overlay {
+    animation: none;
+  }
 }
 
-/* 移动端抽屉遮罩（SidebarOverlay）：宽屏必隐藏——uno 的 lg:hidden 可能被
-   后加载的工具类（.fixed 等）覆盖，显式提权（与 navbar 汉堡同策略） */
 @media (min-width: 1024px) {
-  button[aria-label="Close sidebar"] {
+  .sidebar-overlay {
     display: none !important;
   }
 }
@@ -93,43 +119,29 @@
 @media (max-width: 1023px) {
   #sidebar > .inner {
     width: 100%;
+    height: calc(100% - 3.5rem);
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+  }
+
+  .panels {
+    min-height: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0;
   }
 
   .panels > .inner {
-    margin-top: 0;
-  }
-}
-
-.dimmer {
-  display: none;
-}
-
-@media (max-width: 1023px) {
-  .dimmer {
-    background: black;
-    height: 100%;
-    left: 100%;
-    opacity: 0;
-    top: 0;
     width: 100%;
-    z-index: var(--z-sidebar-overlay);
-    transition: opacity 1s;
-  }
-
-  .dimmer.active {
-    position: fixed;
-    display: block;
-    opacity: 0.3;
-    transform: translateX(-100%);
-  }
-}
-
-/* iPad landscape mode */
-@media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: landscape),
-  screen and (min-width: 768px) and (max-width: 1366px) and (orientation: landscape) and (-webkit-min-device-pixel-ratio: 2),
-  screen and (min-width: 768px) and (max-width: 1440px) and (-webkit-min-device-pixel-ratio: 1) {
-  #sidebar {
-    overflow: visible;
+    height: auto;
+    min-height: 0;
+    flex: 1 1 auto;
+    margin-top: 0;
+    margin-inline: 0;
+    padding-bottom: 1rem;
+    overscroll-behavior: contain;
   }
 }
 
@@ -189,7 +201,6 @@
   display: none;
   padding: 0.875rem 0.9375rem 2rem;
   animation: sidebar-slide-in 0.3s ease-in-out;
-  content-visibility: auto;
 }
 
 .panels .panel.active {

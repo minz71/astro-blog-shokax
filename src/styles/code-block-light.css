@@ -6,15 +6,27 @@
    shadow 树结构样式（header/按钮/全屏动画）仍在 code-block-element.ts 内。
    ============================================================ */
 
+code-block {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
 code-block pre * {
+  min-width: 0;
+  max-width: 100%;
   font-family: "Maple Mono", "Courier New", Courier, monospace;
   font-size: 0.925rem;
   line-height: 1.25rem;
   line-break: anywhere;
   white-space: break-spaces;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 code-block pre {
+  min-width: 0;
+  max-width: 100%;
   padding: 0.925rem;
   margin: 0;
   border-bottom-right-radius: 0.5rem;
@@ -32,6 +44,7 @@ code-block code .line {
   text-indent: -2.5rem;
   padding-left: 2.5rem;
   display: block;
+  min-width: 0;
   min-height: 1.25rem;
   contain-intrinsic-height: 24px;
   transition:
@@ -41,6 +54,8 @@ code-block code .line {
 }
 
 code-block code {
+  min-width: 0;
+  max-width: 100%;
   counter-reset: step;
   counter-increment: step 0;
   display: flex;

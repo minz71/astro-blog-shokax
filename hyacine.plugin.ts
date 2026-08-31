@@ -1,5 +1,5 @@
 import { defineConfig } from "@hyacine/plugin-core";
-import mouseFirework from "@hyacine/plugin-mouse-firework";
+import mouseFirework from "./src/toolkit/mouseFireworkPlugin";
 import articleAgeWarning from "@hyacine/plugin-article-age-warning";
 import vercount from "@hyacine/plugin-vercount";
 import analytics from "@hyacine/plugin-analytics";
@@ -45,6 +45,7 @@ const nyxPlayerConfig = themeConfig.plugins?.nyxPlayer ?? {};
 const nyxPlayerEnabled = nyxPlayerConfig.enable === true;
 const visibilityTitleOverrides = themeConfig.plugins?.visibilityTitle ?? {};
 
+const mouseFireworkEnabled = themeConfig.plugins?.mouseFirework?.enable === true;
 const sakuraConfig = themeConfig.plugins?.sakura;
 const sakuraEnabled = sakuraConfig?.enable === true;
 
@@ -76,10 +77,15 @@ export default defineConfig({
           }),
         ]
       : []),
-    mouseFirework({
-      count: 16,
-      radius: 80,
-    }),
+    ...(mouseFireworkEnabled
+      ? [
+          mouseFirework({
+            colors: ["rgba(255,182,185,.9)", "rgba(250,227,217,.9)", "rgba(138,198,209,.9)"],
+            count: 6,
+            radius: 20,
+          }),
+        ]
+      : []),
     ...(ageWarningEnabled
       ? [
           articleAgeWarning({

@@ -439,6 +439,14 @@ interface PluginsConfig {
   };
 
   /**
+   * 點擊煙火／愛心特效（裝飾性，預設關閉）。
+   */
+  mouseFirework?: {
+    /** 只有明確設為 true 才註冊。 */
+    enable?: boolean;
+  };
+
+  /**
    * 樱花飘落插件（装饰性，默认关闭）。
    */
   sakura?: {
