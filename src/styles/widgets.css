@@ -4,9 +4,9 @@
 
 .widgets {
   --un-bg-opacity: 1;
-  --widget-heading-color: color-mix(in oklch, var(--text-color) 80%, var(--grey-0));
-  --widget-body-color: color-mix(in oklch, var(--text-color) 72%, var(--grey-0));
-  --widget-meta-color: color-mix(in oklch, var(--text-color) 60%, var(--grey-0));
+  --widget-heading-color: color-mix(in oklch, var(--text-color) 88%, var(--grey-0));
+  --widget-body-color: color-mix(in oklch, var(--text-color) 82%, var(--grey-0));
+  --widget-meta-color: color-mix(in oklch, var(--text-color) 72%, var(--grey-0));
 }
 
 .widgets > div {

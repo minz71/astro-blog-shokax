@@ -11,7 +11,10 @@ declare module "nyx-player";
 declare module "nyx-player/style";
 declare module "@waline/client/style";
 declare module "@pagefind/component-ui";
-declare module "@pagefind/component-ui/css";
+declare module "*.css?url" {
+  const stylesheetUrl: string;
+  export default stylesheetUrl;
+}
 
 declare module "virtual:hyacine/runtime" {
   export const initialized: boolean;

@@ -63,35 +63,6 @@ const singleImage =
     </div>
 )}
 
-<script>
-  const imgs = document.querySelector('#imgs')
-
-  if (imgs) {
-    const toggleHoverByPointer = (event: MouseEvent) => {
-      const rect = imgs.getBoundingClientRect()
-      const isInside =
-        event.clientX >= rect.left &&
-        event.clientX <= rect.right &&
-        event.clientY >= rect.top &&
-        event.clientY <= rect.bottom
-
-      imgs.classList.toggle('is-hovered', isInside)
-    }
-
-    const clearHover = () => {
-      imgs.classList.remove('is-hovered')
-    }
-
-    window.addEventListener('mousemove', toggleHoverByPointer, {
-      passive: true,
-    })
-    window.addEventListener('blur', clearHover)
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) clearHover()
-    })
-  }
-</script>
-
 <style>
   :global(:root) {
     --header-cover-brightness: 0.95;
@@ -126,7 +97,7 @@ const singleImage =
     transition: filter 0.35s ease;
   }
 
-  .imgs-container.is-hovered {
+  .imgs-container:hover {
     filter: blur(0) brightness(var(--header-cover-brightness));
   }
 

@@ -91,7 +91,13 @@ function CategoryCard(props: CategoryCardProps) {
           </div>
         </div>
 
-        <a href={props.url} class="btn" title={props.name} itemprop="url">
+        <a
+          href={props.url}
+          class="btn"
+          title={props.name}
+          aria-label={`${t("button.more")} ${props.name}`}
+          itemprop="url"
+        >
           {t("button.more")}
         </a>
       </div>

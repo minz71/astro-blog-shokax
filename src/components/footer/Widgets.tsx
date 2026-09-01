@@ -1,6 +1,5 @@
 import { createSignal, For, onCleanup, onMount } from "solid-js";
 
-import { shuffle } from "es-toolkit";
 import { currentLocale, t } from "@/i18n";
 import { toPostHref } from "@/toolkit/posts/url";
 
@@ -128,7 +127,9 @@ function truncateText(text: string, maxLength: number = 50): string {
 }
 
 function Widgets(props: WidgetsProps) {
-  const [randomPosts, setRandomPosts] = createSignal<Post[]>([]);
+  const initialRandomPosts =
+    props.enableRandomPosts !== false ? (props.posts ?? []).slice(0, 10) : [];
+  const [randomPosts] = createSignal<Post[]>(initialRandomPosts);
   const [recentComments, setRecentComments] = createSignal<RecentCommentItem[]>([]);
   const [loadFailed, setLoadFailed] = createSignal(false);
 
@@ -136,11 +137,6 @@ function Widgets(props: WidgetsProps) {
 
   onMount(() => {
     let destroyRecentComments: (() => void) | undefined;
-
-    // 随机文章
-    if (props.enableRandomPosts !== false && (props.posts?.length ?? 0) > 0) {
-      setRandomPosts(shuffle([...props.posts!]).slice(0, 10));
-    }
 
     // 从 Waline 拉取近期评论
     if (props.enableRecentComments !== false && hasWaline()) {

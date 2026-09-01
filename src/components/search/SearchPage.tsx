@@ -1,6 +1,7 @@
 import { createEffect, createSignal, onCleanup, onMount } from "solid-js";
 
 import { currentLocale, getT } from "@/i18n";
+import { loadStylesheet } from "@/toolkit/loadStylesheet";
 import { lockBodyScroll } from "@/toolkit/ui/scrollLock";
 
 const isDev = import.meta.env.DEV;
@@ -43,16 +44,26 @@ function SearchPage(props: SearchPageProps) {
   let hideTimeoutId: number | null = null;
   const pagefindInstanceName = "global-search";
 
+  let pagefindUiPromise: Promise<void> | null = null;
+
   const visible = () => (props.selector ? internalVisible() : Boolean(props.showSearch));
 
-  async function initPagefindComponentUi() {
-    if (isDev) return;
+  function initPagefindComponentUi(): Promise<void> {
+    if (isDev) return Promise.resolve();
+    if (pagefindUiPromise) return pagefindUiPromise;
 
-    try {
-      await Promise.all([import("@pagefind/component-ui"), import("@pagefind/component-ui/css")]);
-    } catch (error) {
-      console.warn("Pagefind Component UI 初始化失败：", error);
-    }
+    pagefindUiPromise = Promise.all([
+      import("@pagefind/component-ui"),
+      import("@pagefind/component-ui/css?url"),
+    ])
+      .then(([, { default: stylesheetUrl }]) => loadStylesheet(stylesheetUrl))
+      .catch((error: unknown) => {
+        pagefindUiPromise = null;
+        console.warn("Pagefind Component UI 初始化失败：", error);
+        throw error;
+      });
+
+    return pagefindUiPromise;
   }
 
   function clearHideTimeout() {
@@ -81,8 +92,13 @@ function SearchPage(props: SearchPageProps) {
   }
 
   async function focusSearchInput() {
-    if (typeof window === "undefined") return;
-    if (isDev) return;
+    if (typeof window === "undefined" || isDev) return;
+
+    try {
+      await initPagefindComponentUi();
+    } catch {
+      return;
+    }
 
     // 等待 pagefind-input 自定义元素完成升级，确保 focus() 委托到内部 input
     if (typeof customElements !== "undefined" && !customElements.get("pagefind-input")) {
@@ -101,8 +117,6 @@ function SearchPage(props: SearchPageProps) {
   }
 
   onMount(() => {
-    void initPagefindComponentUi();
-
     // 监听 selector 点击
     let element: HTMLElement | null = null;
 

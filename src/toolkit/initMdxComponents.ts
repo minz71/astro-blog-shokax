@@ -1,4 +1,8 @@
 import { langBadgeColor } from "./langBadge";
+import mdxComponentsStylesheet from "@/styles/mdx-components.css?url";
+import { loadStylesheet } from "@/toolkit/loadStylesheet";
+
+void loadStylesheet(mdxComponentsStylesheet);
 
 const QUIZ_DATA_BOUND_KEY = "quizBound";
 const TABS_DATA_BOUND_KEY = "tabsBound";
