@@ -4,6 +4,7 @@ import Brand from "@/components/Brand.astro";
 import HeaderCover from "@/components/HeaderCover.astro";
 import Waves from "@/components/Waves.astro";
 import { getCollection } from "astro:content";
+import { shuffle } from "es-toolkit";
 import type {
   TocItem,
   RelatedPost,
@@ -18,16 +19,11 @@ import "@/styles/palette.css";
 import "@/styles/style.css";
 import "@/styles/navbar.css";
 import "@/styles/sidebar.css";
-import "@/styles/widgets.css";
-import "@/styles/category-card.css";
 import "@/styles/floating-toolbar.css";
 import "@/styles/about-dialog.css";
 import "@/styles/search-page.css";
 import "@/styles/articles-charts.css";
-import "@/styles/image-zoom.css";
 import "@/styles/header-cover.css";
-import "@/styles/code-block-light.css";
-import "@/styles/mdx-components.css";
 
 import Loading from "@/components/Loading.astro";
 import { covers, resolveFixedCover , coverPresets} from "@/components/Images.astro";
@@ -232,12 +228,8 @@ const siteState = {
   }, new Set()).size,
 };
 
-const widgetPosts = createWidgetPosts(posts);
+const widgetPosts = createWidgetPosts(shuffle(posts).slice(0, 10));
 
-// Import custom elements definitions
-import CodeBlock from "@/components/CodeBlock";
-import MermaidDiagram from "@/components/MermaidDiagram";
-import ImageZoom from "@/components/ImageZoom";
 import SearchPage from "@/components/search/SearchPage";
 import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro";
 ---
@@ -319,13 +311,24 @@ import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro"
       <Footer config={footerConfig} {siteName} author={sidebarConfig.author || ""} />
     </div>
     <script>
-      import "@/toolkit/initMdxComponents";
+      const initPageComponents = () => {
+        if (document.querySelector("code-block")) {
+          void import("@/components/initCodeBlock");
+        }
+        if (document.querySelector("mermaid-diagram")) {
+          void import("@/components/initMermaidDiagram");
+        }
+        if (document.querySelector("image-zoom")) {
+          void import("@/components/initImageZoom");
+        }
+        if (document.querySelector(".md .quiz-item, .md .tabs")) {
+          void import("@/toolkit/initMdxComponents");
+        }
+      };
+
+      initPageComponents();
+      document.addEventListener("astro:page-load", initPageComponents);
     </script>
-    <div class="hidden">
-      <CodeBlock client:idle />
-      <MermaidDiagram client:idle />
-      <ImageZoom client:idle />
-    </div>
     {/* 写死 true 会让 SSR 一定渲出播放器按钮，插件关掉时得等 hydrate 后才被
         侦测改掉——闪一下，没 hydrate 就一直留着两颗按不动的按钮。 */}
     <FloatingToolbar client:idle hasNyxPlayer={nyxPlayerEnabled} />

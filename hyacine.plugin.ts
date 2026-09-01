@@ -48,6 +48,9 @@ const visibilityTitleOverrides = themeConfig.plugins?.visibilityTitle ?? {};
 const mouseFireworkEnabled = themeConfig.plugins?.mouseFirework?.enable === true;
 const sakuraConfig = themeConfig.plugins?.sakura;
 const sakuraEnabled = sakuraConfig?.enable === true;
+const walineConfig = themeConfig.comments?.waline;
+const walineServerURL = walineConfig?.serverURL?.trim();
+const walineEnabled = themeConfig.comments?.enable === true && Boolean(walineServerURL);
 
 export default defineConfig({
   injectPoints: {
@@ -104,10 +107,14 @@ export default defineConfig({
         scriptUrl: "",
       },
     }),
-    walineComments({
-      serverURL: "",
-      lang: "zh-CN",
-    }),
+    ...(walineEnabled && walineServerURL
+      ? [
+          walineComments({
+            serverURL: walineServerURL,
+            lang: walineConfig?.lang ?? resolveLocale(themeConfig.locale),
+          }),
+        ]
+      : []),
     aiContent({
       enable: false,
       aiSummary: {

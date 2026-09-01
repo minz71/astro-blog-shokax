@@ -16,18 +16,8 @@ export async function openSearchDialog(page: Page) {
     return searchDialog;
   }
 
-  // SearchPage 使用 client:idle 水合：等待其完成注册 pagefind-input，
-  // 确保键盘/点击监听器已挂载。
-  await page
-    .waitForFunction(
-      () => typeof customElements !== "undefined" && Boolean(customElements.get("pagefind-input")),
-      undefined,
-      { timeout: 5000 },
-    )
-    .catch(() => {});
-
-  // 优先使用 Ctrl/Cmd+K 快捷键打开（SearchPage 中是「打开」语义，单边触发，
-  // 不会与 #search 按钮的 toggle 语义叠加导致开/关交替）。
+  // 先打开轻量面板，再等待按需下载的 Pagefind 自定义元素完成注册。
+  // 这样测试不会在用户尚未触发搜索时提前拉取 Pagefind 资源。
   const shortcut = process.platform === "darwin" ? "Meta+K" : "Control+K";
   await page.keyboard.press(shortcut);
 
@@ -39,6 +29,12 @@ export async function openSearchDialog(page: Page) {
     await openSearchButton.click({ force: true });
     await expect(searchDialog).toBeVisible({ timeout: 5000 });
   }
+
+  await page.waitForFunction(
+    () => typeof customElements !== "undefined" && Boolean(customElements.get("pagefind-input")),
+    undefined,
+    { timeout: 5000 },
+  );
 
   return searchDialog;
 }

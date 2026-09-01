@@ -202,6 +202,19 @@ interface WidgetsConfig {
   recentCommentsServerURL?: string;
 }
 
+interface CommentsConfig {
+  /** 是否启用全站评论；默认关闭。 */
+  enable?: boolean;
+
+  /** Waline 评论服务配置。 */
+  waline?: {
+    /** Waline 服务端完整 URL；未填写时不注册插件。 */
+    serverURL?: string;
+    /** 评论区语言；未填写时跟随主题 locale。 */
+    lang?: Locale;
+  };
+}
+
 interface IconsConfig {
   /**
    * 浏览器分页图示（favicon）。
@@ -545,6 +558,12 @@ export interface ShokaXThemeConfig {
    * - 只放「换一个站点就不成立」的值；观感预设值属主题，写在 hyacine.plugin.ts
    */
   plugins?: PluginsConfig;
+
+  /**
+   * 全站评论配置。
+   * - 默认不启用；只有 enable 为 true 且配置 Waline serverURL 时才注册评论插件
+   */
+  comments?: CommentsConfig;
 
   /**
    * 导航栏配置。

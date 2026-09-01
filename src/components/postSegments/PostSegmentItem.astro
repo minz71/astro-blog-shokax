@@ -49,7 +49,7 @@ const {
             <Image
               src={cover}
               widths={[320, 400, 480, 640, 800, 960]}
-              sizes="(min-width: 768px) 480px, 90vw"
+              sizes="(max-width: 768px) calc(100vw - 2rem), (max-width: 1200px) 45vw, 480px"
               quality={55}
               alt={title}
               priority={!lazy}
@@ -255,7 +255,7 @@ const {
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: 0.875rem;
-    color: var(--grey-5);
+    color: var(--grey-6);
   }
 
   .category-tag {

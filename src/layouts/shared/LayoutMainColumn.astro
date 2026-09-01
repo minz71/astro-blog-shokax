@@ -1,6 +1,7 @@
 ---
 import type { WidgetPost } from "@/toolkit/posts/createWidgetPosts";
 import Widgets from "@/components/footer/Widgets";
+import "@/styles/widgets.css";
 
 interface WidgetsConfig {
   randomPosts?: boolean;
@@ -26,7 +27,7 @@ const {
 <div class="layout-main-widgets">
   <div class="widgets">
     <Widgets
-      client:idle
+      client:visible
       posts={posts}
       enableRandomPosts={widgetsConfig.randomPosts !== false}
       enableRecentComments={widgetsConfig.recentComments === true}

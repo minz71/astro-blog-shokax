@@ -65,6 +65,7 @@ describe("CategoryCard 分类卡片", () => {
 
     const moreBtn = container.querySelector('a.btn[href="/categories/frontend/"]');
     expect(moreBtn?.textContent).toBe("更多");
+    expect(moreBtn?.getAttribute("aria-label")).toBe("更多 前端");
   });
 
   it("cover 写入 cover 区背景，topCategory 渲染徽标与 meta 链接", () => {

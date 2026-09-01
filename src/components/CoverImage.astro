@@ -11,9 +11,10 @@ interface Props {
 
 const { src, alt, index, isListItem = false } = Astro.props as Props;
 
-// 动画延迟(仅多图轮播)
+// 动画延迟（仅多图轮播）
 const animationDelay = isListItem ? `${index * 6}s` : "0s";
 const isPrimaryCarouselImage = !isListItem || index === 0;
+const responsiveWidths = [640, 960, 1280, 1600, 1920, 2560];
 
 // Astro 的 <Image /> 需要 ImageMetadata；字符串（public 路径/远程 URL）用 <img> 兜底
 const isStringSrc = typeof src === "string";
@@ -24,7 +25,7 @@ const assetSrc = !isStringSrc ? (src as ImageMetadata) : undefined;
 {
   isListItem ? (
     <li
-      class="cover-item"
+      class={`cover-item${isPrimaryCarouselImage ? " cover-item-primary" : ""}`}
       style={`animation-delay: ${animationDelay};`}
       onmouseenter="this.classList.add('stop-animation')"
       onmouseleave="this.classList.remove('stop-animation')"
@@ -37,14 +38,16 @@ const assetSrc = !isStringSrc ? (src as ImageMetadata) : undefined;
           alt={alt}
           class="cover-image"
           loading={isPrimaryCarouselImage ? "eager" : "lazy"}
-          decoding="async"
-          fetchpriority={isPrimaryCarouselImage ? "high" : "auto"}
+          decoding={isPrimaryCarouselImage ? "sync" : "async"}
+          fetchpriority={isPrimaryCarouselImage ? "high" : "low"}
         />
       ) : (
         <Image
           src={assetSrc!}
           alt={alt}
-          layout="constrained"
+          widths={responsiveWidths}
+          sizes="100vw"
+          layout="full-width"
           format="avif"
           priority={isPrimaryCarouselImage}
           quality={65}
@@ -66,8 +69,11 @@ const assetSrc = !isStringSrc ? (src as ImageMetadata) : undefined;
     <Image
       src={assetSrc!}
       alt={alt}
-      layout="constrained"
+      widths={responsiveWidths}
+      sizes="100vw"
+      layout="full-width"
       format="avif"
+      quality={65}
       class="single-image"
       priority={true}
       decoding="sync"
@@ -88,6 +94,10 @@ const assetSrc = !isStringSrc ? (src as ImageMetadata) : undefined;
     animation: imageAnimation 36s linear infinite 0s;
     backface-visibility: hidden;
     transform-style: preserve-3d;
+  }
+
+  .cover-item-primary {
+    opacity: 1;
   }
 
   .cover-item.stop-animation {
@@ -112,6 +122,18 @@ const assetSrc = !isStringSrc ? (src as ImageMetadata) : undefined;
   /* 动画应用到容器上，图片本身用 object-cover 填充 */
   .cover-item :global(img) {
     transform-origin: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cover-item {
+      opacity: 0;
+      animation: none;
+      transform: none;
+    }
+
+    .cover-item-primary {
+      opacity: 1;
+    }
   }
 
   @keyframes imageAnimation {

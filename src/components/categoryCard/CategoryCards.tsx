@@ -1,6 +1,7 @@
 import { createSignal, For, onCleanup, onMount } from "solid-js";
 
 import CategoryCard from "./CategoryCard.tsx";
+import "@/styles/category-card.css";
 
 interface PostInfo {
   title: string;
