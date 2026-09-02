@@ -226,6 +226,10 @@
     "retry": "もう一度ランダム",
     "noScript": "このブラウザでは JavaScript が無効です。ホームに戻って手動で記事を選んでください。"
   },
+  "notFound": {
+    "title": "Σ( ° △ °|||)︴404！何も見えない",
+    "imageAlt": "ページが見つかりません"
+  },
   "aboutDialog": {
     "defaults": {
       "title": "クイックチャット",

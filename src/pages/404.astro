@@ -1,0 +1,44 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { t } from "@/i18n";
+import notFoundImage from "@/assets/images/404.png";
+
+/**
+ * 对齐 hexo-theme-shoka 的 404 页：page.njk 里 `page.type === '404'` 分支
+ * 渲染 `.page.wrap > .notfound`，文字取 `title.not_found`，猫图由
+ * pages.styl 的 `.page .notfound` 作为背景贴在底部居中。
+ */
+const pageTitle = t("notFound.title");
+---
+
+<Layout {pageTitle}>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, follow" />
+  </Fragment>
+
+  <div class="wrap">
+    <div class="notfound" role="img" aria-label={t("notFound.imageAlt")}>
+      {pageTitle}
+    </div>
+  </div>
+</Layout>
+
+<style define:vars={{ notFoundImage: `url("${notFoundImage.src}")` }}>
+  /* 尺寸沿用 shoka：图 300×300（18.75rem），额外高度留给顶部文字 */
+  .notfound {
+    width: 18.75rem;
+    max-width: 100%;
+    height: 22.625rem;
+    background: var(--notFoundImage) no-repeat center bottom;
+    background-size: contain;
+    text-align: center;
+    margin: 6.25rem auto;
+    color: var(--grey-6);
+  }
+
+  @media (max-width: 480px) {
+    .notfound {
+      margin: 3rem auto;
+    }
+  }
+</style>

@@ -8,6 +8,8 @@ export const ROUTES = {
   archives: "/archives/",
   tools: "/tools/",
   rss: "/rss.xml",
+  // 静态构建把 src/pages/404.astro 输出成 dist/404.html，任意不存在的路径都会命中它
+  notFound: "/this-route-does-not-exist/",
 } as const;
 
 /**
