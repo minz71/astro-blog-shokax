@@ -95,6 +95,16 @@ test("@critical 工具不出现在任何一般文章流的页面上", async ({ p
     POSTS.helloWorld,
   ];
 
+  /**
+   * 只看内容区与侧栏，不看整页。
+   *
+   * 站点把「工具」加进 theme.config.ts 的 nav 是很自然的下一步，那会让 NavBar
+   * 合理地出现 /tools/ 链接。断言范围若是整个 page，这个测试就会因为一个正确的
+   * 站点设定而失败——要验的是「工具不出现在文章流的列表与导航里」，不是
+   * 「整站没有 /tools/ 这个字」。
+   */
+  const articleFlowScopes = ["#main", "#sidebar", ".layout-extra-column"].join(", ");
+
   for (const route of articleFlowRoutes) {
     // 逐页依序导航：共用同一个 page，平行化会互相覆盖
     // oxlint-disable-next-line eslint/no-await-in-loop
@@ -103,10 +113,11 @@ test("@critical 工具不出现在任何一般文章流的页面上", async ({ p
 
     // oxlint-disable-next-line eslint/no-await-in-loop
     const toolLinks = await page
+      .locator(articleFlowScopes)
       .locator('a[href*="/tools/"]')
       .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
 
-    expect(toolLinks, `${route} 不该出现工具链接`).toEqual([]);
+    expect(toolLinks, `${route} 的内容区或侧栏不该出现工具链接`).toEqual([]);
   }
 });
 

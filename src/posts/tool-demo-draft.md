@@ -4,10 +4,10 @@ date: 2026-03-02
 updated: 2026-03-02
 description: "草稿工具不产生任何静态详情，用来验证 /tools/{slug}/ 的 404"
 tags:
-  - 工具
-  - 示范
+  - 组件
+  - 测试
 categories:
-  - 示范
+  - 测试
 tool: true
 draft: true
 ---
