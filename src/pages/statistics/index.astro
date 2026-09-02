@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import { filterPublishableGeneralArticles } from "@/toolkit/posts/content";
 import Layout from "@/layouts/Layout.astro";
 import { t } from "@/i18n";
 import { buildSiteStatistics } from "@/toolkit/posts/buildSiteStatistics";
@@ -7,7 +8,7 @@ import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro"
 import "@/styles/collapse.css";
 
 const allPosts = await getCollection("posts");
-const statistics = buildSiteStatistics(allPosts);
+const statistics = buildSiteStatistics(filterPublishableGeneralArticles(allPosts));
 
 const latestMonth =
   statistics.monthlyPostCounts.at(-1) || null;

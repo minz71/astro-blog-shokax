@@ -1,12 +1,15 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import { getCollection } from "astro:content";
+import { filterPublishableGeneralArticles } from "@/toolkit/posts/content";
 import { t } from "@/i18n";
+import { toPostHref } from "@/toolkit/posts/url";
 
 const allPosts = await getCollection("posts");
-const postUrls = allPosts
-  .filter((post) => !post.data.draft && !post.data.encrypted)
-  .map((post) => `/posts/${post.id}/`);
+// 随机跳转只落在公开、未加密的一般文章上
+const postUrls = filterPublishableGeneralArticles(allPosts)
+  .filter((post) => !post.data.encrypted)
+  .map((post) => toPostHref(post.id));
 
 const pageTitle = t("random.title");
 const msgRedirecting = t("random.redirecting");

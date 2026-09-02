@@ -21,6 +21,7 @@ import { wrapRenderedImages } from "@/toolkit/wrapRenderedImages";
 import { wrapCodeGroups } from "@/toolkit/wrapCodeGroups";
 import { wrapExternalLinks } from "@/toolkit/wrapExternalLinks";
 import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
+import { filterPublishableGeneralArticles } from "@/toolkit/posts/content";
 
 import "@/styles/post.css";
 
@@ -33,10 +34,12 @@ import "@/styles/spoiler.css";
 import EncryptedPostContent from "@/components/encrypted/EncryptedPost";
 
 export async function getStaticPaths() {
+  // /posts/ 只收公开一般文章：上下篇、相关文章与静态路径共用这一个数组，
+  // 工具不会出现在其中任何一处
   const posts = await getCollection("posts");
-  const sortedPosts = posts
-    .filter((post) => !post.data.draft)
-    .toSorted(comparePostsByOrderDateDesc,);
+  const sortedPosts = filterPublishableGeneralArticles(posts).toSorted(
+    comparePostsByOrderDateDesc,
+  );
 
   const container = await createPostContentContainer();
 

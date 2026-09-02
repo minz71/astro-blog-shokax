@@ -31,6 +31,7 @@ import FloatingToolbar from "@/components/FloatingToolbar";
 import TwoColumnLayout from "@/layouts/TwoColumnLayout.astro";
 import ThreeColumnLayout from "@/layouts/ThreeColumnLayout.astro";
 import { generateTagCloud } from "@/toolkit/posts/generateTagCloud";
+import { filterPublishableGeneralArticles } from "@/toolkit/posts/content";
 import { createWidgetPosts } from "@/toolkit/posts/createWidgetPosts";
 import { toTagHref } from "@/toolkit/posts/url";
 import { resolveHeaderCovers } from "@/toolkit/headerCover";
@@ -173,8 +174,8 @@ const headerCovers = advancedCarousel
 const resolvedHeaderCover = pageCover ?? fixedCover;
 
 // Get all posts for widgets
-const allPosts = await getCollection("posts");
-const posts = allPosts.filter((post) => !post.data.draft);
+// 侧栏、widgets 与统计都属于一般文章流：工具与草稿一律不进这里
+const posts = filterPublishableGeneralArticles(await getCollection("posts"));
 const moments = shouldComputeRightSidebarRecentMoments
   ? (await getCollection("moments")).toSorted(
       (a, b) =>
@@ -216,13 +217,19 @@ const rightSidebarTagCloud = shouldComputeRightSidebarTagCloud
     })()
   : [];
 
+/**
+ * 侧栏统计。
+ *
+ * 分类与标签数原本读未筛选的 allPosts，草稿的 taxonomy 也会被计进去（文章数却是
+ * 筛过的），两个数字来源不一致。现在统一以公开一般文章为来源，顺带修掉这个偏差。
+ */
 const siteState = {
-  categories: allPosts.reduce((acc, post) => {
+  categories: posts.reduce((acc, post) => {
     post.data.categories?.forEach((category) => acc.add(category));
     return acc;
   }, new Set()).size,
   posts: posts.length,
-  tags: allPosts.reduce((acc, post) => {
+  tags: posts.reduce((acc, post) => {
     post.data.tags?.forEach((tag) => acc.add(tag));
     return acc;
   }, new Set()).size,

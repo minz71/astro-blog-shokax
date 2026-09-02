@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { getCollection } from "astro:content";
+import { filterPublishableGeneralArticles } from "@/toolkit/posts/content";
 import { currentLocale, getT } from "@/i18n";
 import { toCategoryHref, toPostHref } from "@/toolkit/posts/url";
 import "../../styles/collapse.css";
@@ -8,7 +9,7 @@ import { comparePostsByOrderDateAsc } from "@/toolkit/posts/sortPosts";
 
 export async function getStaticPaths() {
   const allPosts = await getCollection("posts");
-  const publishedPosts = allPosts.filter((post) => !post.data.draft);
+  const publishedPosts = filterPublishableGeneralArticles(allPosts);
 
   // Collect all unique categories
   const categorySet = new Set<string>();
@@ -29,7 +30,7 @@ const t = getT(currentLocale);
 
 // Get all published posts
 const allPosts = await getCollection("posts");
-const publishedPosts = allPosts.filter((post) => !post.data.draft);
+const publishedPosts = filterPublishableGeneralArticles(allPosts);
 
 // Filter posts that belong to this category (at any level in hierarchy)
 const postsInCategory = publishedPosts.filter((post) => {

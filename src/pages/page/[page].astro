@@ -3,6 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import IndexContent from "@/components/IndexContent.astro";
 import Pagination from "@/components/Pagination.astro";
 import { getCollection } from "astro:content";
+import { filterPublishableGeneralArticles } from "@/toolkit/posts/content";
 import themeConfig from "@/theme.config";
 import type { CollectionEntry } from "astro:content";
 import type { GetStaticPaths } from "astro";
@@ -10,7 +11,7 @@ import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
 
 export const getStaticPaths = (async ({ paginate }) => {
   const allPosts = await getCollection("posts");
-  const publishedPosts = allPosts.filter((post) => !post.data.draft);
+  const publishedPosts = filterPublishableGeneralArticles(allPosts);
 
   const regularPosts = publishedPosts
     .filter((post) => !post.data.sticky)
