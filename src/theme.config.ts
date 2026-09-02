@@ -47,6 +47,11 @@ export default defineConfig({
       },
     },
     {
+      href: "/tools/",
+      text: "工具",
+      icon: "i-ri-tools-line",
+    },
+    {
       href: "/about/",
       text: "關於我",
       icon: "i-ri-user-line",
