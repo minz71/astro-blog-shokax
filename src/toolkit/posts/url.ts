@@ -1,3 +1,5 @@
+import { isTool } from "./content";
+
 function trimSlashes(input: string): string {
   return input.replace(/^\/+/g, "").replace(/\/+$/g, "");
 }
@@ -46,4 +48,30 @@ export function toPostHref(idOrSlug: string): string {
   }
 
   return `/posts/${encodePathSegments(normalized)}/`;
+}
+
+export function toToolHref(idOrSlug: string): string {
+  const normalized = trimSlashes(removeMarkdownExtension((idOrSlug || "").trim()));
+
+  if (!normalized) {
+    return "/tools/";
+  }
+
+  return `/tools/${encodePathSegments(normalized)}/`;
+}
+
+/** toContentHref 只需要 id 与 tool 声明，不要求完整的 CollectionEntry。 */
+export interface RoutableContent {
+  id: string;
+  data: { tool?: boolean };
+}
+
+/**
+ * 依内容型别选出详情 namespace：工具进 /tools/，一般文章进 /posts/。
+ *
+ * 任何可能同时拿到两种内容的地方（工具索引、详情 canonical／permalink、卡片、
+ * sitemap lastmod）都该用这个，不要自己拼接 `/posts/`。
+ */
+export function toContentHref(entry: RoutableContent): string {
+  return isTool(entry) ? toToolHref(entry.id) : toPostHref(entry.id);
 }

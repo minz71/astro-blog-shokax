@@ -69,6 +69,19 @@ const posts = defineCollection({
       sticky: z.boolean().optional(),
 
       /**
+       * 本文是「工具」而非一般文章。
+       *
+       * 内容型别的唯一声明来源：只有 `true` 才是工具，缺席与 `false` 都是一般文章。
+       * 刻意不用 z.coerce.boolean() 或字符串预处理——字符串、数字、数组等值应该在
+       * 建置期验证失败，而不是被静默转成 truthy/falsy。
+       *
+       * 与 `clientIsland` 是两条正交的轴：这个栏位只决定「工具／文章」型别，
+       * `clientIsland` 只决定「interactive／static」渲染模式，改一条不影响另一条。
+       * categories、tags、档案目录与 slug 都不参与型别判定。
+       */
+      tool: z.boolean().optional(),
+
+      /**
        * 本文含 client island（例如 <Component client:load />）。
        *
        * container API 无法把 astro-island 的 component-url 解析成建置后带 hash
