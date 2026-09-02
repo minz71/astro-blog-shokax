@@ -62,6 +62,11 @@ export const DEFAULT_THEME_CONFIG: ShokaXThemeConfig = {
       },
     },
     {
+      text: "工具",
+      href: "/tools/",
+      icon: "i-ri-tools-line",
+    },
+    {
       text: "友链",
       href: "/friends/",
       icon: "i-ri-link",

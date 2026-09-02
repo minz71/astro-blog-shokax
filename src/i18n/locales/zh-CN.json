@@ -81,6 +81,7 @@
   },
   "tools": {
     "title": "工具",
+    "description": "本站发布的可交互小工具。",
     "empty": "还没有发布任何工具。"
   },
   "sidebar": {

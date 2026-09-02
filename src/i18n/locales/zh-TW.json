@@ -81,6 +81,7 @@
   },
   "tools": {
     "title": "工具",
+    "description": "本站發布的可互動小工具。",
     "empty": "還沒有發布任何工具。"
   },
   "sidebar": {

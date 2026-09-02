@@ -81,6 +81,7 @@
   },
   "tools": {
     "title": "Tools",
+    "description": "Interactive tools published on this site.",
     "empty": "No tools published yet."
   },
   "sidebar": {

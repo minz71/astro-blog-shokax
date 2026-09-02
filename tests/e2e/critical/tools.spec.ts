@@ -1,23 +1,24 @@
 import { expect, test } from "@playwright/test";
 import { POSTS, ROUTES, TOOLS } from "../support/routes";
 
-test("@critical 工具索引列出每个公开工具，链接带尾斜线", async ({ page }) => {
+test("@critical 工具索引以文章列表形式列出每个公开工具", async ({ page }) => {
   const response = await page.goto(ROUTES.tools);
   expect(response?.ok()).toBeTruthy();
 
-  const cards = page.locator(".tool-card");
-  await expect(cards.first()).toBeVisible();
+  // 沿用文章列表的 segment 呈现（工具也是文章形式浏览）
+  const items = page.locator("#segment-container article.segment-item");
+  await expect(items.first()).toBeVisible();
 
-  const hrefs = await page
-    .locator(".tool-card .tool-card__link")
+  const detailHrefs = await items
+    .locator('a[href^="/tools/"]')
     .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""));
 
-  // 每个工具恰好出现一次
-  expect(new Set(hrefs).size).toBe(hrefs.length);
-  expect(hrefs).toContain(TOOLS.demo);
+  expect(detailHrefs.length).toBeGreaterThan(0);
+  expect(detailHrefs).toContain(TOOLS.demo);
 
-  // 全部落在 /tools/ 命名空间且保留尾斜线
-  for (const href of hrefs) {
+  // 每个 segment 对应一个工具，详情连结不得跨出 /tools/ 命名空间
+  await expect(items).toHaveCount(new Set(detailHrefs).size);
+  for (const href of detailHrefs) {
     expect(href.startsWith("/tools/")).toBeTruthy();
     expect(href.endsWith("/")).toBeTruthy();
   }
@@ -25,6 +26,21 @@ test("@critical 工具索引列出每个公开工具，链接带尾斜线", asyn
   // 索引本身不渲染文章流的侧栏与 widgets
   await expect(page.locator("#sidebar")).toHaveCount(0);
   await expect(page.locator(".layout-main-widgets")).toHaveCount(0);
+  await expect(page.locator(".layout-standalone")).toHaveCount(1);
+});
+
+test("@critical navbar 有独立的工具入口，可直接进到工具索引", async ({ page }) => {
+  await page.goto(ROUTES.home);
+
+  const navToolsLink = page
+    .getByRole("navigation", { name: "主导航" })
+    .locator('a[href="/tools/"]');
+
+  await expect(navToolsLink).toHaveCount(1);
+  await navToolsLink.first().click();
+
+  await expect(page).toHaveURL(new RegExp(`${ROUTES.tools}$`));
+  await expect(page.locator("#segment-container article.segment-item").first()).toBeVisible();
 });
 
 test("@critical 工具详情可达，标题与 canonical 正确", async ({ page }) => {
@@ -96,12 +112,12 @@ test("@critical 工具不出现在任何一般文章流的页面上", async ({ p
   ];
 
   /**
-   * 只看内容区与侧栏，不看整页。
+   * 只看内容区与侧栏，并排除 <nav>。
    *
-   * 站点把「工具」加进 theme.config.ts 的 nav 是很自然的下一步，那会让 NavBar
-   * 合理地出现 /tools/ 链接。断言范围若是整个 page，这个测试就会因为一个正确的
-   * 站点设定而失败——要验的是「工具不出现在文章流的列表与导航里」，不是
-   * 「整站没有 /tools/ 这个字」。
+   * navbar 与侧栏选单本来就该有独立的工具入口，那是这个功能的一部分；要验的是
+   * 「工具不出现在文章列表与文章相关的面板里」，不是「整站没有 /tools/ 这个字」。
+   * 全站的 <nav> 只有 NavBar、侧栏选单与站点统计三处，都不是文章列表，
+   * 所以用 closest("nav") 排除是安全的。
    */
   const articleFlowScopes = ["#main", "#sidebar", ".layout-extra-column"].join(", ");
 
@@ -115,9 +131,11 @@ test("@critical 工具不出现在任何一般文章流的页面上", async ({ p
     const toolLinks = await page
       .locator(articleFlowScopes)
       .locator('a[href*="/tools/"]')
-      .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+      .evaluateAll((links) =>
+        links.filter((link) => !link.closest("nav")).map((link) => link.getAttribute("href")),
+      );
 
-    expect(toolLinks, `${route} 的内容区或侧栏不该出现工具链接`).toEqual([]);
+    expect(toolLinks, `${route} 的文章列表或侧栏面板不该出现工具链接`).toEqual([]);
   }
 });
 
