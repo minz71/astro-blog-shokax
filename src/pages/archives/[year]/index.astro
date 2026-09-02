@@ -1,6 +1,7 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
 import { getCollection } from "astro:content";
+import { filterPublishableGeneralArticles } from "@/toolkit/posts/content";
 import { structurePostsByDate } from "@/toolkit/posts/structurePostsByDate";
 import { buildArchiveTimeline } from "@/toolkit/posts/buildArchiveTimeline";
 import { toCategoryHref, toPostHref } from "@/toolkit/posts/url";
@@ -11,9 +12,9 @@ import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
 
 export async function getStaticPaths() {
   const allPosts = await getCollection("posts");
-  const publishedPosts = allPosts
-    .filter((post) => !post.data.draft)
-    .toSorted(comparePostsByOrderDateDesc,);
+  const publishedPosts = filterPublishableGeneralArticles(allPosts).toSorted(
+    comparePostsByOrderDateDesc,
+  );
 
   const structuredPosts = structurePostsByDate(publishedPosts, {
     daily: false,

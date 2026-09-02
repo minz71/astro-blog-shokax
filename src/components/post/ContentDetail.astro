@@ -1,0 +1,290 @@
+---
+import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro";
+import type { CollectionEntry, RenderResult } from "astro:content";
+import { render } from "astro:content";
+
+import { avatar } from "@/components/Images.astro";
+import Breadcrumb from "@/components/post/Breadcrumb.astro";
+import PostFooter from "@/components/post/PostFooter.astro";
+import PostHeader from "@/components/post/PostHeader.astro";
+import PostNav from "@/components/post/PostNav.astro";
+import type { QuickNavigation, RelatedPost, TocItem } from "@/components/sidebar/SidebarTypes";
+import { currentLocale } from "@/i18n";
+import Layout from "@/layouts/Layout.astro";
+import themeConfig from "@/theme.config";
+import type { EncryptedData } from "@/toolkit/encryption/types";
+import { getContentRenderMode, isTool } from "@/toolkit/posts/content";
+import { toContentHref, toPostHref, toTagHref } from "@/toolkit/posts/url";
+
+import "@/styles/post.css";
+import "@/styles/spoiler.css";
+import "katex/dist/katex-swap.min.css";
+
+// 加密文章内容组件
+import EncryptedPostContent from "@/components/encrypted/EncryptedPost";
+
+interface NavPost {
+  title: string;
+  slug: string;
+  category?: string;
+  cover?: string;
+}
+
+interface Props {
+  entry: CollectionEntry<"posts">;
+  isEncrypted: boolean;
+  renderedContentHtml?: string;
+  encryptedContent?: EncryptedData;
+  encryptedToc?: EncryptedData;
+  headings: RenderResult["headings"];
+  prevPost?: NavPost;
+  nextPost?: NavPost;
+  relatedPosts?: RelatedPost[];
+}
+
+const {
+  entry,
+  isEncrypted,
+  renderedContentHtml,
+  encryptedContent,
+  encryptedToc,
+  headings,
+  prevPost: prevPostProp,
+  nextPost: nextPostProp,
+  relatedPosts: relatedPostsProp,
+} = Astro.props;
+
+/**
+ * 内容型别自 entry 推导，不接受呼叫端传入的字串——否则会和 frontmatter 冲突，
+ * 出现「路由说是工具、frontmatter 说是文章」这种两个真相来源。
+ */
+const contentIsTool = isTool(entry);
+
+/**
+ * 工具不属于一般文章流：即使呼叫端误传，也在这里丢掉。
+ * Layout 的 articleFlowEnabled=false 会连侧栏资料都不建立。
+ */
+const prevPost = contentIsTool ? undefined : prevPostProp;
+const nextPost = contentIsTool ? undefined : nextPostProp;
+const relatedPosts = contentIsTool ? [] : (relatedPostsProp ?? []);
+
+/**
+ * 带 client island 的内容：container API 解析不出 astro-island 的 component-url，
+ * 所以 prepareContentDetail 那边不预渲染，改在这里拿 Content 直接交给模板。
+ * 主题只看 frontmatter 栏位，不认识任何一篇具体内容。
+ */
+const hasClientIsland = getContentRenderMode(entry) === "interactive";
+const { Content } = hasClientIsland ? await render(entry) : { Content: undefined };
+
+// Build TOC from headings (加密内容的 TOC 在前端解密后更新)
+const toc: TocItem[] = isEncrypted
+  ? []
+  : headings.map((h) => ({
+      id: h.slug,
+      text: h.text,
+      level: h.depth,
+    }));
+
+// Build quick navigation
+const navigation: QuickNavigation = {
+  prevUrl: prevPost ? toPostHref(prevPost.slug) : undefined,
+  prevTitle: prevPost?.title,
+  nextUrl: nextPost ? toPostHref(nextPost.slug) : undefined,
+  nextTitle: nextPost?.title,
+};
+
+// Calculate word count from content
+const plainText = (entry.body || "").replaceAll(/[#*`_[\]()]/g, "").replaceAll(/\s+/g, " ");
+const wordCount = plainText.length;
+
+// Calculate read time (assume 300 words per minute)
+const readTime = Math.ceil(wordCount / 300);
+
+// Get site info from config
+const siteConfig = themeConfig.sidebar || {};
+const author = siteConfig.author || "Author";
+const siteName = themeConfig.siteName || "Site";
+
+// 详情路径依内容型别落在 /tools/ 或 /posts/，不自行拼接
+const contentPath = toContentHref(entry);
+
+// Build permalink
+const permalink = import.meta.env.SITE
+  ? new URL(contentPath, import.meta.env.SITE).toString()
+  : contentPath;
+
+// Build postMeta for Brand component
+const postMeta = {
+  date: entry.data.date,
+  wordCount,
+  readTime,
+};
+// SEO：发布/更新时间、OG 与 JSON-LD（加密内容已 noindex，不输出）
+const publishedTime = entry.data.date.toISOString();
+const modifiedTime = (entry.data.updated ?? entry.data.date).toISOString();
+const pageDescription = entry.data.description || entry.body?.slice(0, 150).replace(/\s+/g, " ");
+const coverSrc = typeof entry.data.cover === "string" ? entry.data.cover : entry.data.cover?.src;
+const coverUrl =
+  coverSrc && import.meta.env.SITE ? new URL(coverSrc, import.meta.env.SITE).toString() : coverSrc;
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: entry.data.title,
+  description: pageDescription,
+  datePublished: publishedTime,
+  dateModified: modifiedTime,
+  mainEntityOfPage: permalink,
+  url: permalink,
+  inLanguage: currentLocale,
+  author: { "@type": "Person", name: author },
+  publisher: { "@type": "Organization", name: siteName },
+  ...(coverUrl ? { image: coverUrl } : {}),
+  ...(entry.data.tags?.length ? { keywords: entry.data.tags.join(", ") } : {}),
+};
+// </script> 不能出现在内联 JSON-LD 中
+const jsonLdHtml = JSON.stringify(jsonLd).replaceAll("<", "\\u003c");
+---
+
+<Layout
+  toc={toc}
+  relatedPosts={relatedPosts}
+  currentSlug={entry.id}
+  navigation={navigation}
+  pageTitle={entry.data.title}
+  postMeta={postMeta}
+  pageCover={entry.data.cover}
+  articleFlowEnabled={!contentIsTool}
+  canonicalPath={contentPath}
+>
+  <Fragment slot="head">
+    <meta name="description" content={pageDescription} />
+    {/* 加密内容添加 noindex */}
+    {isEncrypted && <meta name="robots" content="noindex, nofollow" />}
+    {
+      !isEncrypted && (
+        <>
+          <meta property="og:type" content="article" />
+          <meta property="og:title" content={entry.data.title} />
+          {pageDescription && <meta property="og:description" content={pageDescription} />}
+          <meta property="og:url" content={permalink} />
+          <meta property="og:site_name" content={siteName} />
+          {coverUrl && <meta property="og:image" content={coverUrl} />}
+          <meta property="article:published_time" content={publishedTime} />
+          <meta property="article:modified_time" content={modifiedTime} />
+          {entry.data.tags?.map((tag) => <meta property="article:tag" content={tag} />)}
+          <script is:inline type="application/ld+json" set:html={jsonLdHtml} />
+        </>
+      )
+    }
+  </Fragment>
+
+  <Fragment>
+    <div class="article wrap" data-pagefind-ignore={isEncrypted ? "all" : undefined}>
+      <Breadcrumb categories={entry.data.categories ?? undefined} />
+
+      <article
+        itemscope
+        itemtype="http://schema.org/Article"
+        class="post block"
+        data-pagefind-body={!isEncrypted}
+        lang={currentLocale}
+      >
+        <link itemprop="mainEntityOfPage" href={permalink} />
+
+        <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <meta itemprop="image" content={avatar.src} />
+          <meta itemprop="name" content={author} />
+          <meta itemprop="description" content={`${siteName}`} />
+        </span>
+
+        <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+          <meta itemprop="name" content={siteName} />
+        </span>
+
+        <PostHeader
+          title={entry.data.title}
+          date={entry.data.date}
+          updated={entry.data.updated}
+          wordCount={wordCount}
+        />
+
+        {/* Hyacine Plugin Outlet: Post Header */}
+        <HyacineOutlet name="post-header" context={entry} />
+
+        {/* Hyacine Plugin Outlet: AI 摘要（encrypted 时插件内部自动短路） */}
+        <HyacineOutlet
+          name="post-summary"
+          context={entry}
+          extraProps={{ postId: entry.id, postBody: entry.body }}
+        />
+
+        <div class="body md" itemprop="articleBody">
+          {
+            isEncrypted && encryptedContent ? (
+              <EncryptedPostContent
+                client:load
+                encryptedContent={encryptedContent}
+                encryptedToc={encryptedToc}
+                title={entry.data.title}
+              />
+            ) : hasClientIsland && Content ? (
+              <div class="post-content">
+                <Content />
+              </div>
+            ) : (
+              <div class="post-content" set:html={renderedContentHtml ?? ""} />
+            )
+          }
+
+          {
+            !isEncrypted && entry.data.tags && entry.data.tags.length > 0 && (
+              <div class="tags">
+                {entry.data.tags.map((tag) => (
+                  <a href={toTagHref(tag)} rel="tag">
+                    <i class="icon i-ri-price-tag-3-line" />
+                    {tag}
+                  </a>
+                ))}
+              </div>
+            )
+          }
+        </div>
+
+        <PostFooter
+          date={entry.data.date}
+          updated={entry.data.updated}
+          permalink={permalink}
+          title={entry.data.title}
+          author={author}
+          siteName={siteName}
+          showCopyright={true}
+          showReward={false}
+          license={entry.data.license}
+        />
+
+        {/* Hyacine Plugin Outlet: Post Footer */}
+        <HyacineOutlet name="post-footer" context={entry} extraProps={{ postId: entry.id }} />
+      </article>
+    </div>
+
+    {
+      /* 工具没有上一篇／下一篇：工具之间不建立序列（见 design 的 Non-goals） */
+      !contentIsTool && (
+        <PostNav
+          prevPost={prevPost}
+          nextPost={nextPost}
+          nextGradientCover={themeConfig.cover?.nextGradientCover}
+        />
+      )
+    }
+
+    {
+      !isEncrypted && (
+        <div id="comments" class="comment">
+          {/* Hyacine Plugin Outlet: Waline 评论 */}
+          <HyacineOutlet name="comment" />
+        </div>
+      )
+    }
+  </Fragment>
+</Layout>

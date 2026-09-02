@@ -79,6 +79,11 @@
     "tagDistribution": "標籤文章分佈（Top 16）",
     "latestMonthSummary": "最近統計月份 {{month}} 共發佈 {{count}} 篇文章。"
   },
+  "tools": {
+    "title": "工具",
+    "description": "本站發布的可互動小工具。",
+    "empty": "還沒有發布任何工具。"
+  },
   "sidebar": {
     "toc": "目錄",
     "overview": "站點概覽",

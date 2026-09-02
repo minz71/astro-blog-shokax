@@ -1,3 +1,4 @@
+import { filterPublishableGeneralArticles, isGeneralArticle } from "@/toolkit/posts/content";
 import type { Post } from "@/toolkit/posts/types";
 
 export interface CountItem {
@@ -37,7 +38,11 @@ export function buildSiteStatistics(
   options: BuildSiteStatisticsOptions = {},
 ): SitePostStatistics {
   const includeDrafts = options.includeDrafts ?? false;
-  const publishedPosts = includeDrafts ? posts : posts.filter((post) => !post.data.draft);
+  // 站点统计的语意是「文章统计」，所以工具一律排除。呼叫端本来就该先分流，
+  // 这里再防御一次，避免将来新增入口漏筛。
+  const publishedPosts = includeDrafts
+    ? posts.filter((post) => isGeneralArticle(post))
+    : filterPublishableGeneralArticles(posts);
 
   const monthlyMap = new Map<string, number>();
   const categoryMap = new Map<string, number>();

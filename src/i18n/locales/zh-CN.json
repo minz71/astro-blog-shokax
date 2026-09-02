@@ -79,6 +79,11 @@
     "tagDistribution": "Tag 文章分布（Top 16）",
     "latestMonthSummary": "最近统计月份 {{month}} 共发布 {{count}} 篇文章。"
   },
+  "tools": {
+    "title": "工具",
+    "description": "本站发布的可交互小工具。",
+    "empty": "还没有发布任何工具。"
+  },
   "sidebar": {
     "toc": "目录",
     "overview": "站点概览",

@@ -1,0 +1,9 @@
+/* 独立内容版面：单栏，宽度沿用 .layout-frame */
+.layout-standalone {
+  gap: 0.875rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.layout-standalone > #main {
+  grid-column: 1;
+}

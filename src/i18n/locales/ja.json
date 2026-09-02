@@ -79,6 +79,11 @@
     "tagDistribution": "タグ別記事分布（Top 16）",
     "latestMonthSummary": "{{month}} に {{count}} 件の記事が公開されました。"
   },
+  "tools": {
+    "title": "ツール",
+    "description": "このサイトで公開しているインタラクティブなツール。",
+    "empty": "まだツールが公開されていません。"
+  },
   "sidebar": {
     "toc": "目次",
     "overview": "サイト概要",

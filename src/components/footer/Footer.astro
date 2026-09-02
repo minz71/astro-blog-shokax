@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import { filterPublishableGeneralArticles } from "@/toolkit/posts/content";
 import { currentLocale, getT } from "@/i18n";
 import { sanitizeThemeColor, type ThemeColorValue } from "@/toolkit/themeColor";
 import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro";
@@ -31,8 +32,9 @@ const { config = {}, siteName = "ShokaX", author = "Author" } = Astro.props;
 const t = getT(currentLocale);
 
 // Get all posts for statistics
+// 全站字数与阅读时间是文章统计，工具与草稿都不计入
 const allPosts = await getCollection("posts");
-const posts = allPosts.filter((post) => !post.data.draft);
+const posts = filterPublishableGeneralArticles(allPosts);
 
 // Calculate statistics
 const wordCounts = posts.map((post) => {

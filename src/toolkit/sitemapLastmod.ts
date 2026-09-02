@@ -1,10 +1,10 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { slug as githubSlug } from "github-slugger";
-import { toPostHref } from "./posts/url";
+import { toPostHref, toToolHref } from "./posts/url";
 
 // 供 astro.config 的 sitemap({ serialize }) 使用：扫描 src/posts 的 frontmatter,
-// 为文章页补上 <lastmod>(updated 优先,缺席时回退 date)。
+// 为文章页与工具页补上 <lastmod>(updated 优先,缺席时回退 date)。
 // 不引入 yaml 解析依赖,只需从第一个 --- 块提取 date / updated 两个键。
 
 interface SitemapItemLike {
@@ -42,6 +42,12 @@ function extractDate(frontmatter: string, key: string): Date | undefined {
 // 与 Astro glob loader 的默认 generateId 一致：frontmatter slug 优先，
 // 否则对去除扩展名的相对路径逐段 githubSlug(会小写化，如 AI/Accelerators
 // → ai/accelerators)。
+// 内容型别只读 frontmatter 的严格 `tool: true`，不得以路径是否含 tool/ 判断——
+// 与 runtime 的 isTool 同一条语意。
+function isToolFrontmatter(frontmatter: string): boolean {
+  return frontmatter.match(/^tool:[ \t]*(.+?)[ \t]*$/m)?.[1] === "true";
+}
+
 function toPostId(relativePath: string, frontmatter: string): string {
   const slugOverride = frontmatter
     .match(/^slug:[ \t]*(.+?)[ \t]*$/m)?.[1]
@@ -82,7 +88,8 @@ export function buildPostLastmodMap(postsDir: string): Map<string, string> {
     }
 
     const id = toPostId(relative(postsDir, file).replaceAll("\\", "/"), frontmatter);
-    lastmodByPath.set(normalizePathname(toPostHref(id)), lastmod.toISOString());
+    const href = isToolFrontmatter(frontmatter) ? toToolHref(id) : toPostHref(id);
+    lastmodByPath.set(normalizePathname(href), lastmod.toISOString());
   }
 
   return lastmodByPath;

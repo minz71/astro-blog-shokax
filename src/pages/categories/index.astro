@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { getCollection } from "astro:content";
+import { filterPublishableGeneralArticles } from "@/toolkit/posts/content";
 import {
   formatCategories,
   type Category,
@@ -11,7 +12,7 @@ import "../../styles/collapse.css";
 
 // Get all published posts
 const allPosts = await getCollection("posts");
-const publishedPosts = allPosts.filter((post) => !post.data.draft);
+const publishedPosts = filterPublishableGeneralArticles(allPosts);
 
 // Create a map to track category hierarchy
 // Categories format: ["Parent", "Child", "Grandchild"] - array represents path

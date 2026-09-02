@@ -1,50 +1,24 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import Breadcrumb from "@/components/post/Breadcrumb.astro";
-import PostHeader from "@/components/post/PostHeader.astro";
-import PostFooter from "@/components/post/PostFooter.astro";
-import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro";
-import PostNav from "@/components/post/PostNav.astro";
-import { currentLocale } from "@/i18n";
-import { getCollection, render } from "astro:content";
-import themeConfig from "@/theme.config";
-import type {
-  TocItem,
-  QuickNavigation,
-} from "@/components/sidebar/SidebarTypes";
-import type { EncryptedData } from "@/toolkit/encryption/types";
-import { encryptContent } from "@/toolkit/encryption/crypto";
+import { getCollection } from "astro:content";
+
+import ContentDetail from "@/components/post/ContentDetail.astro";
+import { filterPublishableGeneralArticles } from "@/toolkit/posts/content";
 import { createPostContentContainer } from "@/toolkit/posts/createPostContentContainer";
-import { toPostHref, toTagHref } from "@/toolkit/posts/url";
-import { wrapRenderedCodeBlocks } from "@/toolkit/wrapRenderedCodeBlocks";
-import { wrapRenderedImages } from "@/toolkit/wrapRenderedImages";
-import { wrapCodeGroups } from "@/toolkit/wrapCodeGroups";
-import { wrapExternalLinks } from "@/toolkit/wrapExternalLinks";
+import { prepareContentDetail } from "@/toolkit/posts/prepareContentDetail";
 import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
 
-import "@/styles/post.css";
-
-import "katex/dist/katex-swap.min.css";
-import { avatar } from "@/components/Images.astro";
-
-import "@/styles/spoiler.css";
-
-// 加密文章内容组件
-import EncryptedPostContent from "@/components/encrypted/EncryptedPost";
-
 export async function getStaticPaths() {
+  // /posts/ 只收公开一般文章：静态路径、上下篇与相关文章共用这一个数组，
+  // 工具不会出现在其中任何一处
   const posts = await getCollection("posts");
-  const sortedPosts = posts
-    .filter((post) => !post.data.draft)
-    .toSorted(comparePostsByOrderDateDesc,);
+  const sortedPosts = filterPublishableGeneralArticles(posts).toSorted(comparePostsByOrderDateDesc);
 
   const container = await createPostContentContainer();
 
   return Promise.all(
     sortedPosts.map(async (post, index) => {
       const prevPost = index > 0 ? sortedPosts[index - 1] : undefined;
-      const nextPost =
-        index < sortedPosts.length - 1 ? sortedPosts[index + 1] : undefined;
+      const nextPost = index < sortedPosts.length - 1 ? sortedPosts[index + 1] : undefined;
 
       // Get related posts from the same category
       const categories = post.data.categories || [];
@@ -52,9 +26,7 @@ export async function getStaticPaths() {
         categories.length > 0
           ? sortedPosts
               .filter(
-                (p) =>
-                  p.id !== post.id &&
-                  p.data.categories?.some((c) => categories.includes(c)),
+                (p) => p.id !== post.id && p.data.categories?.some((c) => categories.includes(c)),
               )
               .slice(0, 10)
               .map((p) => ({
@@ -65,52 +37,10 @@ export async function getStaticPaths() {
               }))
           : [];
 
-      // 处理加密文章
-      let encryptedContent: EncryptedData | undefined;
-      let encryptedToc: EncryptedData | undefined;
-      let renderedContentHtml: string | undefined;
-      let isEncrypted = false;
-
-      const { Content, headings } = await render(post);
-
-      // 带 client island 的文章不走 container 预渲染，见 clientIsland 栏位说明
-      const hasClientIsland = post.data.clientIsland === true;
-
-      const renderedHtml = hasClientIsland
-        ? ""
-        : wrapExternalLinks(
-            wrapRenderedImages(
-              wrapCodeGroups(
-                wrapRenderedCodeBlocks(await container.renderToString(Content)),
-              ),
-            ),
-            { siteUrl: import.meta.env.SITE },
-          );
-
-      if (post.data.encrypted && post.data.password) {
-        isEncrypted = true;
-
-        // 加密内容
-        encryptedContent = await encryptContent(
-          renderedHtml,
-          post.data.password,
-        );
-
-        // 加密 TOC
-        const tocData = headings.map((h) => ({
-          id: h.slug,
-          text: h.text,
-          level: h.depth,
-        }));
-        if (tocData.length > 0) {
-          encryptedToc = await encryptContent(
-            JSON.stringify(tocData),
-            post.data.password,
-          );
-        }
-      } else {
-        renderedContentHtml = renderedHtml;
-      }
+      const prepared = await prepareContentDetail(post, {
+        container,
+        siteUrl: import.meta.env.SITE,
+      });
 
       return {
         params: { slug: post.id },
@@ -139,295 +69,14 @@ export async function getStaticPaths() {
               }
             : undefined,
           relatedPosts,
-          isEncrypted,
-          renderedContentHtml,
-          encryptedContent,
-          encryptedToc,
-          headings,
+          ...prepared,
         },
       };
     }),
   );
 }
 
-interface Props {
-  post: import("astro:content").CollectionEntry<"posts">;
-  prevPost?: {
-    title: string;
-    slug: string;
-    category?: string;
-    cover?: string;
-  };
-  nextPost?: {
-    title: string;
-    slug: string;
-    category?: string;
-    cover?: string;
-  };
-  relatedPosts: {
-    slug: string;
-    title: string;
-    date: Date;
-    category?: string;
-  }[];
-  isEncrypted: boolean;
-  renderedContentHtml?: string;
-  encryptedContent?: EncryptedData;
-  encryptedToc?: EncryptedData;
-  headings: import("astro:content").RenderResult["headings"];
-}
-
-const {
-  post,
-  prevPost,
-  nextPost,
-  relatedPosts,
-  isEncrypted,
-  renderedContentHtml,
-  encryptedContent,
-  encryptedToc,
-  headings,
-} = Astro.props as Props;
-
-/**
- * 带 client island 的文章：container API 解析不出 astro-island 的
- * component-url，所以 getStaticPaths 那边不预渲染，改在这里拿 Content 直接交给
- * 模板。主题只看 frontmatter 栏位，不认识任何一篇具体文章。
- */
-const hasClientIsland = post.data.clientIsland === true;
-const { Content: PostContent } = hasClientIsland
-  ? await render(post)
-  : { Content: undefined };
-
-// Build TOC from headings (加密文章的 TOC 在前端解密后更新)
-const toc: TocItem[] = isEncrypted
-  ? []
-  : headings.map((h) => ({
-      id: h.slug,
-      text: h.text,
-      level: h.depth,
-    }));
-
-// Build quick navigation
-const navigation: QuickNavigation = {
-  prevUrl: prevPost ? toPostHref(prevPost.slug) : undefined,
-  prevTitle: prevPost?.title,
-  nextUrl: nextPost ? toPostHref(nextPost.slug) : undefined,
-  nextTitle: nextPost?.title,
-};
-
-// Calculate word count from content
-const plainText = (post.body || "")
-  .replaceAll(/[#*`_[\]()]/g, "")
-  .replaceAll(/\s+/g, " ");
-const wordCount = plainText.length;
-
-// Calculate read time (assume 300 words per minute)
-const readTime = Math.ceil(wordCount / 300);
-
-// Get site info from config
-const siteConfig = themeConfig.sidebar || {};
-const author = siteConfig.author || "Author";
-const siteName = themeConfig.siteName || "Site";
-
-// Current post path (trailing slash required by project routing)
-const postPath = toPostHref(post.id);
-
-// Build permalink
-const permalink = import.meta.env.SITE
-  ? new URL(postPath, import.meta.env.SITE).toString()
-  : postPath;
-
-// Build postMeta for Brand component
-const postMeta = {
-  date: post.data.date,
-  wordCount,
-  readTime,
-};
-// SEO：发布/更新时间、OG 与 JSON-LD（加密文章已 noindex，不输出）
-const publishedTime = post.data.date.toISOString();
-const modifiedTime = (post.data.updated ?? post.data.date).toISOString();
-const pageDescription =
-  post.data.description || post.body?.slice(0, 150).replace(/\s+/g, " ");
-const coverSrc =
-  typeof post.data.cover === "string" ? post.data.cover : post.data.cover?.src;
-const coverUrl =
-  coverSrc && import.meta.env.SITE
-    ? new URL(coverSrc, import.meta.env.SITE).toString()
-    : coverSrc;
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  headline: post.data.title,
-  description: pageDescription,
-  datePublished: publishedTime,
-  dateModified: modifiedTime,
-  mainEntityOfPage: permalink,
-  url: permalink,
-  inLanguage: currentLocale,
-  author: { "@type": "Person", name: author },
-  publisher: { "@type": "Organization", name: siteName },
-  ...(coverUrl ? { image: coverUrl } : {}),
-  ...(post.data.tags?.length ? { keywords: post.data.tags.join(", ") } : {}),
-};
-// </script> 不能出现在内联 JSON-LD 中
-const jsonLdHtml = JSON.stringify(jsonLd).replaceAll("<", "\\u003c");
+const { post, ...detail } = Astro.props;
 ---
 
-<Layout
-  toc={toc}
-  relatedPosts={relatedPosts}
-  currentSlug={post.id}
-  navigation={navigation}
-  pageTitle={post.data.title}
-  postMeta={postMeta}
-  pageCover={post.data.cover}
->
-  <Fragment slot="head">
-    <meta name="description" content={pageDescription} />
-    {/* 加密文章添加 noindex */}
-    {isEncrypted && <meta name="robots" content="noindex, nofollow" />}
-    {
-      !isEncrypted && (
-        <>
-          <meta property="og:type" content="article" />
-          <meta property="og:title" content={post.data.title} />
-          {pageDescription && (
-            <meta property="og:description" content={pageDescription} />
-          )}
-          <meta property="og:url" content={permalink} />
-          <meta property="og:site_name" content={siteName} />
-          {coverUrl && <meta property="og:image" content={coverUrl} />}
-          <meta property="article:published_time" content={publishedTime} />
-          <meta property="article:modified_time" content={modifiedTime} />
-          {post.data.tags?.map((tag) => (
-            <meta property="article:tag" content={tag} />
-          ))}
-          <script is:inline type="application/ld+json" set:html={jsonLdHtml} />
-        </>
-      )
-    }
-  </Fragment>
-
-  <Fragment>
-    <div
-      class="article wrap"
-      data-pagefind-ignore={isEncrypted ? "all" : undefined}
-    >
-      <Breadcrumb categories={post.data.categories ?? undefined} />
-
-      <article
-        itemscope
-        itemtype="http://schema.org/Article"
-        class="post block"
-        data-pagefind-body={!isEncrypted}
-        lang={currentLocale}
-      >
-        <link itemprop="mainEntityOfPage" href={permalink} />
-
-        <span
-          hidden
-          itemprop="author"
-          itemscope
-          itemtype="http://schema.org/Person"
-        >
-          <meta itemprop="image" content={avatar.src} />
-          <meta itemprop="name" content={author} />
-          <meta itemprop="description" content={`${siteName}`} />
-        </span>
-
-        <span
-          hidden
-          itemprop="publisher"
-          itemscope
-          itemtype="http://schema.org/Organization"
-        >
-          <meta itemprop="name" content={siteName} />
-        </span>
-
-        <PostHeader
-          title={post.data.title}
-          date={post.data.date}
-          updated={post.data.updated}
-          wordCount={wordCount}
-        />
-
-        {/* Hyacine Plugin Outlet: Post Header */}
-        <HyacineOutlet name="post-header" context={post} />
-
-        {/* Hyacine Plugin Outlet: AI 摘要（encrypted 时插件内部自动短路） */}
-        <HyacineOutlet
-          name="post-summary"
-          context={post}
-          extraProps={{ postId: post.id, postBody: post.body }}
-        />
-
-        <div class="body md" itemprop="articleBody">
-          {
-            isEncrypted && encryptedContent ? (
-              <EncryptedPostContent
-                client:load
-                encryptedContent={encryptedContent}
-                encryptedToc={encryptedToc}
-                title={post.data.title}
-              />
-            ) : hasClientIsland && PostContent ? (
-              <div class="post-content">
-                <PostContent />
-              </div>
-            ) : (
-              <div class="post-content" set:html={renderedContentHtml ?? ""} />
-            )
-          }
-
-          {
-            !isEncrypted && post.data.tags && post.data.tags.length > 0 && (
-              <div class="tags">
-                {post.data.tags.map((tag) => (
-                  <a href={toTagHref(tag)} rel="tag">
-                    <i class="icon i-ri-price-tag-3-line" />
-                    {tag}
-                  </a>
-                ))}
-              </div>
-            )
-          }
-        </div>
-
-        <PostFooter
-          date={post.data.date}
-          updated={post.data.updated}
-          permalink={permalink}
-          title={post.data.title}
-          author={author}
-          siteName={siteName}
-          showCopyright={true}
-          showReward={false}
-          license={post.data.license}
-        />
-
-        {/* Hyacine Plugin Outlet: Post Footer */}
-        <HyacineOutlet
-          name="post-footer"
-          context={post}
-          extraProps={{ postId: post.id }}
-        />
-      </article>
-    </div>
-
-    <PostNav
-      prevPost={prevPost}
-      nextPost={nextPost}
-      nextGradientCover={themeConfig.cover?.nextGradientCover}
-    />
-
-    {
-      !isEncrypted && (
-        <div id="comments" class="comment">
-          {/* Hyacine Plugin Outlet: Waline 评论 */}
-          <HyacineOutlet name="comment" />
-        </div>
-      )
-    }
-  </Fragment>
-</Layout>
+<ContentDetail entry={post} {...detail} />

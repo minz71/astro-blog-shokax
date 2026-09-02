@@ -3,6 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import IndexContent from "../components/IndexContent.astro";
 import Pagination from "../components/Pagination.astro";
 import { getCollection } from "astro:content";
+import { filterPublishableGeneralArticles } from "@/toolkit/posts/content";
 import themeConfig from "@/theme.config";
 import { resolveCategoryCover } from "@/components/Images.astro";
 import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
@@ -10,8 +11,8 @@ import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
 // Fetch all posts
 const allPosts = await getCollection("posts");
 
-// Filter out drafts
-const publishedPosts = allPosts.filter((post) => !post.data.draft);
+// 只取公开一般文章：草稿与工具都不进首页
+const publishedPosts = filterPublishableGeneralArticles(allPosts);
 
 // Separate sticky posts and regular posts
 const stickyPosts = publishedPosts

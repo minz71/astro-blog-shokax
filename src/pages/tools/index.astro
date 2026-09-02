@@ -1,0 +1,96 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getCollection } from "astro:content";
+
+import Divider from "@/components/Divider.astro";
+import { covers, coverPresets, getPostCover } from "@/components/Images.astro";
+import PostSegments from "@/components/postSegments/PostSegments.astro";
+import { t } from "@/i18n";
+import Layout from "@/layouts/Layout.astro";
+import themeConfig from "@/theme.config";
+import { filterPublishableTools } from "@/toolkit/posts/content";
+import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
+import { transformIndexPosts } from "@/toolkit/posts/transformIndexPosts";
+import { resolveHeaderCovers } from "@/toolkit/headerCover";
+
+/**
+ * 工具索引。
+ *
+ * 单一 posts collection，在查询入口立即以 filterPublishableTools 分流，再排序，
+ * 每个 entry 只投影一次。
+ *
+ * 呈现沿用文章列表那套（transformIndexPosts + PostSegments）：工具也是文章形式
+ * 浏览，只是集合来源与详情 namespace 不同。链接由 toContentHref 产生，所以卡片
+ * 指向 /tools/ 而不是 /posts/。
+ *
+ * 工具的 categories／tags 仍会显示，但一般 taxonomy 聚合页的来源集合已经先排除
+ * 工具，所以这些 metadata 不会把工具带回文章流。
+ */
+const tools = filterPublishableTools(await getCollection("posts")).toSorted(
+  comparePostsByOrderDateDesc,
+);
+
+const coverConfig = themeConfig.cover || {};
+const advancedCarousel = coverConfig.advancedCarousel === true;
+const headerCovers = advancedCarousel
+  ? await resolveHeaderCovers({
+      coverUrls: coverConfig.coverUrls,
+      fallbackCovers: covers,
+      presets: coverPresets,
+    })
+  : [];
+
+const transformedTools = transformIndexPosts(tools, {
+  encryptedExcerpt: t("post.encryptedExcerpt"),
+  resolveCover: (tool: CollectionEntry<"posts">) => getPostCover(tool, headerCovers),
+  excerptSource: "default",
+});
+---
+
+<Layout pageTitle={t("tools.title")} articleFlowEnabled={false} canonicalPath="/tools/">
+  <Fragment slot="head">
+    <meta name="description" content={t("tools.description")} />
+  </Fragment>
+
+  <div class="index wrap tools-index">
+    {
+      transformedTools.length > 0 ? (
+        <section class="posts-section">
+          <Divider title={t("tools.title")} />
+          <div class="segments posts">
+            <PostSegments posts={transformedTools} />
+          </div>
+        </section>
+      ) : (
+        <section class="no-posts-section">
+          <div class="no-posts">
+            <p>{t("tools.empty")}</p>
+          </div>
+        </section>
+      )
+    }
+  </div>
+</Layout>
+
+<style>
+  .index.wrap {
+    position: relative;
+    padding: 1.25rem;
+  }
+
+  .posts-section,
+  .no-posts-section {
+    margin-bottom: 2rem;
+  }
+
+  .posts-section:last-child,
+  .no-posts-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .no-posts {
+    color: var(--text-color-muted);
+    padding: 2rem 0;
+    text-align: center;
+  }
+</style>
