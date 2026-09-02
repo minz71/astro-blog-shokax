@@ -16,7 +16,6 @@ categories:
 - 並且在頂部以外的地方保留模糊效果
   <img src="/images/shokaX/removeTopFrosted_other.avif" alt="" title="頂部以外的地方保留模糊效果" style="width: 80%;">
 
-
 Astro ShokaX 的導覽列固定在視窗頂部（`#nav`），毛玻璃寫在元件的 class list 上：
 
 ```svelte src/components/navbar/NavBar.svelte
@@ -60,4 +59,3 @@ import "@/styles/header-cover.css";
 import "@/styles/nav-blur.css";
 import "@/styles/mdx-components.css";
 ```
-

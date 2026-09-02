@@ -377,11 +377,7 @@ class MermaidDiagramElement extends ShadowSlotElement {
 
     if (!this.isPanning) return;
     event.preventDefault();
-    this.viewport = panBy(
-      this.viewport,
-      event.clientX - previous.x,
-      event.clientY - previous.y,
-    );
+    this.viewport = panBy(this.viewport, event.clientX - previous.x, event.clientY - previous.y);
     this.applyViewport();
   }
 
@@ -450,10 +446,7 @@ class MermaidDiagramElement extends ShadowSlotElement {
 }
 
 function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
 function escapeAttr(value: string): string {
