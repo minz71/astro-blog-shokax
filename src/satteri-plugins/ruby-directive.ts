@@ -1,4 +1,9 @@
-import { defineMdastPlugin, type MdastPluginDefinition } from "satteri";
+import {
+  defineMdastPlugin,
+  type MdastPluginDefinition,
+  type MdastVisitorContext,
+  type MdxJsxTextElement,
+} from "satteri";
 
 /**
  * ruby-directive（satteri 版）：
@@ -6,7 +11,19 @@ import { defineMdastPlugin, type MdastPluginDefinition } from "satteri";
  *
  * 等价于 remark-ruby-directive，适配 satteri 插件 API：
  * - 订阅 textDirective visitor（需要 features.directive: true）
- * - 通过 ctx.replaceNode 返回 { rawHtml } 直接输出 HTML
+ * - 通过 ctx.replaceNode 输出 HTML
+ *
+ * 输出方式按文件类型分两条路径：
+ * - .md：替换为 { rawHtml }，Rust 侧按 markdown 重新解析，HTML 原样输出
+ * - .mdx：替换为带 set:html 属性的 mdxJsxTextElement（Astro jsx-runtime
+ *   会把 set:html 渲染为原始 HTML）
+ *
+ * .mdx 不能走 rawHtml：satteri 0.9.4 的原生层对 RAW_HTML 载荷的重新解析
+ * 只在 handle 的首次 apply 时使用 MDX 模式；只要前面有任何插件做过声明式
+ * 变更（如 auto-import 注入 mdxjsEsm、emoji 替换 text 节点），后续 apply
+ * 的 rawHtml 会退回 markdown 模式解析，HTML 标签被编译成转义文本，
+ * 页面上直接显示 <ruby ... 源码。set:html 属性是纯字符串，
+ * 不经过重新解析，因此与插件顺序无关。
  *
  * 支持的语法：
  *   :ruby[とある科学の超電磁砲(レールガン)]
@@ -39,6 +56,19 @@ function buildRubyHtml(value: string, ruby: string): string {
   return `<ruby data-ruby="${escapedRuby}">${escapedValue}<rp>(</rp><rt>${escapedRuby}</rt><rp>)</rp></ruby>`;
 }
 
+function isMdxFile(ctx: MdastVisitorContext): boolean {
+  return ctx.fileURL?.pathname.endsWith(".mdx") ?? false;
+}
+
+function jsxWithRawHtml(html: string): MdxJsxTextElement {
+  return {
+    type: "mdxJsxTextElement",
+    name: "span",
+    attributes: [{ type: "mdxJsxAttribute", name: "set:html", value: html }],
+    children: [],
+  };
+}
+
 export default function rubyDirective(): MdastPluginDefinition {
   return defineMdastPlugin({
     name: "ruby-directive",
@@ -55,7 +85,7 @@ export default function rubyDirective(): MdastPluginDefinition {
 
       const [, value, , ruby] = matches;
       const html = buildRubyHtml(value, ruby);
-      ctx.replaceNode(node, { rawHtml: html });
+      ctx.replaceNode(node, isMdxFile(ctx) ? jsxWithRawHtml(html) : { rawHtml: html });
     },
   });
 }
