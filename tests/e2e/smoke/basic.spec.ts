@@ -15,6 +15,15 @@ test("@smoke 首页、分页与文章页面可访问", async ({ page }) => {
   await expect(page.locator("article.post h1.title")).toHaveText("Hello World!");
 });
 
+test("@smoke 不存在的路径回落到 404 页面", async ({ page }) => {
+  const response = await page.goto(ROUTES.notFound);
+  expect(response?.status()).toBe(404);
+
+  const notFound = page.locator(".notfound");
+  await expect(notFound).toBeVisible();
+  await expect(notFound).toContainText("404");
+});
+
 test("@smoke 搜索面板可打开并通过 Escape 关闭", async ({ page }) => {
   await page.goto(ROUTES.home);
 

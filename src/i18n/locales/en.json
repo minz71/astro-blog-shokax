@@ -226,6 +226,10 @@
     "retry": "Try Again",
     "noScript": "JavaScript is disabled in this browser. Please go back home and pick a post manually."
   },
+  "notFound": {
+    "title": "Σ( ° △ °|||)︴404!",
+    "imageAlt": "Page not found"
+  },
   "aboutDialog": {
     "defaults": {
       "title": "Quick Chat",

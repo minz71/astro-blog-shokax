@@ -226,6 +226,10 @@
     "retry": "重新隨機",
     "noScript": "目前瀏覽器未啟用 JavaScript，請先返回首頁手動挑選文章。"
   },
+  "notFound": {
+    "title": "Σ( ° △ °|||)︴404！什麼都沒有",
+    "imageAlt": "找不到頁面"
+  },
   "aboutDialog": {
     "defaults": {
       "title": "快速對話",
