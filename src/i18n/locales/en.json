@@ -79,6 +79,10 @@
     "tagDistribution": "Tag Distribution (Top 16)",
     "latestMonthSummary": "In {{month}}, {{count}} posts were published."
   },
+  "tools": {
+    "title": "Tools",
+    "empty": "No tools published yet."
+  },
   "sidebar": {
     "toc": "Table of Contents",
     "overview": "Site Overview",

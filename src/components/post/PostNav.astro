@@ -3,6 +3,7 @@ import { currentLocale, getT } from "@/i18n";
 import { generateRandomBrightColor } from "@/toolkit/tools/generateRandomBrightColor";
 import { covers } from "../Images.astro";
 import { sample } from "es-toolkit";
+import { toPostHref } from "@/toolkit/posts/url";
 
 interface NavPost {
   title: string;
@@ -26,7 +27,7 @@ const t = getT(currentLocale);
     {
       prevPost && (
         <a
-          href={`/posts/${prevPost.slug}/`}
+          href={toPostHref(prevPost.slug)}
           itemprop="url"
           rel="prev"
           title={prevPost.title}
@@ -53,7 +54,7 @@ const t = getT(currentLocale);
     {
       nextPost && (
         <a
-          href={`/posts/${nextPost.slug}/`}
+          href={toPostHref(nextPost.slug)}
           itemprop="url"
           rel="next"
           title={nextPost.title}

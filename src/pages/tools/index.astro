@@ -1,0 +1,48 @@
+---
+import { getCollection } from "astro:content";
+
+import ToolCard from "@/components/tools/ToolCard.astro";
+import { t } from "@/i18n";
+import Layout from "@/layouts/Layout.astro";
+import { filterPublishableTools } from "@/toolkit/posts/content";
+import { comparePostsByOrderDateDesc } from "@/toolkit/posts/sortPosts";
+
+import "@/styles/tools.css";
+
+/**
+ * 工具索引。
+ *
+ * 单一 posts collection，在查询入口立即以 filterPublishableTools 分流，再排序，
+ * 每个 entry 只投影一次。工具的 categories／tags 仍会显示，但一般 taxonomy
+ * 聚合页的来源集合已经先排除工具，所以这些 metadata 不会把工具带回文章流。
+ */
+const tools = filterPublishableTools(await getCollection("posts")).toSorted(
+  comparePostsByOrderDateDesc,
+);
+---
+
+<Layout pageTitle={t("tools.title")} articleFlowEnabled={false} canonicalPath="/tools/">
+  <Fragment slot="head">
+    <meta name="description" content={t("tools.empty")} />
+  </Fragment>
+
+  <div class="wrap tools-wrap">
+    <h2 class="item header">
+      <a href="/">{t("nav.home")}</a>
+      <small>/</small>
+      {t("tools.title")}
+    </h2>
+
+    {
+      tools.length > 0 ? (
+        <div class="tools-grid">
+          {tools.map((tool) => (
+            <ToolCard entry={tool} />
+          ))}
+        </div>
+      ) : (
+        <p class="tools-empty">{t("tools.empty")}</p>
+      )
+    }
+  </div>
+</Layout>

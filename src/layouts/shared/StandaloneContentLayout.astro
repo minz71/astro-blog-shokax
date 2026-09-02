@@ -1,0 +1,21 @@
+---
+import "@/styles/layout-common.css";
+import "@/styles/layout-standalone.css";
+
+/**
+ * 独立内容版面：只有主内容一栏。
+ *
+ * 供不属于一般文章流的页面使用（目前是 /tools/ 与工具详情）。刻意不渲染
+ * LayoutPrimarySidebar、RightSidebar 与 LayoutMainColumn 的 widgets——那些都是
+ * 文章流的组件，工具页出现它们等于把工具接回文章流。
+ *
+ * Header、NavBar、Footer 与全域 custom elements 仍由 Layout.astro 提供，
+ * 这里只负责主栏容器；#main.pjax 保留原样，view transition 与既有脚本靠它定位。
+ */
+---
+
+<div class="inner layout-frame layout-standalone">
+  <div id="main" class="pjax layout-main-column">
+    <slot />
+  </div>
+</div>

@@ -30,6 +30,7 @@ import { covers, resolveFixedCover , coverPresets} from "@/components/Images.ast
 import FloatingToolbar from "@/components/FloatingToolbar";
 import TwoColumnLayout from "@/layouts/TwoColumnLayout.astro";
 import ThreeColumnLayout from "@/layouts/ThreeColumnLayout.astro";
+import StandaloneContentLayout from "@/layouts/shared/StandaloneContentLayout.astro";
 import { generateTagCloud } from "@/toolkit/posts/generateTagCloud";
 import { filterPublishableGeneralArticles } from "@/toolkit/posts/content";
 import { createWidgetPosts } from "@/toolkit/posts/createWidgetPosts";
@@ -126,6 +127,20 @@ interface Props {
   postMeta?: PostMeta;
   indexPage?: boolean;
   pageCover?: ImageMetadata | string;
+  /**
+   * 这一页是否属于一般文章流。
+   *
+   * false 时改用只有主栏的独立版面，并且完全不建立文章侧栏资料——连
+   * getCollection("posts") 都不查。工具页用这个把自己排除在文章流之外。
+   */
+  articleFlowEnabled?: boolean;
+  /**
+   * canonical 用的站内路径（含尾斜线）。
+   *
+   * 预设是 Astro.url.pathname；由页面明确传入可避免 request path 或手写字串
+   * 和实际路由偏离（工具索引传 "/tools/"，详情传 toContentHref(entry)）。
+   */
+  canonicalPath?: string;
 }
 
 const {
@@ -137,6 +152,8 @@ const {
   postMeta,
   indexPage = false,
   pageCover,
+  articleFlowEnabled = true,
+  canonicalPath,
 } = Astro.props;
 
 const navLinks = themeConfig.nav;
@@ -152,11 +169,11 @@ const rightSidebarConfig = layoutConfig.rightSidebar || {};
 const layoutMode = layoutConfig.mode || "two-column";
 const enableThirdColumn = layoutMode === "three-column";
 const shouldComputeRightSidebarRandomPosts =
-  enableThirdColumn && rightSidebarConfig.randomPosts === true;
+  articleFlowEnabled && enableThirdColumn && rightSidebarConfig.randomPosts === true;
 const shouldComputeRightSidebarRecentMoments =
-  enableThirdColumn && rightSidebarConfig.recentMoments === true;
+  articleFlowEnabled && enableThirdColumn && rightSidebarConfig.recentMoments === true;
 const shouldComputeRightSidebarTagCloud =
-  enableThirdColumn && rightSidebarConfig.tagCloud === true;
+  articleFlowEnabled && enableThirdColumn && rightSidebarConfig.tagCloud === true;
 const ActiveLayout = enableThirdColumn ? ThreeColumnLayout : TwoColumnLayout;
 
 // fixedCover：通过 Images.astro 统一解析（静态导入走 <Image />，字符串走 <img> 兜底）
@@ -174,8 +191,11 @@ const headerCovers = advancedCarousel
 const resolvedHeaderCover = pageCover ?? fixedCover;
 
 // Get all posts for widgets
-// 侧栏、widgets 与统计都属于一般文章流：工具与草稿一律不进这里
-const posts = filterPublishableGeneralArticles(await getCollection("posts"));
+// 侧栏、widgets 与统计都属于一般文章流：工具与草稿一律不进这里。
+// 独立内容模式连查询都不做——不是「查了再丢掉」，是根本不建立这批资料。
+const posts = articleFlowEnabled
+  ? filterPublishableGeneralArticles(await getCollection("posts"))
+  : [];
 const moments = shouldComputeRightSidebarRecentMoments
   ? (await getCollection("moments")).toSorted(
       (a, b) =>
@@ -235,7 +255,7 @@ const siteState = {
   }, new Set()).size,
 };
 
-const widgetPosts = createWidgetPosts(shuffle(posts).slice(0, 10));
+const widgetPosts = articleFlowEnabled ? createWidgetPosts(shuffle(posts).slice(0, 10)) : [];
 
 import SearchPage from "@/components/search/SearchPage";
 import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro";
@@ -254,7 +274,7 @@ import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro"
       Astro.site && (
         <link
           rel="canonical"
-          href={new URL(Astro.url.pathname, Astro.site).toString()}
+          href={new URL(canonicalPath ?? Astro.url.pathname, Astro.site).toString()}
         />
       )
     }
@@ -297,23 +317,31 @@ import HyacineOutlet from "@hyacine/plugin-astro/components/HyacineOutlet.astro"
       />
       <Waves />
       <main>
-        <ActiveLayout
-          widgetPosts={widgetPosts}
-          widgetsConfig={widgetsConfig}
-          sidebarConfig={sidebarConfig}
-          rightSidebarConfig={rightSidebarConfig}
-          rightSidebarPosts={rightSidebarPosts}
-          rightSidebarMoments={moments}
-          rightSidebarTagCloud={rightSidebarTagCloud}
-          navLinks={navLinks}
-          toc={toc}
-          relatedPosts={relatedPosts}
-          currentSlug={currentSlug}
-          navigation={navigation}
-          siteState={siteState}
-        >
-          <slot />
-        </ActiveLayout>
+        {
+          articleFlowEnabled ? (
+            <ActiveLayout
+              widgetPosts={widgetPosts}
+              widgetsConfig={widgetsConfig}
+              sidebarConfig={sidebarConfig}
+              rightSidebarConfig={rightSidebarConfig}
+              rightSidebarPosts={rightSidebarPosts}
+              rightSidebarMoments={moments}
+              rightSidebarTagCloud={rightSidebarTagCloud}
+              navLinks={navLinks}
+              toc={toc}
+              relatedPosts={relatedPosts}
+              currentSlug={currentSlug}
+              navigation={navigation}
+              siteState={siteState}
+            >
+              <slot />
+            </ActiveLayout>
+          ) : (
+            <StandaloneContentLayout>
+              <slot />
+            </StandaloneContentLayout>
+          )
+        }
       </main>
       <Footer config={footerConfig} {siteName} author={sidebarConfig.author || ""} />
     </div>

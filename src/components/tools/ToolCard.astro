@@ -1,0 +1,65 @@
+---
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+import type { ImageMetadata } from "astro";
+
+import { toCategoryHref, toContentHref, toTagHref } from "@/toolkit/posts/url";
+
+interface Props {
+  entry: CollectionEntry<"posts">;
+}
+
+const { entry } = Astro.props;
+
+/**
+ * href 一律走 toContentHref：型别由 frontmatter 的 tool 决定，卡片不写死
+ * `/tools/`，也不写死 `/posts/`。
+ */
+const href = toContentHref(entry);
+const cover = entry.data.cover as ImageMetadata | string | undefined;
+const coverIsAsset = typeof cover === "object";
+const categories = entry.data.categories ?? [];
+const tags = entry.data.tags ?? [];
+const dateTime = (entry.data.updated ?? entry.data.date).toISOString();
+const dateLabel = (entry.data.updated ?? entry.data.date).toLocaleDateString("zh-CN");
+---
+
+<article class="tool-card">
+  <a class="tool-card__link" href={href}>
+    {
+      cover && (
+        <div class="tool-card__cover">
+          {coverIsAsset ? (
+            <Image src={cover} alt={entry.data.title} loading="lazy" widths={[320, 640]} />
+          ) : (
+            <img src={cover} alt={entry.data.title} loading="lazy" decoding="async" />
+          )}
+        </div>
+      )
+    }
+    <div class="tool-card__body">
+      <h3 class="tool-card__title">{entry.data.title}</h3>
+      {entry.data.description && <p class="tool-card__desc">{entry.data.description}</p>}
+      <time class="tool-card__date" datetime={dateTime}>{dateLabel}</time>
+    </div>
+  </a>
+
+  {
+    (categories.length > 0 || tags.length > 0) && (
+      <div class="tool-card__meta">
+        {categories.map((category) => (
+          <a class="tool-card__category" href={toCategoryHref(category)} rel="index">
+            <i class="icon i-ri-folder-2-line" />
+            {category}
+          </a>
+        ))}
+        {tags.map((tag) => (
+          <a class="tool-card__tag" href={toTagHref(tag)} rel="tag">
+            <i class="icon i-ri-price-tag-3-line" />
+            {tag}
+          </a>
+        ))}
+      </div>
+    )
+  }
+</article>

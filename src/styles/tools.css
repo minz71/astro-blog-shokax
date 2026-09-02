@@ -1,0 +1,100 @@
+/*
+ * 工具索引与工具卡片。
+ *
+ * 类名统一带 tool-card__ / tools- 前缀：UnoCSS 会为扫描到的每个 class 名生成
+ * 工具类，没有业务前缀的钩子名（如 grid、card）会被同名工具类覆盖。
+ */
+.tools-wrap {
+  padding: 0 0.625rem;
+}
+
+.tools-empty {
+  color: var(--text-color-muted);
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.tools-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 1.5rem 0;
+}
+
+@media (min-width: 768px) {
+  .tools-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tool-card {
+  background: var(--block-bg-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 0.0625rem 0.125rem rgb(0 0 0 / 8%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.tool-card:hover {
+  box-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 12%);
+}
+
+.tool-card__link {
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+}
+
+.tool-card__cover {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.tool-card__cover img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.tool-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+.tool-card__title {
+  font-size: 1.125rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.tool-card__desc {
+  color: var(--text-color-muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.tool-card__date {
+  color: var(--text-color-muted);
+  font-size: 0.75rem;
+}
+
+.tool-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0 1rem 1rem;
+}
+
+.tool-card__category,
+.tool-card__tag {
+  align-items: center;
+  display: inline-flex;
+  font-size: 0.75rem;
+  gap: 0.25rem;
+}

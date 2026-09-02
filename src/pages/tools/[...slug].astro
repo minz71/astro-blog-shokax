@@ -1,0 +1,41 @@
+---
+import { getCollection } from "astro:content";
+
+import ContentDetail from "@/components/post/ContentDetail.astro";
+import { filterPublishableTools } from "@/toolkit/posts/content";
+import { createPostContentContainer } from "@/toolkit/posts/createPostContentContainer";
+import { prepareContentDetail } from "@/toolkit/posts/prepareContentDetail";
+
+/**
+ * 工具详情。
+ *
+ * 只为公开工具产生路径，params.slug 直接用 entry 的稳定 id——catch-all 路由本来
+ * 就允许合法的巢状 id，不需要任何 `tool/` 前缀剥除规则。
+ *
+ * 刻意不建立工具之间的上一篇／下一篇与相关工具：那些属于一般文章流。没有对应
+ * 公开工具的 URL 不会有静态产物，由静态主机回 404（包含不存在的 id、草稿工具，
+ * 以及被放到 /tools/ 底下的一般文章）。
+ */
+export async function getStaticPaths() {
+  const tools = filterPublishableTools(await getCollection("posts"));
+  const container = await createPostContentContainer();
+
+  return Promise.all(
+    tools.map(async (tool) => {
+      const prepared = await prepareContentDetail(tool, {
+        container,
+        siteUrl: import.meta.env.SITE,
+      });
+
+      return {
+        params: { slug: tool.id },
+        props: { tool, ...prepared },
+      };
+    }),
+  );
+}
+
+const { tool, ...detail } = Astro.props;
+---
+
+<ContentDetail entry={tool} {...detail} />
