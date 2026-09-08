@@ -1,0 +1,18 @@
+---
+import ImageEditorToolSolid from "./ImageEditorTool.tsx";
+
+// 样式在这里用一般 import 静态载入，而不是在 .tsx 里用 ?inline 取回字串后
+// 运行时注入：.astro 元件的样式是按页归属的，只有真的载入这颗工具的文章才会带进来
+// （比照 LocalFolderCopyTool.astro，避免像 ?inline 那样把 CSS 塞进岛屿自己的 JS
+// chunk，改用建置期就能按页归属的机制）。
+import "@/styles/image-editor-tool.css";
+---
+
+{/*
+  client:only 而不是 client:visible／client:load：
+  这个岛屿从头到尾都依赖 canvas、Worker、createImageBitmap，SSR 阶段没有一行能跑，
+  预渲染只会白花一次 HTML 体积。用 client:only 让 Astro 完全跳过服务端渲染，
+  同时也保证整个工具（含 CSS chunk）只在真的载入这一页时才被请求 —— 其他页面的
+  HTML 里不会出现任何相关的 script 或 modulepreload。
+*/}
+<ImageEditorToolSolid client:only="solid-js" />

@@ -28,6 +28,8 @@ export const TOOLS = {
   draft: "/tools/tool-demo-draft/",
   /** 一般文章被放到 /tools/ 底下：同样没有产物 */
   articleUnderTools: "/tools/hello-world/",
+  /** 站点工具：图片编辑与压缩（cloudflare 负载，见 src/posts/image_editor.mdx） */
+  imageEditor: "/tools/image_editor/",
 } as const;
 
 export const POSTS = {

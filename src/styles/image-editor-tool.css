@@ -1,0 +1,683 @@
+/*
+ * 图片编辑工具的样式。
+ *
+ * 刻意写成独立的 CSS 档并由 ImageEditorTool.svelte 直接 import，而不是用 UnoCSS
+ * 的 utility class：UnoCSS 会把所有用到的 utility 收进整站共用的样式 chunk，只有
+ * 这一页会用到的样式也会让每一页多下载几 KB。走独立档案时 Vite 会为它单独产生一个
+ * chunk，只有真正载入这个岛屿的页面才会请求。参考 local-folder-copy-tool.css 的做法。
+ */
+
+.iet {
+  --iet-radius: 0.875rem;
+  --iet-border: 1px solid color-mix(in srgb, var(--grey-4) 22%, transparent);
+  --iet-panel: color-mix(in srgb, var(--grey-1) 94%, transparent);
+
+  margin: 1.5rem 0;
+  border: var(--iet-border);
+  border-radius: var(--iet-radius);
+  background: var(--iet-panel);
+  box-shadow: var(--shadow-card-soft);
+  overflow: hidden;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-color);
+
+  /*
+   * 让 height / block-size 的 `auto` 变成可以被 transition 内插的值。少了这一行
+   * 下面 ::details-content 的高度动画会直接跳，因为 0 -> auto 本来是不可动画的。
+   * 不支援的浏览器就是没有动画，行为跟以前一样。
+   */
+  interpolate-size: allow-keywords;
+}
+
+.iet * {
+  box-sizing: border-box;
+}
+
+/* ── 拖放区 ───────────────────────────────────────────────── */
+
+.iet-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1.25rem;
+  border: 2px dashed color-mix(in srgb, var(--grey-4) 32%, transparent);
+  border-radius: var(--iet-radius);
+  margin: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.iet-drop:hover,
+.iet-drop:focus-visible,
+.iet-drop.is-over {
+  border-color: var(--color-pink);
+  background: color-mix(in srgb, var(--color-pink) 6%, transparent);
+  outline: none;
+}
+
+.iet-drop-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.iet-drop-hint {
+  color: var(--grey-5);
+  font-size: 0.8rem;
+}
+
+.iet-drop input[type="file"] {
+  display: none;
+}
+
+/* ── 主体 ─────────────────────────────────────────────────── */
+
+.iet-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0 1rem 1rem;
+}
+
+@media (min-width: 60rem) {
+  .iet-body {
+    grid-template-columns: minmax(0, 1fr) 17rem;
+    align-items: start;
+  }
+}
+
+/* ── 预览 ─────────────────────────────────────────────────── */
+
+.iet-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 14rem;
+  padding: 0.75rem;
+  border: var(--iet-border);
+  border-radius: var(--iet-radius);
+  /* 棋盘格底，让透明区域看得出来是透明而不是白色 */
+  background-color: var(--grey-2);
+  background-image:
+    linear-gradient(45deg, var(--grey-3) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--grey-3) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--grey-3) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--grey-3) 75%);
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+}
+
+.iet-canvas-wrap {
+  position: relative;
+  display: block;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.iet-canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 60vh;
+  height: auto;
+  border-radius: 0.375rem;
+}
+
+.iet-cropper {
+  position: absolute;
+  inset: 0;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.iet-crop-box {
+  position: absolute;
+  border: 1px solid #fff;
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 45%),
+    0 0 0 9999px rgb(0 0 0 / 45%);
+  pointer-events: none;
+}
+
+.iet-crop-box::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* 三分法参考线 */
+  background-image:
+    linear-gradient(
+      to right,
+      transparent 33.33%,
+      rgb(255 255 255 / 35%) 33.33%,
+      rgb(255 255 255 / 35%) 33.5%,
+      transparent 33.5%,
+      transparent 66.66%,
+      rgb(255 255 255 / 35%) 66.66%,
+      rgb(255 255 255 / 35%) 66.83%,
+      transparent 66.83%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 33.33%,
+      rgb(255 255 255 / 35%) 33.33%,
+      rgb(255 255 255 / 35%) 33.5%,
+      transparent 33.5%,
+      transparent 66.66%,
+      rgb(255 255 255 / 35%) 66.66%,
+      rgb(255 255 255 / 35%) 66.83%,
+      transparent 66.83%
+    );
+}
+
+.iet-stage-empty {
+  color: var(--grey-5);
+  font-size: 0.85rem;
+}
+
+/* ── 控制面板 ─────────────────────────────────────────────── */
+
+.iet-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.iet-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.iet-group-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--grey-5);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.iet-group-value {
+  color: var(--text-color);
+  font-variant-numeric: tabular-nums;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/*
+ * 折叠区块。
+ *
+ * 面板上的设定分成两层：模式与输出是每次都要看的，留在外面；尺寸／旋转裁切／调色／浮水印
+ * 与拼贴版面则收进 <details>，预设关起来。用原生 <details> 而不是自己拿 signal 做开合，
+ * 是因为它自带键盘操作与 aria-expanded，而且开合状态本来就不该进 Solid 的反应式系统。
+ *
+ * 关键是 summary 上要显示现值（「浮水印 · 滿版文字」、「調色 · 已調整」），否则折叠只是把
+ * 设定藏起来，使用者得一个个点开找自己刚改过什么。
+ */
+
+.iet-fold {
+  border: var(--iet-border);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--grey-2) 40%, transparent);
+}
+
+.iet-fold > summary {
+  justify-content: flex-start;
+  padding: 0.5rem 0.6rem;
+  cursor: pointer;
+  /* 两个都要写：list-style 管标准浏览器，::-webkit-details-marker 管旧版 Safari */
+  list-style: none;
+}
+
+.iet-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.iet-fold > summary:hover,
+.iet-fold > summary:focus-visible {
+  color: var(--text-color);
+}
+
+.iet-fold > summary > .iet-group-value {
+  margin-left: auto;
+}
+
+.iet-fold > summary::after {
+  content: "";
+  flex: 0 0 auto;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-left: 0.5rem;
+  border-right: 1.5px solid currentcolor;
+  border-bottom: 1.5px solid currentcolor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.16s ease;
+}
+
+.iet-fold[open] > summary::after {
+  transform: translateY(1px) rotate(225deg);
+}
+
+.iet-fold-body {
+  padding: 0 0.6rem 0.6rem;
+}
+
+/*
+ * 展开／收起的高度动画。
+ *
+ * ::details-content 是 <details> 内容那一块的伪元素，收合状态下浏览器给它
+ * content-visibility: hidden，所以要连 content-visibility 一起过渡（allow-discrete），
+ * 否则内容会在动画开始前就整块消失、看起来仍然是硬跳。
+ */
+.iet-fold::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition:
+    block-size 0.26s cubic-bezier(0.2, 0, 0.2, 1),
+    content-visibility 0.26s allow-discrete;
+}
+
+.iet-fold[open]::details-content {
+  block-size: auto;
+}
+
+/*
+ * 区块「已经展开」之后内容又换掉造成的位移（切浮水印模式、换缩放方式、换拼贴版面），
+ * 没办法用 transition 补：::details-content 的高度两边都是 auto，计算值没变就不会触发
+ * 过渡。所以改成让新出现的那一块自己淡入并往下滑一点，位移至少是滑进来而不是硬跳。
+ * 消失的那一边没有退场动画 —— 那需要 JS 或 View Transitions 才做得到。
+ */
+@keyframes iet-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.iet-reveal {
+  animation: iet-reveal 0.2s cubic-bezier(0.2, 0, 0.2, 1) both;
+}
+
+.iet-segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border: var(--iet-border);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--grey-2) 70%, transparent);
+}
+
+.iet-segmented button {
+  padding: 0.35rem 0.2rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: var(--grey-5);
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease;
+}
+
+.iet-segmented button:hover {
+  color: var(--text-color);
+}
+
+.iet-segmented button[aria-pressed="true"] {
+  background: var(--grey-1);
+  color: var(--color-pink);
+  font-weight: 600;
+  box-shadow: var(--shadow-card-soft);
+}
+
+.iet-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.iet-row input[type="number"],
+.iet-row input[type="text"],
+.iet-row input[type="file"],
+.iet-row select {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border: var(--iet-border);
+  border-radius: 0.45rem;
+  background: var(--grey-1);
+  color: var(--text-color);
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.iet-row input[type="color"] {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.15rem;
+  border: var(--iet-border);
+  border-radius: 0.45rem;
+  background: var(--grey-1);
+}
+
+.iet-slider {
+  width: 100%;
+  accent-color: var(--color-pink);
+}
+
+.iet-icon-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.iet-anchor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+}
+
+.iet-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.6rem;
+  border: var(--iet-border);
+  border-radius: 0.5rem;
+  background: var(--grey-1);
+  color: var(--text-color);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.iet-btn:hover:not(:disabled) {
+  border-color: var(--color-pink);
+  color: var(--color-pink);
+}
+
+.iet-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.iet-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.iet-btn[aria-pressed="true"] {
+  border-color: var(--color-pink);
+  background: color-mix(in srgb, var(--color-pink) 10%, transparent);
+  color: var(--color-pink);
+}
+
+.iet-btn-primary {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-color: transparent;
+  background: var(--color-pink);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.iet-btn-primary:hover:not(:disabled) {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--color-pink) 85%, #000);
+  color: #fff;
+}
+
+.iet-note {
+  color: var(--grey-5);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.iet-warn {
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-orange) 14%, transparent);
+  color: var(--text-color);
+  font-size: 0.75rem;
+}
+
+/* ── 档案清单 ─────────────────────────────────────────────── */
+
+.iet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0 1rem 1rem;
+  list-style: none;
+}
+
+.iet-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border: var(--iet-border);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--grey-2) 45%, transparent);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.iet-item:hover {
+  border-color: color-mix(in srgb, var(--color-pink) 45%, transparent);
+}
+
+.iet-item.is-selected {
+  border-color: var(--color-pink);
+  background: color-mix(in srgb, var(--color-pink) 8%, transparent);
+}
+
+.iet-item-index {
+  width: 1.5rem;
+  color: var(--grey-5);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.iet-item-main {
+  min-width: 0;
+}
+
+.iet-item-name {
+  /*
+   * display 一定要是 block（或其他非 inline）：overflow 与 text-overflow 对
+   * 非置换的 inline 元素完全无效，少了这一行长档名不会截成「…」，而是直接把
+   * 整个项目撑破 —— 手机上 254px 的格子塞 473px 的档名就是这样溢出的。
+   */
+  display: block;
+  overflow: hidden;
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iet-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  color: var(--grey-5);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.iet-badge {
+  padding: 0.05rem 0.35rem;
+  border-radius: 0.3rem;
+  background: color-mix(in srgb, var(--grey-4) 18%, transparent);
+  font-size: 0.68rem;
+}
+
+.iet-badge.is-good {
+  background: color-mix(in srgb, var(--color-green) 20%, transparent);
+  color: var(--text-color);
+}
+
+.iet-badge.is-bad {
+  background: color-mix(in srgb, var(--color-red) 18%, transparent);
+  color: var(--text-color);
+}
+
+.iet-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.iet-status {
+  color: var(--grey-5);
+  font-size: 0.72rem;
+}
+
+.iet-error {
+  color: var(--color-red);
+  font-size: 0.72rem;
+}
+
+/* ── 底部动作列 ───────────────────────────────────────────── */
+
+.iet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: var(--iet-border);
+  background: color-mix(in srgb, var(--grey-2) 40%, transparent);
+}
+
+.iet-actions .iet-spacer {
+  flex: 1 1 auto;
+}
+
+.iet-summary {
+  color: var(--grey-5);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 手机 ─────────────────────────────────────────────────── */
+
+/*
+ * 折叠区块本身就是手机版最大的改善：收起来之后单栏顺序变成
+ * 拖放区 → 预览 → 一叠标题列 → 档案清单，不再是要卷过一屏半的设定。
+ * 这里补的是折叠解决不了的三件事：可点面积、iOS 的聚焦缩放、窄宽度下被挤爆的排版。
+ */
+
+@media (max-width: 60rem) {
+  .iet-drop {
+    padding: 1.5rem 1rem;
+    margin: 0.75rem;
+  }
+
+  /* 预览吃掉整个萤幕高度的话，下面的设定与清单就要卷很久才看得到 */
+  .iet-canvas {
+    max-height: 50vh;
+  }
+}
+
+@media (max-width: 30rem) {
+  /* 一列塞四个中文标签会挤成两行还溢出，改成 2x2 */
+  .iet-segmented {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* ↑ ↓ 下載 ✕ 四颗按钮跟档名抢同一行，档名会被压到只剩几个字 —— 让按钮自己占一行 */
+  .iet-item {
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 0.4rem;
+  }
+
+  .iet-item-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+@media (pointer: coarse) {
+  .iet-btn {
+    min-height: 2.5rem;
+    padding-inline: 0.7rem;
+  }
+
+  .iet-segmented button {
+    min-height: 2.25rem;
+  }
+
+  .iet-fold > summary {
+    padding-block: 0.7rem;
+  }
+
+  /* 滑桿的原生 thumb 在触控上太小，把可点区域垫高 */
+  .iet-slider {
+    height: 1.75rem;
+  }
+
+  /*
+   * iOS Safari 只要聚焦到字级小於 16px 的表单元件就会把整页放大，然后使用者要自己缩回去。
+   * 拼贴的列数／间距／输出宽度是手机上最常被点的几个栏位，所以这里一律拉到 16px。
+   */
+  .iet-row input[type="number"],
+  .iet-row input[type="text"],
+  .iet-row input[type="file"],
+  .iet-row select {
+    font-size: 1rem;
+  }
+
+  .iet-row input[type="color"] {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iet-drop,
+  .iet-btn,
+  .iet-item,
+  .iet-segmented button,
+  .iet-fold > summary::after,
+  .iet-fold::details-content {
+    transition: none;
+  }
+
+  .iet-reveal {
+    animation: none;
+  }
+}

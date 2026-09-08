@@ -102,5 +102,11 @@ export default defineConfig({
       "color-grey": "var(--color-grey)",
     },
   },
+  // 图片编辑工具（src/toolkit/imageEditor、ImageEditorTool.tsx）的原始码里有
+  // "grayscale(100%)" 这类 canvas filter 字串，会被 UnoCSS 的提取器误判成 utility
+  // class，於是 .grayscale 被产进整站共用的样式表 —— 只有一页用得到的规则却让每一页
+  // 都多下载。主题本身没有任何地方使用 .grayscale utility（想要灰阶请直接写 CSS
+  // filter），所以直接封锁这个 class 名。
+  blocklist: ["grayscale"],
   safelist: [...new Set(iconSafeList)],
 });

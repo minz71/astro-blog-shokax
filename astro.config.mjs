@@ -173,8 +173,12 @@ export default defineConfig({
     // solid 仍然认领所有 .tsx，于是 mdx 里的 react 元件报
     // 「NoMatchingRenderer: No valid renderer was found for the .tsx file extension」。
     // dev server 才会现形：client:only 在建置时不做 SSR，产物看不出来。
-    solid({ exclude: ["**/components/mdx/**"] }),
-    react({ include: ["**/components/mdx/**"] }),
+    //
+    // react 只为 LocalFolderCopyTool.tsx 引入（保留既有 React 实作，见 AGENTS.md
+    // 「文章专属组件」），范围精确到这一个文件，而不是整个 components/mdx/**——
+    // 否则同目录下其他工具（如 ImageEditorTool.tsx）想用 solid 也会被 react 抢走。
+    solid({ exclude: ["**/components/mdx/LocalFolderCopyTool.tsx"] }),
+    react({ include: ["**/components/mdx/LocalFolderCopyTool.tsx"] }),
     sitemap({
       // 文章页输出 <lastmod>（frontmatter updated，缺席时回退 date）。
       // 复用上面的 POSTS_DIR：config 被 bundle 后 import.meta.url 会指错。
