@@ -25,10 +25,11 @@
   overflow-wrap: anywhere;
 }
 
+/* clientIsland 文章走 <Content /> 直渲，拿不到 .table-container 包裹（见
+   prepareContentDetail 的 interactive 分支），表格是 .post-content 的直接子元素。
+   这里只留 max-width——display: block 会让 border-collapse 失效、边框翻倍。 */
 .post-content > table {
-  display: block;
   max-width: 100%;
-  overflow-x: auto;
 }
 
 .post-content th,
@@ -741,7 +742,7 @@ mermaid-diagram:not(:defined) .mermaid-source {
   overflow: auto;
 }
 
-.table-container table {
+.md :is(.table-container, .post-content) > table {
   border-collapse: collapse;
   border-spacing: 0;
   font-size: 0.875rem;
@@ -750,42 +751,42 @@ mermaid-diagram:not(:defined) .mermaid-source {
   overflow: auto;
 }
 
-.table-container table tbody tr:nth-of-type(even) {
+.md :is(.table-container, .post-content) > table tbody tr:nth-of-type(even) {
   background: var(--grey-0);
 }
 
-.table-container table tbody tr:hover {
+.md :is(.table-container, .post-content) > table tbody tr:hover {
   background: var(--grey-2);
 }
 
-.table-container table caption,
-.table-container table th,
-.table-container table td {
+.md :is(.table-container, .post-content) > table caption,
+.md :is(.table-container, .post-content) > table th,
+.md :is(.table-container, .post-content) > table td {
   font-weight: normal;
   padding: 0.5rem;
   text-align: left;
   vertical-align: middle;
 }
 
-.table-container table th,
-.table-container table td {
+.md :is(.table-container, .post-content) > table th,
+.md :is(.table-container, .post-content) > table td {
   border: 0.0625rem solid var(--grey-3);
   border-bottom: 0.1875rem solid var(--grey-3);
 }
 
-.table-container table th {
+.md :is(.table-container, .post-content) > table th {
   font-weight: 700;
   padding-bottom: 0.625rem;
   text-align: center;
 }
 
-.table-container table td {
+.md :is(.table-container, .post-content) > table td {
   border-bottom-width: 0.0625rem;
 }
 
-.table-container table td p:last-child,
-.table-container table td pre:last-child,
-.table-container table td .highlight:last-child {
+.md :is(.table-container, .post-content) > table td p:last-child,
+.md :is(.table-container, .post-content) > table td pre:last-child,
+.md :is(.table-container, .post-content) > table td .highlight:last-child {
   margin: 0;
 }
 

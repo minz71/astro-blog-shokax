@@ -1,8 +1,8 @@
 import { langBadgeColor } from "./langBadge";
-import mdxComponentsStylesheet from "@/styles/mdx-components.css?url";
-import { loadStylesheet } from "@/toolkit/loadStylesheet";
 
-void loadStylesheet(mdxComponentsStylesheet);
+// mdx-components.css 不在这里按需插入：它样式的是 SSR 出来的静态内容（note、
+// collapse、kbd、ruby、spoiler…），等 JS 注入 <link> 会让每篇文章闪一次无样式。
+// 改由 ContentDetail.astro 与 about/credits/links 随 post.css 静态引入。
 
 const QUIZ_DATA_BOUND_KEY = "quizBound";
 const TABS_DATA_BOUND_KEY = "tabsBound";
