@@ -29,3 +29,167 @@
 /tool/Uipath/ /posts/tool/uipath/ 301
 /tool/VMware/ /posts/tool/vmware/ 301
 /posts/tool/local_code_copy/ /tools/local_code_copy/ 301
+
+# 无斜线的旧链接：Workers Static Assets 只在 <path>/index.html 真的存在时才补
+# 308 斜线，_redirects 的来源不是资产，所以 /AI/Claude 不会被正规化成 /AI/Claude/，
+# 直接落到 not_found_handling 的 404。每条规则都要自带无斜线版本。
+/AI/Accelerators /posts/ai/accelerators/ 301
+/AI/BenchMark /posts/ai/benchmark/ 301
+/AI/Claude /posts/ai/claude/ 301
+/AI/OpenWebui_direct /posts/ai/openwebui_direct/ 301
+/Courses/algorithms /posts/cs/algorithms/ 301
+/Courses/data-structures /posts/cs/data-structures/ 301
+/Courses/discrete-mathematics /posts/cs/discrete-mathematics/ 301
+/Courses/linear-algebra /posts/cs/linear-algebra/ 301
+/posts/cs/oop /posts/cs/programming-problems/ 301
+/Courses/operating-systems /posts/cs/operating-systems/ 301
+/Courses/probability-and-statistics /posts/cs/probability-and-statistics/ 301
+/Courses/programming-problems /posts/cs/programming-problems/ 301
+/posts/cs/sorting-algorithms /posts/cs/algorithms/ 301
+/CS/diskpart /posts/tool/diskpart/ 301
+/posts/cs/diskpart /posts/tool/diskpart/ 301
+/DevOps/releaseDockerCache /posts/devops/releasedockercache/ 301
+/DevOps/watchtower /posts/devops/watchtower/ 301
+/other/mora /posts/other/mora/ 301
+/shokaX/ShokaX_install /posts/shokax/shoka-shokax-astro/ 301
+/shokaX/ShokaX_github_action /posts/shokax/shoka-shokax-astro/ 301
+/posts/shokax/shokax_install /posts/shokax/shoka-shokax-astro/ 301
+/posts/shokax/shokax_github_action /posts/shokax/shoka-shokax-astro/ 301
+/posts/shokax/shokax插件-移除頂部霧面效果 /posts/shokax/shokax-remove-top-blur/ 301
+/posts/shokax/shokax插件-點擊愛心效果 /posts/shokax/shokax-click-heart/ 301
+/posts/shokax/shokax插件-櫻花 /posts/shokax/shokax-sakura-rain/ 301
+/tool/domainSearch /posts/tool/domainsearch/ 301
+/tool/madVR /posts/tool/madvr/ 301
+/tool/streamMonitor /posts/tool/streammonitor/ 301
+/tool/Uipath /posts/tool/uipath/ 301
+/tool/VMware /posts/tool/vmware/ 301
+/posts/tool/local_code_copy /tools/local_code_copy/ 301
+
+# 旧的 /面試題目/<中文標題> 与 /CS/<工具> 方案：GA 的 404 报表证实还有人在撞。
+# 每条都配一条无斜线版本，理由同上。
+/面試題目/作業系統/ /posts/cs/operating-systems/ 301
+/面試題目/作業系統 /posts/cs/operating-systems/ 301
+/面試題目/機率與統計/ /posts/cs/probability-and-statistics/ 301
+/面試題目/機率與統計 /posts/cs/probability-and-statistics/ 301
+/面試題目/演算法/ /posts/cs/algorithms/ 301
+/面試題目/演算法 /posts/cs/algorithms/ 301
+/面試題目/線性代數/ /posts/cs/linear-algebra/ 301
+/面試題目/線性代數 /posts/cs/linear-algebra/ 301
+/面試題目/離散數學/ /posts/cs/discrete-mathematics/ 301
+/面試題目/離散數學 /posts/cs/discrete-mathematics/ 301
+/面試題目/OOP/ /posts/cs/programming-problems/ 301
+/面試題目/OOP /posts/cs/programming-problems/ 301
+/AI/AI-Accelerators/ /posts/ai/accelerators/ 301
+/AI/AI-Accelerators /posts/ai/accelerators/ 301
+/CS/domainSearch/ /posts/tool/domainsearch/ 301
+/CS/domainSearch /posts/tool/domainsearch/ 301
+
+# 同一族但 GA 前 10 名没出现的，先补上（撞不到就不会触发，补了没有代价）
+/面試題目/資料結構/ /posts/cs/data-structures/ 301
+/面試題目/資料結構 /posts/cs/data-structures/ 301
+/面試題目/程式題目/ /posts/cs/programming-problems/ 301
+/面試題目/程式題目 /posts/cs/programming-problems/ 301
+/面試題目/ /categories/CS/ 301
+/面試題目 /categories/CS/ 301
+
+# /CS/<工具> 依 /CS/diskpart 与 /CS/domainSearch 的先例类推。
+/面試題目/矩陣題目/ /posts/cs/programming-problems/ 301
+/面試題目/矩陣題目 /posts/cs/programming-problems/ 301
+/CS/madVR/ /posts/tool/madvr/ 301
+/CS/madVR /posts/tool/madvr/ 301
+/CS/streamMonitor/ /posts/tool/streammonitor/ 301
+/CS/streamMonitor /posts/tool/streammonitor/ 301
+/CS/Uipath/ /posts/tool/uipath/ 301
+/CS/Uipath /posts/tool/uipath/ 301
+/CS/VMware/ /posts/tool/vmware/ 301
+/CS/VMware /posts/tool/vmware/ 301
+
+# GA 404 报表第二批（2026-09-10）
+/Courses/sorting-algorithms/ /posts/cs/algorithms/ 301
+/Courses/sorting-algorithms /posts/cs/algorithms/ 301
+/categories/面試題目/ /categories/CS/ 301
+/categories/面試題目 /categories/CS/ 301
+/categories/shokaX/ /categories/ShokaX/ 301
+/categories/shokaX /categories/ShokaX/ 301
+/sakura-rain/ /posts/shokax/shokax-sakura-rain/ 301
+/sakura-rain /posts/shokax/shokax-sakura-rain/ 301
+
+# 标签网址：toTagSlug() 会转小写、空白换 -，旧站保留原始写法。
+# GA 只撞到 /tags/Docker，但整族都是坏的，一次补齐。
+/tags/API/ /tags/api/ 301
+/tags/API /tags/api/ 301
+/tags/Anthropic/ /tags/anthropic/ 301
+/tags/Anthropic /tags/anthropic/ 301
+/tags/Astro/ /tags/astro/ 301
+/tags/Astro /tags/astro/ 301
+/tags/BitMEX/ /tags/bitmex/ 301
+/tags/BitMEX /tags/bitmex/ 301
+/tags/Cerebras/ /tags/cerebras/ 301
+/tags/Cerebras /tags/cerebras/ 301
+/tags/Claude/ /tags/claude/ 301
+/tags/Claude /tags/claude/ 301
+/tags/Cloudflare/ /tags/cloudflare/ 301
+/tags/Cloudflare /tags/cloudflare/ 301
+/tags/Custom/ /tags/custom/ 301
+/tags/Custom /tags/custom/ 301
+/tags/Deepseek/ /tags/deepseek/ 301
+/tags/Deepseek /tags/deepseek/ 301
+/tags/DevOps/ /tags/devops/ 301
+/tags/DevOps /tags/devops/ 301
+/tags/Docker/ /tags/docker/ 301
+/tags/Docker /tags/docker/ 301
+/tags/Groq/ /tags/groq/ 301
+/tags/Groq /tags/groq/ 301
+/tags/Hi-res/ /tags/hi-res/ 301
+/tags/Hi-res /tags/hi-res/ 301
+/tags/LMSYS/ /tags/lmsys/ 301
+/tags/LMSYS /tags/lmsys/ 301
+/tags/Moonlight/ /tags/moonlight/ 301
+/tags/Moonlight /tags/moonlight/ 301
+/tags/Open-webui/ /tags/open-webui/ 301
+/tags/Open-webui /tags/open-webui/ 301
+/tags/SambaNova/ /tags/sambanova/ 301
+/tags/SambaNova /tags/sambanova/ 301
+/tags/Shoka/ /tags/shoka/ 301
+/tags/Shoka /tags/shoka/ 301
+/tags/ShokaX/ /tags/shokax/ 301
+/tags/ShokaX /tags/shokax/ 301
+/tags/ShokaX安裝/ /tags/shokax安裝/ 301
+/tags/ShokaX安裝 /tags/shokax安裝/ 301
+/tags/ShokaX插件/ /tags/shokax插件/ 301
+/tags/ShokaX插件 /tags/shokax插件/ 301
+/tags/TLD-LIST/ /tags/tld-list/ 301
+/tags/TLD-LIST /tags/tld-list/ 301
+/tags/Terminal/ /tags/terminal/ 301
+/tags/Terminal /tags/terminal/ 301
+/tags/TranslucentTB/ /tags/translucenttb/ 301
+/tags/TranslucentTB /tags/translucenttb/ 301
+/tags/UiPath/ /tags/uipath/ 301
+/tags/UiPath /tags/uipath/ 301
+/tags/VMware/ /tags/vmware/ 301
+/tags/VMware /tags/vmware/ 301
+/tags/VMware下載/ /tags/vmware下載/ 301
+/tags/VMware下載 /tags/vmware下載/ 301
+/tags/WSL/ /tags/wsl/ 301
+/tags/WSL /tags/wsl/ 301
+/tags/Windhawk/ /tags/windhawk/ 301
+/tags/Windhawk /tags/windhawk/ 301
+/tags/madVR/ /tags/madvr/ 301
+/tags/madVR /tags/madvr/ 301
+
+# 含空白的标签：_redirects 以空白分栏，来源只能写 %20；
+# Cloudflare 是先解码再比对，所以这几条能不能命中未经实测。
+/tags/AI%20排行榜/ /tags/ai-排行榜/ 301
+/tags/AI%20排行榜 /tags/ai-排行榜/ 301
+/tags/Chatbot%20Arena/ /tags/chatbot-arena/ 301
+/tags/Chatbot%20Arena /tags/chatbot-arena/ 301
+/tags/Github%20Action/ /tags/github-action/ 301
+/tags/Github%20Action /tags/github-action/ 301
+/tags/MapleStory%20Classic%20World/ /tags/maplestory-classic-world/ 301
+/tags/MapleStory%20Classic%20World /tags/maplestory-classic-world/ 301
+/tags/Oh%20My%20Posh/ /tags/oh-my-posh/ 301
+/tags/Oh%20My%20Posh /tags/oh-my-posh/ 301
+/tags/Parsec%20VDD/ /tags/parsec-vdd/ 301
+/tags/Parsec%20VDD /tags/parsec-vdd/ 301
+/tags/ShokaX%20Astro/ /tags/shokax-astro/ 301
+/tags/ShokaX%20Astro /tags/shokax-astro/ 301
