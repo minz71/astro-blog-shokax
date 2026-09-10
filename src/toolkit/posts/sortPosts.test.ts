@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Post } from "./types";
 import {
+  comparePostsByCreatedDateAsc,
+  comparePostsByCreatedDateDesc,
   comparePostsByOrderDateAsc,
   comparePostsByOrderDateDesc,
+  getPostCreatedDate,
   getPostOrderDate,
 } from "./sortPosts";
 
@@ -45,5 +48,20 @@ describe("sortPosts", () => {
   it("should sort posts by updated or date in ascending order", () => {
     const posts = [olderPost, updatedPost].toSorted(comparePostsByOrderDateAsc);
     expect(posts.map((post) => post.id)).toEqual(["older", "updated"]);
+  });
+
+  it("should always use date, never updated, as the created date", () => {
+    expect(getPostCreatedDate(updatedPost)).toEqual(updatedPost.data.date);
+    expect(getPostCreatedDate(olderPost)).toEqual(olderPost.data.date);
+  });
+
+  it("should sort posts by created date in descending order", () => {
+    const posts = [updatedPost, olderPost].toSorted(comparePostsByCreatedDateDesc);
+    expect(posts.map((post) => post.id)).toEqual(["older", "updated"]);
+  });
+
+  it("should sort posts by created date in ascending order", () => {
+    const posts = [olderPost, updatedPost].toSorted(comparePostsByCreatedDateAsc);
+    expect(posts.map((post) => post.id)).toEqual(["updated", "older"]);
   });
 });
