@@ -200,7 +200,9 @@
   font-size: 0.75rem;
 }
 
-.post .tags a {
+/* span 是「没有 taxonomy 页可去」的标签：外观一致，但不是链接也没有 hover */
+.post .tags > a,
+.post .tags > span {
   display: inline-block;
   position: relative;
   padding: 0 0.3125rem;
@@ -209,7 +211,7 @@
   color: var(--note-text);
 }
 
-.post .tags a:not(:last-child) {
+.post .tags > *:not(:last-child) {
   margin-right: 0.625rem;
 }
 

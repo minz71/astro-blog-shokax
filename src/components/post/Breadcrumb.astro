@@ -1,13 +1,24 @@
 ---
 import { currentLocale, getT } from "@/i18n";
+import { toCategoryHref } from "@/toolkit/posts/url";
 
 interface Props {
   categories?: string[];
   isHome?: boolean;
+  /**
+   * 已产生 `/categories/<name>/` 的分类。省略代表不过滤，全部渲染成链接；
+   * 传入时不在其中的分类渲染成纯文字——工具用的分类若没有任何一般文章使用，
+   * 对应的 taxonomy 页不会被产生，链过去就是 404。
+   */
+  linkableCategories?: string[];
 }
 
-const { categories = [], isHome = true } = Astro.props;
+const { categories = [], isHome = true, linkableCategories } = Astro.props;
 const t = getT(currentLocale);
+
+const linkable = linkableCategories ? new Set(linkableCategories) : undefined;
+const hrefOf = (cat: string): string | undefined =>
+  !linkable || linkable.has(cat) ? toCategoryHref(cat) : undefined;
 ---
 
 <div class="breadcrumb" itemscope itemtype="https://schema.org/BreadcrumbList">
@@ -29,8 +40,20 @@ const t = getT(currentLocale);
         <i class="ic i-ri-arrow-right-s-line" />
         {categories.map((cat, index) => {
           const isLast = index === categories.length - 1;
-          const catPath = `/categories/${cat}/`;
+          const catPath = hrefOf(cat);
           const position = index + 2;
+          const label = catPath ? (
+            <a
+              href={catPath}
+              itemprop="item"
+              rel="index"
+              title={`${t("common.in")} ${cat}`}
+            >
+              <span itemprop="name">{cat}</span>
+            </a>
+          ) : (
+            <span itemprop="name">{cat}</span>
+          );
 
           if (isLast && isHome) {
             return (
@@ -40,14 +63,7 @@ const t = getT(currentLocale);
                 itemscope
                 itemtype="https://schema.org/ListItem"
               >
-                <a
-                  href={catPath}
-                  itemprop="item"
-                  rel="index"
-                  title={`${t("common.in")} ${cat}`}
-                >
-                  <span itemprop="name">{cat}</span>
-                </a>
+                {label}
                 <meta itemprop="position" content={String(position)} />
               </span>
             );
@@ -59,14 +75,7 @@ const t = getT(currentLocale);
                   itemscope
                   itemtype="https://schema.org/ListItem"
                 >
-                  <a
-                    href={catPath}
-                    itemprop="item"
-                    rel="index"
-                    title={`${t("common.in")} ${cat}`}
-                  >
-                    <span itemprop="name">{cat}</span>
-                  </a>
+                  {label}
                   <meta itemprop="position" content={String(position)} />
                 </span>
                 {index < categories.length - 1 && (
