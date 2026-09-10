@@ -57,6 +57,20 @@ test("@critical 工具详情可达，标题与 canonical 正确", async ({ page 
   expect(new URL(ogUrl!).pathname).toBe(TOOLS.demo);
 });
 
+test("@critical 工具的标签只在 taxonomy 页存在时才渲染成链接", async ({ page }) => {
+  await page.goto(TOOLS.demo);
+
+  const tags = page.locator("article.post .tags");
+
+  /**
+   * taxonomy 聚合页的来源集合排除工具，所以工具独有的标签没有对应页面。
+   * 无条件渲染 <a> 就是在造死链接，这里必须退成纯文字。
+   */
+  await expect(tags.locator('a[rel="tag"]', { hasText: "组件" })).toHaveCount(1);
+  await expect(tags.locator("a", { hasText: "工具专用" })).toHaveCount(0);
+  await expect(tags.locator("span", { hasText: "工具专用" })).toHaveCount(1);
+});
+
 test("@critical clientIsland 工具在浏览器中完成水合且可交互", async ({ page }) => {
   await page.goto(TOOLS.demo);
 

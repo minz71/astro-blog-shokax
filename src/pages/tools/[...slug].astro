@@ -5,6 +5,7 @@ import ContentDetail from "@/components/post/ContentDetail.astro";
 import { filterPublishableTools } from "@/toolkit/posts/content";
 import { createPostContentContainer } from "@/toolkit/posts/createPostContentContainer";
 import { prepareContentDetail } from "@/toolkit/posts/prepareContentDetail";
+import { collectLinkableTaxonomy } from "@/toolkit/posts/taxonomy";
 
 /**
  * 工具详情。
@@ -17,8 +18,15 @@ import { prepareContentDetail } from "@/toolkit/posts/prepareContentDetail";
  * 以及被放到 /tools/ 底下的一般文章）。
  */
 export async function getStaticPaths() {
-  const tools = filterPublishableTools(await getCollection("posts"));
+  const allPosts = await getCollection("posts");
+  const tools = filterPublishableTools(allPosts);
   const container = await createPostContentContainer();
+
+  /**
+   * 工具最容易踩到这个坑：taxonomy 聚合页的来源集合排除工具，工具独有的分类／
+   * 标签因此没有页面。算一次交给 ContentDetail，让它渲染成纯文字而非死链接。
+   */
+  const linkableTaxonomy = collectLinkableTaxonomy(allPosts);
 
   return Promise.all(
     tools.map(async (tool) => {
@@ -29,7 +37,7 @@ export async function getStaticPaths() {
 
       return {
         params: { slug: tool.id },
-        props: { tool, ...prepared },
+        props: { tool, linkableTaxonomy, ...prepared },
       };
     }),
   );

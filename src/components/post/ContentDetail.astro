@@ -14,6 +14,7 @@ import Layout from "@/layouts/Layout.astro";
 import themeConfig from "@/theme.config";
 import type { EncryptedData } from "@/toolkit/encryption/types";
 import { getContentRenderMode, isTool } from "@/toolkit/posts/content";
+import { createTaxonomyLookup, type LinkableTaxonomy } from "@/toolkit/posts/taxonomy";
 import { toContentHref, toPostHref, toTagHref } from "@/toolkit/posts/url";
 
 import "@/styles/post.css";
@@ -41,6 +42,12 @@ interface Props {
   prevPost?: NavPost;
   nextPost?: NavPost;
   relatedPosts?: RelatedPost[];
+  /**
+   * 哪些 taxonomy 页真的会被产生。由路由的 getStaticPaths 算一次传进来——
+   * 工具的分类／标签若没有任何一般文章使用，`/tags/` 与 `/categories/` 的
+   * getStaticPaths 就不会为它产生页面，这里必须渲染成纯文字而不是链接。
+   */
+  linkableTaxonomy?: LinkableTaxonomy;
 }
 
 const {
@@ -53,7 +60,10 @@ const {
   prevPost: prevPostProp,
   nextPost: nextPostProp,
   relatedPosts: relatedPostsProp,
+  linkableTaxonomy,
 } = Astro.props;
+
+const taxonomy = createTaxonomyLookup(linkableTaxonomy);
 
 /**
  * 内容型别自 entry 推导，不接受呼叫端传入的字串——否则会和 frontmatter 冲突，
@@ -181,7 +191,10 @@ const jsonLdHtml = JSON.stringify(jsonLd).replaceAll("<", "\\u003c");
 
   <Fragment>
     <div class="article wrap" data-pagefind-ignore={isEncrypted ? "all" : undefined}>
-      <Breadcrumb categories={entry.data.categories ?? undefined} />
+      <Breadcrumb
+        categories={entry.data.categories ?? undefined}
+        linkableCategories={linkableTaxonomy?.categories}
+      />
 
       <article
         itemscope
@@ -240,12 +253,19 @@ const jsonLdHtml = JSON.stringify(jsonLd).replaceAll("<", "\\u003c");
           {
             !isEncrypted && entry.data.tags && entry.data.tags.length > 0 && (
               <div class="tags">
-                {entry.data.tags.map((tag) => (
-                  <a href={toTagHref(tag)} rel="tag">
-                    <i class="icon i-ri-price-tag-3-line" />
-                    {tag}
-                  </a>
-                ))}
+                {entry.data.tags.map((tag) =>
+                  taxonomy.hasTag(tag) ? (
+                    <a href={toTagHref(tag)} rel="tag">
+                      <i class="icon i-ri-price-tag-3-line" />
+                      {tag}
+                    </a>
+                  ) : (
+                    <span>
+                      <i class="icon i-ri-price-tag-3-line" />
+                      {tag}
+                    </span>
+                  ),
+                )}
               </div>
             )
           }
