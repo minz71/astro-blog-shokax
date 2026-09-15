@@ -20,6 +20,9 @@ export interface CropRect {
   height: number;
 }
 
+/** 裁切框的八个把手。字串里出现 n/s/w/e，就代表那条边会跟着指标走。 */
+export type CropHandle = "nw" | "n" | "ne" | "w" | "e" | "sw" | "s" | "se";
+
 /** 缩放方式。`original` 代表不缩放。 */
 export type ResizeSpec =
   | { mode: "original" }

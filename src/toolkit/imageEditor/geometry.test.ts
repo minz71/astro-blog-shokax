@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
+  CROP_HANDLES,
   MAX_DIMENSION,
   clampCropRect,
+  clampRectToFrame,
   createDefaultEdit,
+  fitAspect,
+  handleAt,
+  isInsideRect,
   isPristine,
+  normalizeRect,
   outputSize,
+  resizeCropRect,
   resolveTargetSize,
   rotatedSize,
 } from "./geometry";
@@ -198,5 +205,184 @@ describe("isPristine", () => {
     const resized = createDefaultEdit();
     resized.resize = { mode: "percent", percent: 50 };
     expect(isPristine(resized)).toBe(false);
+  });
+});
+
+describe("crop box interaction geometry", () => {
+  const frame = { width: 400, height: 300 };
+  // 一个离每条边都够远的框，才测得出「命中哪条边」不是靠运气
+  const box = { x: 100, y: 80, width: 200, height: 120 };
+
+  describe("normalizeRect", () => {
+    it("turns a bottom-right-to-top-left drag into a top-left origin", () => {
+      expect(normalizeRect({ x: 300, y: 200, width: -200, height: -120 })).toEqual(box);
+    });
+
+    it("leaves an already-normalized rect alone", () => {
+      expect(normalizeRect(box)).toEqual(box);
+    });
+  });
+
+  describe("clampRectToFrame", () => {
+    it("keeps an in-bounds rect untouched", () => {
+      expect(clampRectToFrame(box, frame)).toEqual(box);
+    });
+
+    it("stops a box at the edge instead of squashing it", () => {
+      // 这是「搬动」的核心保证：撞到边只改位置，尺寸一格都不能少
+      const moved = clampRectToFrame({ ...box, x: -50, y: -30 }, frame);
+      expect(moved).toEqual({ x: 0, y: 0, width: 200, height: 120 });
+    });
+
+    it("stops at the far edge too", () => {
+      const moved = clampRectToFrame({ ...box, x: 999, y: 999 }, frame);
+      expect(moved).toEqual({ x: 200, y: 180, width: 200, height: 120 });
+    });
+
+    it("shrinks a box that is larger than the frame", () => {
+      expect(clampRectToFrame({ x: -10, y: -10, width: 900, height: 900 }, frame)).toEqual({
+        x: 0,
+        y: 0,
+        width: 400,
+        height: 300,
+      });
+    });
+
+    it("scales both sides together when the ratio is locked", () => {
+      // 两边各自夹会把比例夹坏：选了 1:1 往角落拉就拉出一个不方的「正方形」
+      const rect = clampRectToFrame({ x: 0, y: 0, width: 600, height: 600 }, frame, true);
+      expect(rect).toEqual({ x: 0, y: 0, width: 300, height: 300 });
+    });
+
+    it("leaves an in-bounds locked-ratio box alone", () => {
+      const rect = { x: 10, y: 10, width: 120, height: 120 };
+      expect(clampRectToFrame(rect, frame, true)).toEqual(rect);
+    });
+
+    it("does not round, so dragging stays smooth", () => {
+      const rect = clampRectToFrame({ x: 10.25, y: 20.5, width: 30.75, height: 40.5 }, frame);
+      expect(rect).toEqual({ x: 10.25, y: 20.5, width: 30.75, height: 40.5 });
+    });
+  });
+
+  describe("handleAt", () => {
+    const slop = 10;
+
+    it("finds every corner", () => {
+      expect(handleAt({ x: 100, y: 80 }, box, slop, slop)).toBe("nw");
+      expect(handleAt({ x: 300, y: 80 }, box, slop, slop)).toBe("ne");
+      expect(handleAt({ x: 100, y: 200 }, box, slop, slop)).toBe("sw");
+      expect(handleAt({ x: 300, y: 200 }, box, slop, slop)).toBe("se");
+    });
+
+    it("finds every edge", () => {
+      expect(handleAt({ x: 200, y: 80 }, box, slop, slop)).toBe("n");
+      expect(handleAt({ x: 200, y: 200 }, box, slop, slop)).toBe("s");
+      expect(handleAt({ x: 100, y: 140 }, box, slop, slop)).toBe("w");
+      expect(handleAt({ x: 300, y: 140 }, box, slop, slop)).toBe("e");
+    });
+
+    it("hits from just outside the border, not only from inside", () => {
+      // 只认内侧的话就得刚好压在那条线上，那正是「拉不动」的手感
+      expect(handleAt({ x: 94, y: 74 }, box, slop, slop)).toBe("nw");
+      expect(handleAt({ x: 306, y: 206 }, box, slop, slop)).toBe("se");
+    });
+
+    it("returns null well inside the box and well outside it", () => {
+      expect(handleAt({ x: 200, y: 140 }, box, slop, slop)).toBeNull();
+      expect(handleAt({ x: 20, y: 20 }, box, slop, slop)).toBeNull();
+    });
+
+    it("only returns names that actually exist", () => {
+      for (let x = 80; x <= 320; x += 4) {
+        for (let y = 60; y <= 220; y += 4) {
+          const handle = handleAt({ x, y }, box, slop, slop);
+          if (handle !== null) expect(CROP_HANDLES).toContain(handle);
+        }
+      }
+    });
+  });
+
+  describe("isInsideRect", () => {
+    it("accepts the interior and the border, rejects the outside", () => {
+      expect(isInsideRect({ x: 200, y: 140 }, box)).toBe(true);
+      expect(isInsideRect({ x: 100, y: 80 }, box)).toBe(true);
+      expect(isInsideRect({ x: 99, y: 140 }, box)).toBe(false);
+      expect(isInsideRect({ x: 200, y: 201 }, box)).toBe(false);
+    });
+  });
+
+  describe("fitAspect", () => {
+    it("is a no-op without a ratio", () => {
+      expect(fitAspect(box, null)).toEqual(box);
+    });
+
+    it("keeps the anchor and derives the shorter side", () => {
+      expect(fitAspect({ x: 0, y: 0, width: 200, height: 50 }, 1)).toEqual({
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 200,
+      });
+    });
+
+    it("preserves the drag direction", () => {
+      const rect = fitAspect({ x: 300, y: 300, width: -200, height: -50 }, 1);
+      expect(rect).toEqual({ x: 300, y: 300, width: -200, height: -200 });
+    });
+  });
+
+  describe("resizeCropRect", () => {
+    it("moves only the grabbed corner and keeps the opposite one pinned", () => {
+      const rect = resizeCropRect("se", box, { x: 260, y: 170 }, null);
+      expect(normalizeRect(rect)).toEqual({ x: 100, y: 80, width: 160, height: 90 });
+    });
+
+    it("moves only the grabbed edge", () => {
+      expect(normalizeRect(resizeCropRect("w", box, { x: 140, y: 999 }, null))).toEqual({
+        x: 140,
+        y: 80,
+        width: 160,
+        height: 120,
+      });
+      expect(normalizeRect(resizeCropRect("n", box, { x: 999, y: 120 }, null))).toEqual({
+        x: 100,
+        y: 120,
+        width: 200,
+        height: 80,
+      });
+    });
+
+    it("anchors a locked-ratio corner drag at the opposite corner", () => {
+      // 锚在起拖点的话，比例补出来的那一边会把整个框推到指标外面去
+      const rect = normalizeRect(resizeCropRect("nw", box, { x: 200, y: 150 }, 1));
+      expect(rect.x + rect.width).toBeCloseTo(300);
+      expect(rect.y + rect.height).toBeCloseTo(200);
+      expect(rect.width).toBeCloseTo(rect.height);
+    });
+
+    it("grows a locked-ratio edge drag around the box centre", () => {
+      // 边把手若也锚在 x/y，框会在指标底下往一侧滑走
+      const before = box.y + box.height / 2;
+      const rect = normalizeRect(resizeCropRect("e", box, { x: 200, y: 140 }, 1));
+      expect(rect.width).toBeCloseTo(100);
+      expect(rect.height).toBeCloseTo(100);
+      expect(rect.y + rect.height / 2).toBeCloseTo(before);
+    });
+
+    it("keeps the perpendicular centre when dragging a vertical edge under a ratio", () => {
+      const before = box.x + box.width / 2;
+      const rect = normalizeRect(resizeCropRect("s", box, { x: 140, y: 160 }, 2));
+      expect(rect.height).toBeCloseTo(80);
+      expect(rect.width).toBeCloseTo(160);
+      expect(rect.x + rect.width / 2).toBeCloseTo(before);
+    });
+
+    it("survives dragging a handle past the opposite side", () => {
+      // 拉过头时框会翻面，normalizeRect 之后仍然要是个合法矩形
+      const rect = normalizeRect(resizeCropRect("e", box, { x: 20, y: 140 }, null));
+      expect(rect.width).toBeGreaterThan(0);
+      expect(rect.x).toBeCloseTo(20);
+    });
   });
 });

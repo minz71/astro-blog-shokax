@@ -3,11 +3,19 @@ import { createStore } from "solid-js/store";
 
 import { disposeCodecWorker, encodeImage } from "@/toolkit/imageEditor/codecClient";
 import {
+  CROP_HANDLES,
+  clampRectToFrame,
   createDefaultEdit,
+  fitAspect,
+  handleAt,
+  isInsideRect,
   isPristine,
+  normalizeRect,
   outputSize,
+  resizeCropRect,
   rotatedFrameSize,
 } from "@/toolkit/imageEditor/geometry";
+import type { FramePoint } from "@/toolkit/imageEditor/geometry";
 import {
   formatBytes,
   formatSaving,
@@ -48,6 +56,7 @@ import {
 import type {
   CollageLayout,
   CollageSpec,
+  CropHandle,
   CropRect,
   EditSpec,
   OutputFormat,
@@ -155,6 +164,28 @@ const COLLAGE_FIT_LABELS: Record<CollageSpec["fit"], string> = {
 
 /** 座标换成百分比，裁切框才能不受预览显示尺寸影响地对齐。 */
 const pct = (value: number, total: number) => `${((value / total) * 100).toFixed(3)}%`;
+
+const HANDLE_CURSORS: Record<CropHandle, string> = {
+  nw: "nwse-resize",
+  n: "ns-resize",
+  ne: "nesw-resize",
+  w: "ew-resize",
+  e: "ew-resize",
+  sw: "nesw-resize",
+  s: "ns-resize",
+  se: "nwse-resize",
+};
+
+/**
+ * 把手的命中半径，单位是「萤幕上的 CSS 像素」。
+ *
+ * 不能写死画面座标：画面座标就是原图像素，同一颗把手在 800px 宽的图上是 12/800，
+ * 在 6000px 的图上变成 12/6000，等于完全抓不到。先在萤幕上量，再换算回画面。
+ */
+const HANDLE_HIT_PX = 14;
+
+/** 小于这个尺寸（画面像素）的新框一律当误触丢掉。 */
+const MIN_CROP_PX = 8;
 
 function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -468,6 +499,7 @@ export default function ImageEditorTool() {
     setItems((candidate) => candidate.id === item.id, "edit", "rotate", next as RotateAngle);
     // 画面转了，原本的裁切框在新座标系里已经没有意义
     setItems((candidate) => candidate.id === item.id, "edit", "crop", null);
+    setHoverTarget(null);
   }
 
   function toggleFlip(axis: "flipH" | "flipV"): void {
@@ -481,20 +513,40 @@ export default function ImageEditorTool() {
     if (!item) return;
     setItems((candidate) => candidate.id === item.id, "edit", createDefaultEdit());
     setCropMode(false);
+    // 框没了，指标底下就不再有东西可抓；不重设的话游标会卡在 move/resize 的样子
+    setHoverTarget(null);
   }
 
   function clearCrop(): void {
     const item = selected();
     if (!item) return;
     setItems((candidate) => candidate.id === item.id, "edit", "crop", null);
+    setHoverTarget(null);
   }
 
   // ── 裁切框拖曳 ──────────────────────────────────────────────
 
-  let dragStart: { x: number; y: number } | null = null;
+  type DragSession =
+    | { mode: "new"; start: FramePoint }
+    | { mode: "move"; start: FramePoint; startRect: CropRect }
+    | { mode: "resize"; handle: CropHandle; start: FramePoint; startRect: CropRect };
+
+  let dragSession: DragSession | null = null;
+  /** 没在拖的时候指标底下是什么，只拿来决定游标长相。 */
+  const [hoverTarget, setHoverTarget] = createSignal<CropHandle | "move" | null>(null);
+
+  /** 把裁切框写回 store，顺手正规化并压回画面范围。 */
+  function writeCrop(item: Item, rect: CropRect | null): void {
+    setItems(
+      (candidate) => candidate.id === item.id,
+      "edit",
+      "crop",
+      rect ? clampRectToFrame(rect, frame(), aspectRatio() !== null) : null,
+    );
+  }
 
   /** 把指标位置换算成「旋转后画面」的像素座标。 */
-  function toFramePoint(event: PointerEvent, element: HTMLElement): { x: number; y: number } {
+  function toFramePoint(event: PointerEvent, element: HTMLElement): FramePoint {
     const rect = element.getBoundingClientRect();
     const fx = rect.width > 0 ? (event.clientX - rect.left) / rect.width : 0;
     const fy = rect.height > 0 ? (event.clientY - rect.top) / rect.height : 0;
@@ -505,66 +557,178 @@ export default function ImageEditorTool() {
     };
   }
 
-  function applyAspect(rect: CropRect): CropRect {
-    const ratio = aspectRatio();
-    if (!ratio || ratio <= 0) return rect;
-    const signX = rect.width < 0 ? -1 : 1;
-    const signY = rect.height < 0 ? -1 : 1;
-    const width = Math.abs(rect.width);
-    const height = Math.abs(rect.height);
-    // 以较长的那一边为准，另一边按比例算，拖曳时才不会忽大忽小
-    if (width / ratio >= height) {
-      return { ...rect, width: width * signX, height: (width / ratio) * signY };
-    }
-    return { ...rect, width: height * ratio * signX, height: height * signY };
+  /** 把手命中半径换算成画面座标；overlay 的显示尺寸跟画面尺寸不是 1:1。 */
+  function hitSlop(element: HTMLElement): FramePoint {
+    const rect = element.getBoundingClientRect();
+    const currentFrame = frame();
+    return {
+      x: rect.width > 0 ? (HANDLE_HIT_PX / rect.width) * currentFrame.width : 0,
+      y: rect.height > 0 ? (HANDLE_HIT_PX / rect.height) * currentFrame.height : 0,
+    };
   }
 
   function onCropPointerDown(event: PointerEvent & { currentTarget: HTMLElement }): void {
     const item = selected();
     if (!cropMode() || !item) return;
     const element = event.currentTarget;
+    // 自己拿焦点，拖完就能直接用方向键微调，不必再点一次。
+    // preventScroll 不能省：画布高到 60vh，文章里通常只露出一半，预设的 focus 会把它
+    // 卷进视野 —— 页面在 pointerdown 当下位移，整段拖曳就从错的地方开始。
+    element.focus({ preventScroll: true });
     element.setPointerCapture(event.pointerId);
-    dragStart = toFramePoint(event, element);
-    setItems((candidate) => candidate.id === item.id, "edit", "crop", null);
+    const point = toFramePoint(event, element);
+    const existing = item.edit.crop ? normalizeRect(item.edit.crop) : null;
+
+    if (existing) {
+      const slop = hitSlop(element);
+      const handle = handleAt(point, existing, slop.x, slop.y);
+      if (handle) {
+        dragSession = { mode: "resize", handle, start: point, startRect: existing };
+        return;
+      }
+      if (isInsideRect(point, existing)) {
+        dragSession = { mode: "move", start: point, startRect: existing };
+        return;
+      }
+    }
+
+    // 框外按下＝重画。这里刻意不先把旧框清掉：第一个 pointermove 本来就会整个覆写它，
+    // 清了只是让「手滑点到框外一点点」变成没得复原的删除 —— 那跟原本「只能点第一次」
+    // 是同一种难用。真的不想要框的话，面板上有「清除框」。
+    dragSession = { mode: "new", start: point };
   }
 
   function onCropPointerMove(event: PointerEvent & { currentTarget: HTMLElement }): void {
     const item = selected();
-    if (!dragStart || !item) return;
     const element = event.currentTarget;
+    const session = dragSession;
+
+    if (!session) {
+      // 没在拖就只更新游标，让使用者看得出哪里抓得到、哪里是重画
+      const existing = item?.edit.crop ? normalizeRect(item.edit.crop) : null;
+      if (!existing) {
+        setHoverTarget(null);
+        return;
+      }
+      const slop = hitSlop(element);
+      const point = toFramePoint(event, element);
+      const handle = handleAt(point, existing, slop.x, slop.y);
+      setHoverTarget(handle ?? (isInsideRect(point, existing) ? "move" : null));
+      return;
+    }
+
+    if (!item) return;
     const point = toFramePoint(event, element);
-    const crop = applyAspect({
-      x: dragStart.x,
-      y: dragStart.y,
-      width: point.x - dragStart.x,
-      height: point.y - dragStart.y,
-    });
-    setItems((candidate) => candidate.id === item.id, "edit", "crop", crop);
+
+    if (session.mode === "new") {
+      writeCrop(
+        item,
+        fitAspect(
+          {
+            x: session.start.x,
+            y: session.start.y,
+            width: point.x - session.start.x,
+            height: point.y - session.start.y,
+          },
+          aspectRatio(),
+        ),
+      );
+      return;
+    }
+
+    if (session.mode === "move") {
+      // 搬动只改位置：clampRectToFrame 会先夹尺寸再夹位置，撞到边会停住而不是被压扁
+      writeCrop(item, {
+        ...session.startRect,
+        x: session.startRect.x + point.x - session.start.x,
+        y: session.startRect.y + point.y - session.start.y,
+      });
+      return;
+    }
+
+    writeCrop(item, resizeCropRect(session.handle, session.startRect, point, aspectRatio()));
   }
 
   function onCropPointerUp(event: PointerEvent & { currentTarget: HTMLElement }): void {
-    if (!dragStart) return;
+    const session = dragSession;
+    if (!session) return;
     const element = event.currentTarget;
-    element.releasePointerCapture(event.pointerId);
-    dragStart = null;
-    // 太小的框几乎都是误触，直接丢掉比留着一个 3x3 的裁切好
+    if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId);
+    dragSession = null;
+
+    // 误触判定只对「新画」的框生效。搬动与拉把手时框本来就存在，拿同一把尺去量
+    // 会变成手抖一下整个框就消失。
+    if (session.mode !== "new") return;
     const item = selected();
     const crop = item?.edit.crop;
-    if (item && crop && (Math.abs(crop.width) < 8 || Math.abs(crop.height) < 8)) {
-      setItems((candidate) => candidate.id === item.id, "edit", "crop", null);
+    if (item && crop && (crop.width < MIN_CROP_PX || crop.height < MIN_CROP_PX)) {
+      writeCrop(item, null);
     }
   }
+
+  /** 方向键微调：单按搬动 1px，Shift 一次 10px，Ctrl/Cmd 则是改大小。 */
+  function onCropKeyDown(event: KeyboardEvent & { currentTarget: HTMLElement }): void {
+    const item = selected();
+    const crop = item?.edit.crop;
+    if (!item || !crop) return;
+    const deltas: Record<string, [number, number]> = {
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+    };
+    const delta = deltas[event.key];
+    if (!delta) return;
+    event.preventDefault();
+    const step = event.shiftKey ? 10 : 1;
+    const dx = delta[0] * step;
+    const dy = delta[1] * step;
+
+    if (event.ctrlKey || event.metaKey) {
+      writeCrop(
+        item,
+        fitAspect(
+          {
+            ...crop,
+            width: Math.max(MIN_CROP_PX, crop.width + dx),
+            height: Math.max(MIN_CROP_PX, crop.height + dy),
+          },
+          aspectRatio(),
+        ),
+      );
+      return;
+    }
+    writeCrop(item, { ...crop, x: crop.x + dx, y: crop.y + dy });
+  }
+
+  /** 换比例时把现有的框一起改掉，不然按钮按下去画面没反应，看起来像坏了。 */
+  function chooseAspectRatio(value: number | null): void {
+    setAspectRatio(value);
+    const item = selected();
+    const crop = item?.edit.crop;
+    if (!item || !crop || !value || value <= 0) return;
+    // 绕着原本的中心重算，框才会留在原地而不是往左上角缩
+    const fitted = normalizeRect(fitAspect(crop, value));
+    writeCrop(item, {
+      ...fitted,
+      x: crop.x + (crop.width - fitted.width) / 2,
+      y: crop.y + (crop.height - fitted.height) / 2,
+    });
+  }
+
+  const cropCursor = createMemo(() => {
+    const target = hoverTarget();
+    if (!target) return "crosshair";
+    return target === "move" ? "move" : HANDLE_CURSORS[target];
+  });
 
   /** 裁切框换算成 CSS 百分比，overlay 才能不受显示尺寸影响地对齐。 */
   const cropStyle = createMemo(() => {
     const crop = selected()?.edit.crop;
     const currentFrame = frame();
     if (!crop || currentFrame.width <= 0 || currentFrame.height <= 0) return null;
-    const x = Math.min(crop.x, crop.x + crop.width);
-    const y = Math.min(crop.y, crop.y + crop.height);
-    const w = Math.abs(crop.width);
-    const h = Math.abs(crop.height);
-    return `left:${pct(x, currentFrame.width)};top:${pct(y, currentFrame.height)};width:${pct(w, currentFrame.width)};height:${pct(h, currentFrame.height)}`;
+    const rect = normalizeRect(crop);
+    return `left:${pct(rect.x, currentFrame.width)};top:${pct(rect.y, currentFrame.height)};width:${pct(rect.width, currentFrame.width)};height:${pct(rect.height, currentFrame.height)}`;
   });
 
   // ── 输出 ────────────────────────────────────────────────────
@@ -778,14 +942,32 @@ export default function ImageEditorTool() {
                 <Show when={cropMode() && mode() === "batch"}>
                   <div
                     class="iet-cropper"
-                    role="presentation"
+                    role="group"
+                    aria-label="裁切範圍"
+                    tabindex="0"
+                    style={{ cursor: cropCursor() }}
                     onPointerDown={onCropPointerDown}
                     onPointerMove={onCropPointerMove}
                     onPointerUp={onCropPointerUp}
                     onPointerCancel={onCropPointerUp}
+                    onPointerLeave={() => {
+                      if (!dragSession) setHoverTarget(null);
+                    }}
+                    onKeyDown={onCropKeyDown}
+                    // Chromium 会把「按住再往旁边移」判成原生拖曳而送出 pointercancel，
+                    // 整段拖曳在第一个 pointermove 之后就断掉 —— 框跟着走一步就卡住。
+                    // pointerdown 上的 preventDefault 挡不掉（滑鼠的相容事件不受它影响），
+                    // 只有把 dragstart 本身挡下来才有用。
+                    onDragStart={(event) => event.preventDefault()}
                   >
                     <Show when={cropStyle()}>
-                      <div class="iet-crop-box" style={cropStyle() ?? undefined} />
+                      <div class="iet-crop-box" style={cropStyle() ?? undefined}>
+                        {/* 把手只负责让使用者看得见抓点在哪，命中判定是在 cropper 上算几何的，
+                            所以整盒维持 pointer-events: none，pointer capture 的目标不用改 */}
+                        <For each={CROP_HANDLES}>
+                          {(handle) => <span class={`iet-crop-handle is-${handle}`} />}
+                        </For>
+                      </div>
                     </Show>
                   </div>
                 </Show>
@@ -1178,7 +1360,7 @@ export default function ImageEditorTool() {
                           class="iet-btn"
                           type="button"
                           aria-pressed={aspectRatio() === ratio.value}
-                          onClick={() => setAspectRatio(ratio.value)}
+                          onClick={() => chooseAspectRatio(ratio.value)}
                         >
                           {ratio.label}
                         </button>
@@ -1188,7 +1370,11 @@ export default function ImageEditorTool() {
                       清除框
                     </button>
                   </div>
-                  <p class="iet-note iet-reveal">在預覽上拖曳選取要保留的範圍。</p>
+                  <p class="iet-note iet-reveal">
+                    在預覽上拖曳選取要保留的範圍。框出來之後：拖框內可以整塊移動，拉四角或四邊可以改大小，
+                    點框外重新畫一個。選取範圍取得焦點時，方向鍵微調位置（Shift 一次 10px），Ctrl/⌘
+                    加方向鍵改大小。
+                  </p>
                 </Show>
                 <Show when={mode() === "collage"}>
                   <p class="iet-note">

@@ -144,6 +144,127 @@ test.describe("图片编辑工具", () => {
     await expect(panel).toContainText(/400×200 →\s+\d+×\d+/);
   });
 
+  test("@regression 畫好的裁切框可以整塊搬動與拉把手微調", async ({ page }) => {
+    await page.goto(TOOLS.imageEditor);
+
+    const fixture = await makePngFixture(page, 400, 300);
+    await page.locator('[data-testid="iet-file-input"]').setInputFiles(fixture);
+
+    await openSection(page, "旋轉與裁切");
+    await page.locator('[data-testid="iet-crop-toggle"]').click();
+
+    const cropper = page.locator(".iet-cropper");
+    await cropper.scrollIntoViewIfNeeded();
+    const stage = await cropper.boundingBox();
+    expect(stage).not.toBeNull();
+    if (!stage) return;
+
+    const at = (fx: number, fy: number) => ({
+      x: stage.x + stage.width * fx,
+      y: stage.y + stage.height * fy,
+    });
+
+    // 先畫一個框
+    const from = at(0.2, 0.2);
+    const to = at(0.6, 0.6);
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(to.x, to.y, { steps: 8 });
+    await page.mouse.up();
+
+    const cropBox = page.locator(".iet-crop-box");
+    await expect(cropBox).toBeVisible();
+    const drawn = await cropBox.boundingBox();
+    expect(drawn).not.toBeNull();
+    if (!drawn) return;
+
+    // 把手要看得見，不然使用者不會知道框是可以動的
+    await expect(page.locator(".iet-crop-handle")).toHaveCount(8);
+
+    // ── 框內拖曳＝整塊搬動：位置要變，尺寸一格都不能變 ──
+    const inside = at(0.4, 0.4);
+    const shifted = at(0.5, 0.5);
+    await page.mouse.move(inside.x, inside.y);
+    await page.mouse.down();
+    await page.mouse.move(shifted.x, shifted.y, { steps: 8 });
+    await page.mouse.up();
+
+    const moved = await cropBox.boundingBox();
+    expect(moved).not.toBeNull();
+    if (!moved) return;
+    // 這是回歸的重點：舊版任何一次 pointerdown 都會把框清掉，框會整個消失
+    expect(moved.x).toBeGreaterThan(drawn.x + 5);
+    expect(moved.y).toBeGreaterThan(drawn.y + 5);
+    expect(moved.width).toBeCloseTo(drawn.width, 0);
+    expect(moved.height).toBeCloseTo(drawn.height, 0);
+
+    // ── 拉右下角把手＝改大小：對角要釘住不動 ──
+    const corner = { x: moved.x + moved.width, y: moved.y + moved.height };
+    await page.mouse.move(corner.x, corner.y);
+    await page.mouse.down();
+    await page.mouse.move(corner.x - stage.width * 0.15, corner.y - stage.height * 0.15, {
+      steps: 8,
+    });
+    await page.mouse.up();
+
+    const resized = await cropBox.boundingBox();
+    expect(resized).not.toBeNull();
+    if (!resized) return;
+    expect(resized.width).toBeLessThan(moved.width - 5);
+    expect(resized.height).toBeLessThan(moved.height - 5);
+    expect(resized.x).toBeCloseTo(moved.x, 0);
+    expect(resized.y).toBeCloseTo(moved.y, 0);
+
+    // ── 方向鍵微調：按一次只走 1 個畫面像素，框不會消失 ──
+    await cropper.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(cropBox).toBeVisible();
+    const nudged = await cropBox.boundingBox();
+    expect(nudged).not.toBeNull();
+    if (!nudged) return;
+    expect(nudged.x).toBeGreaterThan(resized.x);
+    expect(nudged.width).toBeCloseTo(resized.width, 0);
+
+    // ── 框外單純點一下（沒拖）不該把框刪掉 ──
+    const outside = at(0.03, 0.03);
+    await page.mouse.click(outside.x, outside.y);
+    await expect(cropBox).toBeVisible();
+    const survived = await cropBox.boundingBox();
+    expect(survived).not.toBeNull();
+    if (!survived) return;
+    expect(survived.width).toBeCloseTo(nudged.width, 0);
+  });
+
+  test("@regression 鎖 1:1 時拉到畫面邊界仍然是正方形", async ({ page }) => {
+    await page.goto(TOOLS.imageEditor);
+
+    const fixture = await makePngFixture(page, 400, 300);
+    await page.locator('[data-testid="iet-file-input"]').setInputFiles(fixture);
+
+    await openSection(page, "旋轉與裁切");
+    await page.locator('[data-testid="iet-crop-toggle"]').click();
+    await page.locator(".iet-panel").getByRole("button", { name: "1:1" }).click();
+
+    const cropper = page.locator(".iet-cropper");
+    await cropper.scrollIntoViewIfNeeded();
+    const stage = await cropper.boundingBox();
+    expect(stage).not.toBeNull();
+    if (!stage) return;
+
+    // 往角落拉到超出畫面：兩邊各自夾的話，比例就死在這裡
+    await page.mouse.move(stage.x + stage.width * 0.05, stage.y + stage.height * 0.05);
+    await page.mouse.down();
+    await page.mouse.move(stage.x + stage.width * 0.99, stage.y + stage.height * 0.99, {
+      steps: 8,
+    });
+    await page.mouse.up();
+
+    const box = await page.locator(".iet-crop-box").boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) return;
+    expect(box.width).toBeCloseTo(box.height, 0);
+  });
+
   test("@regression 缩放设定会套用到输出", async ({ page }) => {
     await page.goto(TOOLS.imageEditor);
 

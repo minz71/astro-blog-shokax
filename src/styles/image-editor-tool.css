@@ -134,8 +134,17 @@
 .iet-cropper {
   position: absolute;
   inset: 0;
+  /* 游标由 JS 按指标底下的东西写成 inline style，这里只是拿不到时的退路 */
   cursor: crosshair;
   touch-action: none;
+  /* 跟元件上拦 dragstart 是同一件事：别让浏览器把拖框当成选取或原生拖曳 */
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.iet-cropper:focus-visible {
+  outline: 2px solid var(--color-pink, #f06);
+  outline-offset: 2px;
 }
 
 .iet-crop-box {
@@ -145,6 +154,57 @@
     0 0 0 1px rgb(0 0 0 / 45%),
     0 0 0 9999px rgb(0 0 0 / 45%);
   pointer-events: none;
+}
+
+/*
+ * 把手只是记号：命中范围是在 .iet-cropper 上用坐标算的（比这几颗方块大得多），
+ * 所以它们不接指标事件，也就不会把 pointer capture 的目标抢走。
+ */
+.iet-crop-handle {
+  position: absolute;
+  z-index: 1;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border: 1px solid rgb(0 0 0 / 55%);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.iet-crop-handle.is-nw,
+.iet-crop-handle.is-w,
+.iet-crop-handle.is-sw {
+  left: -6px;
+}
+
+.iet-crop-handle.is-n,
+.iet-crop-handle.is-s {
+  left: 50%;
+  margin-left: -6px;
+}
+
+.iet-crop-handle.is-ne,
+.iet-crop-handle.is-e,
+.iet-crop-handle.is-se {
+  right: -6px;
+}
+
+.iet-crop-handle.is-nw,
+.iet-crop-handle.is-n,
+.iet-crop-handle.is-ne {
+  top: -6px;
+}
+
+.iet-crop-handle.is-w,
+.iet-crop-handle.is-e {
+  top: 50%;
+  margin-top: -6px;
+}
+
+.iet-crop-handle.is-sw,
+.iet-crop-handle.is-s,
+.iet-crop-handle.is-se {
+  bottom: -6px;
 }
 
 .iet-crop-box::after {
