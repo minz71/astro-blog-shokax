@@ -116,7 +116,8 @@ int main() {
 using namespace std;
 
 // 定義遞迴函式計算階乘
-int factorial(int n) {
+// 回傳 long long：int 算到 13! 就會溢位，long long 最多可以算到 20!
+long long factorial(int n) {
     // Base case: 當 n 為 0 或 1 時，階乘為 1
     if (n == 0 || n == 1) {
         return 1;
@@ -128,11 +129,17 @@ int factorial(int n) {
 
 int main() {
     int num;
-    cout << "請輸入一個正整數: ";
+    cout << "請輸入一個 0 到 20 之間的整數: ";
     cin >> num;
 
+    // 負數會讓遞迴永遠碰不到 base case，超過 20 則會溢位
+    if (num < 0 || num > 20) {
+        cout << "輸入超出範圍" << endl;
+        return 1;
+    }
+
     // 呼叫遞迴函式計算階乘
-    int result = factorial(num);
+    long long result = factorial(num);
 
     cout << num << " 的階乘是: " << result << endl;
 
@@ -144,6 +151,7 @@ int main() {
 
 ```cpp 找出陣列中第二大的數字
 #include <iostream>
+#include <climits> // 包含 INT_MIN 的定義
 using namespace std;
 
 int findSecondLargest(int arr[], int size) {
@@ -236,8 +244,8 @@ bool isPrime(int number) {
 
     // 使用平方根的方法進行質數判斷
     // 如果一個數字 n 是合數（非質數）
-    // 那麼它必定可以分解為兩個因數 a 和 b
-    // 其中 a 和 b 都不大於 sqrt(n)
+    // 那麼它必定可以分解為兩個因數 a 和 b（a * b = n）
+    // 其中至少有一個不大於 sqrt(n)，所以只要檢查到 sqrt(n) 就足夠了
     int sqrtNumber = sqrt(number);
     for (int i = 2; i <= sqrtNumber; i++) {
         if (number % i == 0) {
@@ -574,12 +582,12 @@ void transposeMatrix(int matrix[][MAX_SIZE], int rows, int cols) {
 
 int main() {
     int matrix[MAX_SIZE][MAX_SIZE];  // 定義原始矩陣
-    int rows, cols;  // 矩陣的行數和列數
+    int rows, cols;  // 矩陣的列數和行數
 
-    // 輸入矩陣的行數和列數
-    cout << "請輸入矩陣的行數：";
-    cin >> rows;
+    // 輸入矩陣的列數和行數
     cout << "請輸入矩陣的列數：";
+    cin >> rows;
+    cout << "請輸入矩陣的行數：";
     cin >> cols;
 
     // 輸入矩陣元素
@@ -664,12 +672,13 @@ int main() {
 using namespace std;
 
 // 計算矩陣與向量的乘積
-vector<double> matrixVectorMultiply(const vector<vector<double>>& matrix, const vector<double>& vector) {
+// 注意：變數不能取名為 vector，否則會蓋掉 std::vector，讓 vector<double> 無法編譯
+vector<double> matrixVectorMultiply(const vector<vector<double>>& matrix, const vector<double>& vec) {
     int rows = matrix.size();
     int cols = matrix[0].size();
 
     // 檢查矩陣與向量的尺寸是否符合乘法規則
-    if (cols != vector.size()) {
+    if (cols != static_cast<int>(vec.size())) {
         cout << "矩陣與向量的尺寸不符合乘法規則" << endl;
         return vector<double>();
     }
@@ -680,7 +689,7 @@ vector<double> matrixVectorMultiply(const vector<vector<double>>& matrix, const 
     // 進行矩陣與向量的乘法
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            result[i] += matrix[i][j] * vector[j];
+            result[i] += matrix[i][j] * vec[j];
         }
     }
 
@@ -695,10 +704,10 @@ int main() {
                                      {7, 8, 9}};
 
     // 定義向量
-    vector<double> vector = {1, 2, 3};
+    vector<double> vec = {1, 2, 3};
 
     // 計算矩陣與向量的乘積
-    vector<double> result = matrixVectorMultiply(matrix, vector);
+    vector<double> result = matrixVectorMultiply(matrix, vec);
 
     // 輸出結果
     cout << "乘積結果：";

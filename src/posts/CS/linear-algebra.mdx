@@ -57,14 +57,14 @@ b = 3
 假設有兩個二維向量 v₁ = (1, 2) 和 v₂ = (3, 4)。
 
 首先，計算這兩個向量的內積（dot product）：
-v₁ · v₂ = (1 _ 3) + (2 _ 4) = 3 + 8 = 11
+v₁ · v₂ = (1 × 3) + (2 × 4) = 3 + 8 = 11
 
 接下來，計算每個向量的長度（歐幾里得範數）：
 ||v₁|| = √(1² + 2²) = √5 ≈ 2.236
 ||v₂|| = √(3² + 4²) = √25 = 5
 
 然後，計算餘弦相似度：
-similarity = v₁ · v₂ / (||v₁|| _ ||v₂||) = 11 / (2.236 _ 5) ≈ 0.984
+similarity = v₁ · v₂ / (||v₁|| × ||v₂||) = 11 / (2.236 × 5) ≈ 0.984
 
 從上述計算結果可以看出，這兩個向量的餘弦相似度約為 0.984，接近於 1，表示它們在方向上非常相似。
 
@@ -74,8 +74,10 @@ similarity = v₁ · v₂ / (||v₁|| _ ||v₂||) = 11 / (2.236 _ 5) ≈ 0.984
 
 # 一個方陣要怎麼求反矩陣
 
-1. 高斯-喬登消去法（Gaussian-Jordan elimination）
-   a. 將右邊放上基本矩陣
+1. 高斯-喬登消去法（Gauss-Jordan elimination）
+
+   a. 在方陣右邊放上同階的單位矩陣（identity matrix）
+
    $
 \begin{bmatrix}
     a & b & c & 1 & 0 & 0 \\
@@ -84,18 +86,23 @@ similarity = v₁ · v₂ / (||v₁|| _ ||v₂||) = 11 / (2.236 _ 5) ≈ 0.984
 \end{bmatrix}
 $
 
--     b. 將左邊做列運算至基本矩陣
-                            c. 可得右邊為反矩陣
-  $
+   b. 對整個矩陣做列運算，直到左邊變成單位矩陣
+
+   c. 此時右邊就是反矩陣（若左邊無法化成單位矩陣，代表這個方陣不可逆）
+
+   $
 \begin{bmatrix}
     1 & 0 & 0 & ? & ? & ? \\
     0 & 1 & 0 & ? & ? & ? \\
     0 & 0 & 1 & ? & ? & ? 
 \end{bmatrix}
 $
--
 
-2. 矩陣的伴隨矩陣（adjugate matrix）。
+2. 矩陣的伴隨矩陣（adjugate matrix）：A⁻¹ = adj(A) / det(A)。
+
+:::warning
+不論用哪種方法，都只有在 det(A) ≠ 0 時方陣才有反矩陣。
+:::
 
 以下是一個簡單的範例來說明如何求一個方陣的反矩陣：
 :::info
@@ -110,23 +117,23 @@ c & d
 $
 
 首先，計算方陣 A 的行列式（determinant）：
-det(A) = ad - bc
+det(A) = ad - bc（必須 ad - bc ≠ 0，A 才有反矩陣）
 
 接下來，計算方陣 A 的伴隨矩陣（adjugate matrix） B：
 $
 B =
-\begin{matrix}
+\begin{bmatrix}
 d & -b \\
 -c & a
-\end{matrix}
+\end{bmatrix}
 $
 
 最後，計算反矩陣（inverse matrix） A⁻¹：
-A⁻¹ = (1/det(A)) _ B
-= (1/(ad - bc)) _ $
-\begin{matrix}
+A⁻¹ = (1/det(A)) × B
+= (1/(ad - bc)) × $
+\begin{bmatrix}
 d & -b \\
 -c & a
-\end{matrix}
+\end{bmatrix}
 $
 :::
