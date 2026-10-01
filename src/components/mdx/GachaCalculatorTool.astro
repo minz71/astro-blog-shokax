@@ -1,0 +1,15 @@
+---
+import GachaCalculatorToolSolid from "./GachaCalculatorTool.tsx";
+
+// 样式在这里用一般 import 静态载入，而不是在 .tsx 里 import：client:only 的元件
+// Astro 无法静态归属，它的 CSS 会被注入到**每一页**；.astro 元件的样式才是按页
+// 归属的，只有真正载入这颗工具的文章会带进来（同 ImageEditorTool.astro）。
+import "@/styles/gacha-calculator-tool.css";
+---
+
+{/*
+  client:only 而不是 client:load：整颗工具的初始画面取决于 localStorage 里的存档，
+  服务端没有那份资料，预渲染出来的一定是预设值，接手时又会整片换掉——白花一次 HTML
+  体积换一次闪动。直接跳过 SSR 比较诚实。
+*/}
+<GachaCalculatorToolSolid client:only="solid-js" />

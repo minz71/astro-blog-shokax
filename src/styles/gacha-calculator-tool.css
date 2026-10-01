@@ -1,0 +1,1016 @@
+/*
+ * 转蛋机率计算机的样式。
+ *
+ * 比照 image-editor-tool.css：独立 CSS 档、由 .astro 包装元件 import，不写成 UnoCSS
+ * utility。UnoCSS 的 utility 会被收进整站共用的样式 chunk，只有这一页用得到的样式
+ * 也会让每一页多下载几 KB；独立档案则由 Vite 单独产生 chunk，只有真的载入这颗岛屿的
+ * 页面才会请求。颜色一律走 palette.css 的变数，深色模式因此不必写第二套。
+ */
+
+.gct {
+  --gct-radius: 0.875rem;
+  --gct-border: 1px solid color-mix(in srgb, var(--grey-4) 22%, transparent);
+  --gct-panel: color-mix(in srgb, var(--grey-1) 94%, transparent);
+
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  border: var(--gct-border);
+  border-radius: var(--gct-radius);
+  background: var(--gct-panel);
+  box-shadow: var(--shadow-card-soft);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-color);
+}
+
+.gct * {
+  box-sizing: border-box;
+}
+
+/*
+ * 新出现的区块（期望值那一整块、汇入后的提示）淡入并往下滑一点，而不是硬跳。
+ * 消失的那一边没有退场动画——那需要 JS 或 View Transitions 才做得到，为了一个
+ * 收合效果不值得。
+ */
+@keyframes gct-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.gct-appear {
+  animation: gct-appear 0.24s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gct-appear {
+    animation: none;
+  }
+}
+
+/* ── 面板与输入 ───────────────────────────────────────────── */
+
+.gct-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border: var(--gct-border);
+  border-radius: calc(var(--gct-radius) - 0.25rem);
+  background: color-mix(in srgb, var(--grey-1) 60%, transparent);
+}
+
+.gct-panel legend {
+  padding: 0 0.4rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-color-muted);
+}
+
+.gct-panel-note {
+  margin: 0;
+  color: var(--text-color-muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.gct-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.875rem;
+}
+
+.gct-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.gct-field-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/*
+ * 后缀（%／抽／元）画在输入框内右侧，而不是当成另一个格子排在旁边：独立栏位会让
+ * 栏宽在输入时跳来跳去。
+ */
+.gct-field-input {
+  position: relative;
+  display: block;
+}
+
+.gct-field-input input {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: var(--gct-border);
+  border-radius: 0.5rem;
+  background: var(--grey-1);
+  color: var(--text-color);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.gct-field-input:has(.gct-field-suffix) input {
+  padding-right: 3rem;
+}
+
+.gct-field-input input:focus-visible {
+  border-color: var(--color-pink);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-pink) 25%, transparent);
+}
+
+.gct-field-suffix {
+  position: absolute;
+  top: 50%;
+  right: 0.6rem;
+  transform: translateY(-50%);
+  color: var(--text-color-muted);
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+.gct-field-hint {
+  color: var(--text-color-muted);
+  font-size: 0.75rem;
+}
+
+/* ── 奖品表 ───────────────────────────────────────────────── */
+
+.gct-prizes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/*
+ * 奖品表最多一百列，全部摊开会把后面的结果推到好几个萤幕之外，所以列本身放进
+ * 有高度上限的卷动区，表头留在外面不跟着卷。留一点内距，输入框聚焦时的外框光晕
+ * 才不会被 overflow 裁掉。
+ */
+.gct-prize-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 26rem;
+  margin: -2px;
+  padding: 2px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* 卷轴会吃掉列的宽度，用细卷轴把跟表头之间的错位压到最小。 */
+  scrollbar-width: thin;
+}
+
+/*
+ * 一列奖品是一个 grid，栏位用 grid-template-areas 命名。
+ * 宽萤幕排成一条（勾选／名称／机率／价值／删除），窄萤幕折成两行——名称独占第一行，
+ * 机率与价值并排在第二行。用具名区域而不是重排 DOM，两种版型共用同一段 markup。
+ */
+.gct-prize,
+.gct-prize-head {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(5rem, 1fr) 7rem 8rem 1.75rem;
+  grid-template-areas: "target name prob value remove";
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.gct-prize-head {
+  padding: 0 0.1rem;
+  color: var(--text-color-muted);
+  font-size: 0.72rem;
+}
+
+.gct-prize-head span[data-area="prob"],
+.gct-prize-head span[data-area="value"] {
+  padding-left: 0.6rem;
+}
+
+.gct-prize {
+  padding: 0.35rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+/* 目标那一列要一眼认得出来：上方每一个机率数字讲的都是它。 */
+.gct-prize[data-target="true"] {
+  border-color: color-mix(in srgb, var(--color-pink) 40%, transparent);
+  background: color-mix(in srgb, var(--color-pink) 7%, transparent);
+}
+
+.gct-prize-cell {
+  position: relative;
+  display: block;
+}
+
+.gct [data-area="target"] {
+  grid-area: target;
+}
+
+.gct [data-area="name"] {
+  grid-area: name;
+}
+
+.gct [data-area="prob"] {
+  grid-area: prob;
+}
+
+.gct [data-area="value"] {
+  grid-area: value;
+}
+
+.gct [data-area="remove"] {
+  grid-area: remove;
+}
+
+.gct-prize-cell[data-area="target"],
+.gct-prize-cell[data-area="remove"] {
+  display: flex;
+  justify-content: center;
+}
+
+.gct-prize-cell input[type="text"],
+.gct-prize-cell input[type="number"] {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: var(--gct-border);
+  border-radius: 0.45rem;
+  background: var(--grey-1);
+  color: var(--text-color);
+  font: inherit;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 只有带后缀（%）的栏位要替后缀留位置；价值栏没有单位，不必多留空白。 */
+.gct-prize-cell:has(.gct-prize-suffix) input[type="number"] {
+  padding-right: 2.25rem;
+}
+
+.gct-prize-cell input:focus-visible {
+  border-color: var(--color-pink);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-pink) 25%, transparent);
+}
+
+.gct-prize-cell input[type="radio"] {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+.gct-prize-suffix {
+  position: absolute;
+  top: 50%;
+  right: 0.55rem;
+  transform: translateY(-50%);
+  color: var(--text-color-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.gct-prize-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+}
+
+.gct-prize-total {
+  color: var(--text-color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.gct-dim {
+  opacity: 0.78;
+}
+
+.gct-warn {
+  color: var(--color-red);
+  font-weight: 600;
+}
+
+/* ── 主结果 ───────────────────────────────────────────────── */
+
+.gct-headline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 1.25rem;
+  padding: 1.25rem 1rem;
+  border-radius: calc(var(--gct-radius) - 0.25rem);
+  background: color-mix(in srgb, var(--color-pink) 8%, transparent);
+  text-align: center;
+}
+
+.gct-headline-label {
+  color: var(--text-color-muted);
+  font-size: 0.85rem;
+}
+
+.gct-headline-value {
+  /*
+   * 数字会在 100% 与 1.00×10⁻¹⁰% 之间跳，用 clamp 让长字串在窄萤幕上自己缩，
+   * 不必为科学记号另外写一组断点。
+   */
+  font-size: clamp(1.6rem, 7vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--primary-color);
+}
+
+.gct-headline-note {
+  color: var(--text-color-muted);
+  font-size: 0.8rem;
+}
+
+/* ── 区块 ─────────────────────────────────────────────────── */
+
+.gct-block {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: var(--gct-border);
+}
+
+.gct-block-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.gct-block-note {
+  margin: 0 0 0.75rem;
+  color: var(--text-color-muted);
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.gct-block-note code {
+  padding: 0 0.2rem;
+  border-radius: 0.2rem;
+  background: color-mix(in srgb, var(--grey-4) 16%, transparent);
+  font-size: 0.95em;
+  white-space: nowrap;
+}
+
+.gct-block-note:last-child {
+  margin: 0.75rem 0 0;
+}
+
+/* ── 分布表 ───────────────────────────────────────────────── */
+
+.gct-dist-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0;
+  list-style: none;
+}
+
+/*
+ * 主题会给文章内的清单补上圆点与缩排（post.css 的 `.md ul > li:not(...)::before`
+ * 与 `.md ul { padding-left: 1.4em }`）。分布表的 li 是资料列不是条列项，圆点在这里
+ * 只是噪音。选择器要刻意写得比主题那条重（三个 class + 三个元素），否则算下来是
+ * 平手，谁赢就取决于两个样式 chunk 的载入顺序——那不是该赌的事。
+ */
+.gct ul.gct-dist-rows {
+  padding: 0;
+}
+
+.gct ul.gct-dist-rows li.gct-dist-row::before {
+  content: none;
+}
+
+.gct ul.gct-dist-rows li.gct-dist-row {
+  margin: 0;
+}
+
+/* 栏位勾选：长条永远在，三个机率数字让使用者自己决定要看哪几个。 */
+.gct-dist-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.78rem;
+}
+
+.gct-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.gct-check input {
+  width: 0.95rem;
+  height: 0.95rem;
+  margin: 0;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+.gct-check code {
+  padding: 0 0.2rem;
+  border-radius: 0.2rem;
+  background: color-mix(in srgb, var(--grey-4) 16%, transparent);
+  font-size: 0.95em;
+  white-space: nowrap;
+}
+
+/*
+ * 栏数随勾选变动，所以不用具名区域，改成依序自动排入；整串 template 由元件经
+ * `--gct-dist-template` 给出（理由见元件里 distTemplate 的注解）。
+ */
+.gct-dist-row,
+.gct-dist-head {
+  display: grid;
+  grid-template-columns: var(--gct-dist-template, 4.5rem minmax(3rem, 1fr));
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 宽萤幕上数字那一层不占格子，让每个数字直接成为列的 grid item。 */
+.gct-dist-nums {
+  display: contents;
+}
+
+.gct-dist-head {
+  margin-bottom: 0.35rem;
+  padding-bottom: 0.3rem;
+  border-bottom: var(--gct-border);
+  color: var(--text-color-muted);
+  font-size: 0.72rem;
+}
+
+.gct-dist-head > span:nth-child(n + 3),
+.gct-dist-num {
+  text-align: right;
+}
+
+.gct-dist-key {
+  color: var(--text-color-muted);
+}
+
+/* 每一列自带的小标签，只在窄萤幕（表头收起来时）出现。 */
+.gct-dist-label {
+  display: none;
+  color: var(--text-color-muted);
+  font-size: 0.64rem;
+  font-style: normal;
+  line-height: 1.3;
+}
+
+.gct-dist-track {
+  height: 0.75rem;
+  border-radius: 0.375rem;
+  background: color-mix(in srgb, var(--grey-4) 18%, transparent);
+  overflow: hidden;
+}
+
+.gct-dist-fill {
+  display: block;
+  height: 100%;
+  border-radius: 0.375rem;
+  background: color-mix(in srgb, var(--color-pink) 55%, transparent);
+  transition: width 0.18s ease;
+}
+
+/* 「想中幾次」指到的那一列：整列提亮，视线才知道该往哪一列看。 */
+.gct-dist-row[data-active="true"] .gct-dist-fill {
+  background: var(--primary-color);
+}
+
+.gct-dist-row[data-active="true"] .gct-dist-key,
+.gct-dist-row[data-active="true"] .gct-dist-num {
+  color: var(--text-color);
+  font-weight: 700;
+  opacity: 1;
+}
+
+/* ── 要抽几次才够 ─────────────────────────────────────────── */
+
+/*
+ * 问句与答案当成一段普通文字排版，而不是 flex：flex 会把「% 的把握至少中…」整段当成
+ * 一个项目，放不下就整块掉到下一行；一般的行内排版则只在真的放不下的字之间折行。
+ */
+.gct-inline {
+  font-size: 0.85rem;
+  line-height: 2.2;
+}
+
+.gct-inline-input {
+  width: 5rem;
+  margin: 0 0.3rem;
+  vertical-align: baseline;
+  padding: 0.25rem 0.45rem;
+  border: var(--gct-border);
+  border-radius: 0.4rem;
+  background: var(--grey-1);
+  color: var(--text-color);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 答案接在问句后面同一行；窄萤幕放不下时整段答案一起折到下一行，不会从中间断开。 */
+.gct-answer {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.gct-answer strong {
+  font-size: 1.35rem;
+  line-height: 1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--primary-color);
+}
+
+.gct-answer-extra {
+  color: var(--text-color-muted);
+  font-size: 0.85rem;
+}
+
+.gct-answer[data-fail="true"] {
+  color: var(--text-color-muted);
+  white-space: normal;
+}
+
+/* ── 期望值 ───────────────────────────────────────────────── */
+
+.gct-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.gct-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem;
+  border: var(--gct-border);
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--grey-1) 60%, transparent);
+}
+
+.gct-stat-label {
+  color: var(--text-color-muted);
+  font-size: 0.78rem;
+}
+
+.gct-stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.gct-stat-note {
+  color: var(--text-color-muted);
+  font-size: 0.72rem;
+}
+
+.gct-stat[data-tone="good"] .gct-stat-value {
+  color: var(--color-green);
+}
+
+.gct-stat[data-tone="bad"] .gct-stat-value {
+  color: var(--color-red);
+}
+
+/* 明细跟奖品表一样可能有一百列，同样限高卷动，下面的汇总卡片才不会被推走。 */
+.gct-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 22rem;
+  margin: 0 0 1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+/* 同样要压过主题给文章清单加的圆点与缩排，理由见 .gct-dist-rows 那一段。 */
+.gct ul.gct-breakdown {
+  padding: 0;
+}
+
+.gct ul.gct-breakdown li.gct-breakdown-row::before {
+  content: none;
+}
+
+.gct ul.gct-breakdown li.gct-breakdown-row {
+  margin: 0;
+}
+
+.gct-breakdown-row {
+  display: grid;
+  grid-template-columns: minmax(6rem, 1fr) auto auto;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, var(--grey-1) 55%, transparent);
+  font-size: 0.8rem;
+}
+
+.gct-breakdown-name {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.gct-breakdown-count {
+  color: var(--text-color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.gct-breakdown-value {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.gct-tag {
+  padding: 0.05rem 0.35rem;
+  border-radius: 0.3rem;
+  background: color-mix(in srgb, var(--color-pink) 22%, transparent);
+  color: var(--text-color);
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── 按钮与状态 ───────────────────────────────────────────── */
+
+.gct-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gct-btn {
+  padding: 0.4rem 0.9rem;
+  border: var(--gct-border);
+  border-radius: 0.5rem;
+  background: var(--grey-1);
+  color: var(--text-color);
+  font: inherit;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.gct-btn:hover:not(:disabled),
+.gct-btn:focus-visible:not(:disabled) {
+  border-color: var(--color-pink);
+  background: color-mix(in srgb, var(--color-pink) 8%, transparent);
+  outline: none;
+}
+
+.gct-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.gct-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: var(--gct-border);
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--text-color-muted);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.gct-icon-btn:hover:not(:disabled),
+.gct-icon-btn:focus-visible:not(:disabled) {
+  border-color: var(--color-red);
+  outline: none;
+  color: var(--color-red);
+}
+
+.gct-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.gct-status {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.gct-status[data-tone="ok"] {
+  color: var(--color-green);
+}
+
+.gct-status[data-tone="warn"] {
+  color: var(--text-color-muted);
+}
+
+.gct-status[data-tone="error"] {
+  color: var(--color-red);
+}
+
+/* ── 弹窗 ─────────────────────────────────────────────────── */
+
+/*
+ * 原生 <dialog> 的开合动画。
+ *
+ * 关闭时元素会变成 display:none，那本来是不可动画的；要靠 `allow-discrete` 把
+ * display 与 overlay 一起纳入过渡，浏览器才会等动画播完再把它收掉。开启那一侧
+ * 则要 @starting-style 指定「刚插入时」的样式，否则没有可以内插的起点。
+ * 不支援这两个特性的浏览器就是直接出现／消失，功能不受影响。
+ */
+.gct-modal {
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 4rem);
+  /*
+   * 原生 dialog 靠 UA 样式的 `margin: auto` 置中，但 UnoCSS preflight 的
+   * `*, ::before, ::after { margin: 0 }` 会把它盖掉，弹窗就黏在左上角。要自己补回来。
+   */
+  margin: auto;
+  padding: 0;
+  border: var(--gct-border);
+  border-radius: var(--gct-radius);
+  background: var(--grey-1);
+  color: var(--text-color);
+  box-shadow: var(--shadow-card-soft-hover);
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s cubic-bezier(0.2, 0, 0.2, 1),
+    overlay 0.22s allow-discrete,
+    display 0.22s allow-discrete;
+}
+
+/*
+ * 隐藏状态挂在 `:not([open])` 而不是基底选择器上：基底若是 opacity 0，任何让过渡
+ * 跑不起来的环境都会留下一个看不见、却仍然抢走焦点的对话框。挂在关闭状态上，
+ * 「开着」的预设就是看得见，动画只是加分。
+ */
+.gct-modal:not([open]) {
+  opacity: 0;
+  transform: translateY(0.75rem) scale(0.98);
+}
+
+@starting-style {
+  .gct-modal[open] {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.98);
+  }
+}
+
+.gct-modal::backdrop {
+  background: oklch(0 0 0 / 0.45);
+  opacity: 1;
+  transition:
+    opacity 0.22s ease,
+    overlay 0.22s allow-discrete,
+    display 0.22s allow-discrete;
+}
+
+.gct-modal:not([open])::backdrop {
+  opacity: 0;
+}
+
+@starting-style {
+  .gct-modal[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gct-modal,
+  .gct-modal::backdrop {
+    transition: none;
+  }
+}
+
+.gct-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem 1.25rem;
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.gct-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.gct-modal-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.gct-modal-text {
+  margin: 0;
+  color: var(--text-color-muted);
+}
+
+.gct-modal-hint {
+  margin: 0;
+  color: var(--text-color-muted);
+  font-size: 0.75rem;
+}
+
+.gct-modal-hint code,
+.gct-modal-text code {
+  padding: 0 0.2rem;
+  border-radius: 0.2rem;
+  background: color-mix(in srgb, var(--grey-4) 16%, transparent);
+  font-size: 0.95em;
+}
+
+.gct-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  color: var(--text-color-muted);
+}
+
+/* 同样要压过主题给文章清单的样式：这是弹窗里的步骤，不是文章的条列。 */
+/*
+ * counter-reset 也要写在这条高特异性的选择器里：主题的 `.md ol` 有自己的 counter-reset，
+ * 特异性比单一 class 高，会把 gct-step 整个盖掉，每一步都变成从头计的「1.」。
+ */
+.gct ol.gct-steps {
+  padding: 0;
+  list-style: none;
+  counter-reset: gct-step;
+}
+
+/*
+ * 主题的 `.md ol > li::before` 会把编号画成绝对定位的实心圆（底色就是主色），
+ * 这里的编号字也是主色，叠起来只剩一颗看不到数字的红点。定位、底色、圆角都要一并还原。
+ */
+.gct ol.gct-steps li::before {
+  counter-increment: gct-step;
+  content: counter(gct-step) ".";
+  position: static;
+  display: inline-block;
+  width: 1.4em;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  color: var(--primary-color);
+  font-size: inherit;
+  font-weight: 700;
+  line-height: inherit;
+  text-align: left;
+  text-indent: 0;
+}
+
+.gct ol.gct-steps li {
+  margin: 0;
+  padding-left: 1.4em;
+  text-indent: -1.4em;
+}
+
+.gct-textarea {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: var(--gct-border);
+  border-radius: 0.45rem;
+  background: var(--grey-1);
+  color: var(--text-color);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  /* JSON 会有长行；让它换行而不是长出一条横向卷轴。 */
+  white-space: pre-wrap;
+  resize: vertical;
+}
+
+.gct-textarea:focus-visible {
+  border-color: var(--color-pink);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-pink) 25%, transparent);
+}
+
+/* ── 页脚 ─────────────────────────────────────────────────── */
+
+/* 只剩一颗重设按钮，不再需要分隔线：上面每个区块已经各自带了 border-top。 */
+.gct-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+/* ── 窄萤幕 ───────────────────────────────────────────────── */
+
+/*
+ * 窄萤幕的分布表：折成两行——次数与长条一行，三个机率并排在下一行。
+ *
+ * 五栏挤不下：机率栏最宽的内容是 `1.35×10⁻¹⁰%`，量出来要 92px，而 375px 的萤幕
+ * 分给每一栏只有 74px，数字会从中间断行。折成两行之后每个机率有整整三分之一的
+ * 宽度。
+ *
+ * 表头对不上两行版型，所以收起来，改由每个数字自己带一个小标签。标签是独立元素
+ * 而不是「≤ 」这种前缀：机率接近 1 时格式化出来是「> 99.9999%」，前缀会跟它叠成
+ * 「≥ > 99.9999%」，反而更难读。
+ */
+@media (max-width: 700px) {
+  .gct-dist-row {
+    grid-template-columns: 4.5rem 1fr;
+    row-gap: 0.3rem;
+  }
+
+  /* 数字那一层改成独占第二行的三等分格，只勾一两栏时也维持同样的栏宽。 */
+  .gct-dist-nums {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .gct-dist-head {
+    display: none;
+  }
+
+  .gct-dist-label {
+    display: block;
+  }
+
+  .gct-dist-row .gct-dist-num {
+    text-align: left;
+  }
+}
+
+@media (max-width: 620px) {
+  /*
+   * 奖品表折成两行：名称独占第一行（名字最长，最需要宽度），机率与价值并排在
+   * 第二行，勾选与删除留在第一行的两端。
+   */
+  .gct-prize {
+    grid-template-columns: 1.75rem 1fr 1fr 1.75rem;
+    grid-template-areas:
+      "target name name remove"
+      "target prob value remove";
+    row-gap: 0.35rem;
+  }
+
+  .gct-prize-head {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .gct {
+    padding: 1rem 0.875rem;
+  }
+
+  /* 明细从三栏折成两行，金额靠右单独一行。 */
+  .gct-breakdown-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .gct-breakdown-value {
+    grid-column: 2;
+  }
+}

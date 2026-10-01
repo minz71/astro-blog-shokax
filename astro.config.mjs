@@ -6,7 +6,7 @@ import { defineConfig } from "astro/config";
 import { hyacinePlugin } from "@hyacine/plugin-astro";
 import { satteri } from "@astrojs/markdown-satteri";
 import sitemap from "@astrojs/sitemap";
-// react 只为 src/posts/tool/local_code_copy.mdx 的 client island 引入。
+// react 只为 src/posts/tools/local_code_copy.mdx 的 client island 引入。
 // 依 AGENTS.md「文章专属组件」，这个 renderer 与 react 依赖只存在于 cloudflare。
 import react from "@astrojs/react";
 import esToolkitPlugin from "vite-plugin-es-toolkit";
