@@ -1,3 +1,4 @@
+/* 本文件由组件全局 import，不像 astro <style> 会自动 scoped：每个选择器都必须挂在 .calendar-card 下，否则会漏到全站（曾让所有 h3 变红） */
 .calendar-card {
   position: relative;
   background: var(--grey-0);
@@ -18,7 +19,7 @@
   transform: translateY(-0.1875rem);
 }
 
-.card-head {
+.calendar-card .card-head {
   position: relative;
   z-index: var(--z-content);
   display: flex;
@@ -28,13 +29,13 @@
   margin-bottom: 0.85rem;
 }
 
-h3 {
+.calendar-card h3 {
   color: var(--primary-color, var(--color-pink));
   font-size: 1.125rem;
   margin: 0;
 }
 
-.badge {
+.calendar-card .badge {
   background: color-mix(in srgb, var(--color-pink) 10%, var(--grey-1));
   border: 0.0625rem solid color-mix(in srgb, var(--color-pink) 18%, var(--grey-3));
   border-radius: 999px;
@@ -47,7 +48,7 @@ h3 {
   white-space: nowrap;
 }
 
-.calendar-grid {
+.calendar-card .calendar-grid {
   position: relative;
   z-index: var(--z-content);
   display: grid;
@@ -56,21 +57,21 @@ h3 {
   margin-bottom: 0.75rem;
 }
 
-.weekday,
-.date {
+.calendar-card .weekday,
+.calendar-card .date {
   align-items: center;
   display: inline-flex;
   justify-content: center;
 }
 
-.weekday {
+.calendar-card .weekday {
   color: var(--grey-5);
   font-size: 0.75rem;
   font-weight: 600;
   min-height: 1.45rem;
 }
 
-.date {
+.calendar-card .date {
   background: color-mix(in srgb, var(--grey-1) 92%, transparent);
   border: 0.0625rem solid var(--grey-3);
   border-radius: 0.65rem;
@@ -84,20 +85,20 @@ h3 {
     transform 0.3s ease;
 }
 
-.date:not(.empty):hover {
+.calendar-card .date:not(.empty):hover {
   border-color: color-mix(in srgb, var(--color-pink) 26%, var(--grey-3));
   color: var(--grey-8);
   transform: translateY(-0.0625rem);
 }
 
-.date.today {
+.calendar-card .date.today {
   background: linear-gradient(to right, var(--color-pink) 0, var(--color-orange) 100%);
   border-color: transparent;
   color: var(--grey-0);
   font-weight: 700;
 }
 
-.date.empty {
+.calendar-card .date.empty {
   border-style: dashed;
   opacity: 0.35;
 }
@@ -106,11 +107,11 @@ h3 {
   box-shadow: var(--shadow-card-base);
 }
 
-:root[data-theme="dark"] .date.today,
-:root[data-theme="dark"] .badge {
+:root[data-theme="dark"] .calendar-card .date.today,
+:root[data-theme="dark"] .calendar-card .badge {
   color: var(--grey-7);
 }
 
-:root[data-theme="dark"] .date.today {
+:root[data-theme="dark"] .calendar-card .date.today {
   color: var(--grey-0);
 }
