@@ -1,0 +1,548 @@
+/*
+ * 双币理财（交易所抽成）计算机的样式。
+ *
+ * 比照 gacha-calculator-tool.css：独立档案、由 .astro 包装元件 import，颜色一律走
+ * palette.css 的变数，深色模式不必写第二套。类名统一加 `dit-` 前缀，避开 UnoCSS
+ * 依类名生成工具类的挟持（见 AGENTS.md）。
+ */
+
+.dit {
+  --dit-radius: 0.875rem;
+  --dit-border: 1px solid color-mix(in srgb, var(--grey-4) 22%, transparent);
+  --dit-panel: color-mix(in srgb, var(--grey-1) 94%, transparent);
+
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  border: var(--dit-border);
+  border-radius: var(--dit-radius);
+  background: var(--dit-panel);
+  box-shadow: var(--shadow-card-soft);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-color);
+}
+
+.dit * {
+  box-sizing: border-box;
+}
+
+/* ── 模式切换 ─────────────────────────────────────────────── */
+
+.dit-modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.dit-mode {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.65rem 0.8rem;
+  border: var(--dit-border);
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--grey-1) 60%, transparent);
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+/* 原生 radio 留着给键盘与读屏，只是视觉上藏起来：整张卡片就是点击目标。 */
+.dit-mode input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dit-mode:has(input:focus-visible) {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-pink) 35%, transparent);
+}
+
+.dit-mode[data-active="true"] {
+  border-color: color-mix(in srgb, var(--color-pink) 55%, transparent);
+  background: color-mix(in srgb, var(--color-pink) 9%, transparent);
+}
+
+.dit-mode-title {
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.dit-mode-note {
+  color: var(--text-color-muted);
+  font-size: 0.74rem;
+}
+
+/* ── 面板与输入 ───────────────────────────────────────────── */
+
+.dit-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border: var(--dit-border);
+  border-radius: calc(var(--dit-radius) - 0.25rem);
+  background: color-mix(in srgb, var(--grey-1) 60%, transparent);
+}
+
+.dit-panel legend {
+  padding: 0 0.4rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-color-muted);
+}
+
+.dit-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.875rem;
+}
+
+.dit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.dit-field-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.dit-field-input {
+  position: relative;
+  display: block;
+}
+
+.dit-field-input input {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: var(--dit-border);
+  border-radius: 0.5rem;
+  background: var(--grey-1);
+  color: var(--text-color);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.dit-field-input:has(.dit-field-suffix) input {
+  padding-right: 3.6rem;
+}
+
+.dit-field-input input:focus-visible {
+  border-color: var(--color-pink);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-pink) 25%, transparent);
+}
+
+.dit-field-suffix {
+  position: absolute;
+  top: 50%;
+  right: 0.6rem;
+  transform: translateY(-50%);
+  color: var(--text-color-muted);
+  font-size: 0.78rem;
+  pointer-events: none;
+}
+
+.dit-field-hint {
+  color: var(--text-color-muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+/* ── 主结果 ───────────────────────────────────────────────── */
+
+/* 公平 APR : 价差 : 隐含 IV = 1 : 2 : 1；窄屏时价差独占一行放最上面，两张小卡并排在下。 */
+.dit-summary {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-areas: "fair headline implied";
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.dit-summary > .dit-stat:first-child {
+  grid-area: fair;
+}
+
+.dit-summary > .dit-headline {
+  grid-area: headline;
+}
+
+.dit-summary > .dit-stat:last-child {
+  grid-area: implied;
+}
+
+@media (max-width: 640px) {
+  .dit-summary {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "headline headline"
+      "fair implied";
+  }
+}
+
+.dit-headline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 1.25rem 1rem;
+  border-radius: calc(var(--dit-radius) - 0.25rem);
+  background: color-mix(in srgb, var(--color-pink) 8%, transparent);
+  text-align: center;
+}
+
+.dit-headline-label {
+  color: var(--text-color-muted);
+  font-size: 0.85rem;
+}
+
+.dit-headline-value {
+  font-size: clamp(1.6rem, 7vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--primary-color);
+}
+
+.dit-headline[data-tone="good"] .dit-headline-value {
+  color: var(--color-green);
+}
+
+.dit-headline-note {
+  color: var(--text-color-muted);
+  font-size: 0.8rem;
+}
+
+.dit-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: var(--dit-border);
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--grey-1) 60%, transparent);
+}
+
+.dit-stat-label {
+  color: var(--text-color-muted);
+  font-size: 0.78rem;
+}
+
+.dit-stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.dit-stat-note {
+  color: var(--text-color-muted);
+  font-size: 0.72rem;
+}
+
+/* ── 区块 ─────────────────────────────────────────────────── */
+
+.dit-block {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: var(--dit-border);
+}
+
+.dit-block-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.dit-block-note {
+  margin: 0 0 0.75rem;
+  color: var(--text-color-muted);
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+/*
+ * 清单要压过主题给文章 ul 加的圆点与缩排（post.css 的 `.md ul > li::before`）。
+ * 选择器刻意写得比主题那条重，理由见 gacha-calculator-tool.css 的 .gct-dist-rows。
+ */
+.dit ul.dit-legs,
+.dit ul.dit-scenarios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dit ul.dit-legs li.dit-leg::before,
+.dit ul.dit-scenarios li.dit-scenario::before {
+  content: none;
+}
+
+.dit ul.dit-legs li.dit-leg,
+.dit ul.dit-scenarios li.dit-scenario {
+  margin: 0;
+}
+
+.dit-leg {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, var(--grey-1) 55%, transparent);
+  font-size: 0.82rem;
+}
+
+.dit-leg strong {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 数字本身是文字，用文字色；正负由前面的 +/− 与左边的色条一起表达，不靠颜色单独说话。 */
+.dit-leg[data-sign="plus"] {
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--color-green) 70%, transparent);
+}
+
+.dit-leg[data-sign="minus"] {
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--color-red) 70%, transparent);
+}
+
+.dit-leg-total {
+  margin-top: 0.2rem;
+  border-top: var(--dit-border);
+  border-radius: 0 0 0.4rem 0.4rem;
+  font-weight: 700;
+}
+
+.dit-scenario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  border: var(--dit-border);
+  border-radius: 0.5rem;
+}
+
+.dit-scenario-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.dit-scenario-prob {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dit-scenario-bar {
+  display: block;
+  height: 0.4rem;
+  border-radius: 0.2rem;
+  background: color-mix(in srgb, var(--grey-4) 18%, transparent);
+  overflow: hidden;
+}
+
+.dit-scenario-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 0.2rem;
+  background: color-mix(in srgb, var(--color-pink) 60%, transparent);
+  transition: width 0.18s ease;
+}
+
+.dit-scenario-text {
+  color: var(--text-color-muted);
+  font-size: 0.78rem;
+}
+
+/* ── 图表 ─────────────────────────────────────────────────── */
+
+.dit-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  margin-bottom: 0.4rem;
+  color: var(--text-color-muted);
+  font-size: 0.76rem;
+}
+
+.dit-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* 图例与提示框的「线段钥匙」：跟图上的线同色同样式，虚线就画成虚线。 */
+.dit-key {
+  display: inline-block;
+  width: 1.1rem;
+  height: 0;
+  border-top: 2px solid var(--primary-color);
+}
+
+.dit-key[data-style="reference"] {
+  border-top: 2px dashed var(--text-color-muted);
+}
+
+.dit-chart {
+  position: relative;
+  width: 100%;
+  border-radius: 0.5rem;
+  outline: none;
+  touch-action: pan-y;
+}
+
+.dit-chart:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-pink) 30%, transparent);
+}
+
+.dit-chart svg {
+  display: block;
+  overflow: visible;
+}
+
+.dit-grid {
+  stroke: color-mix(in srgb, var(--grey-4) 22%, transparent);
+  stroke-width: 1;
+}
+
+.dit-axis,
+.dit-marker-label,
+.dit-dot-label {
+  fill: var(--text-color-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dit-dot-label {
+  fill: var(--text-color);
+  font-weight: 600;
+}
+
+.dit-marker {
+  stroke: color-mix(in srgb, var(--grey-4) 45%, transparent);
+  stroke-width: 1;
+}
+
+.dit-line {
+  fill: none;
+  stroke: var(--primary-color);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.dit-line[data-style="reference"] {
+  stroke: var(--text-color-muted);
+  stroke-dasharray: 5 4;
+}
+
+/* 标记点带一圈底色的环，压在线上时才看得清楚。 */
+.dit-dot,
+.dit-hover-dot {
+  fill: var(--primary-color);
+  stroke: var(--grey-1);
+  stroke-width: 2;
+}
+
+.dit-hover-dot[data-style="reference"] {
+  fill: var(--text-color-muted);
+}
+
+.dit-crosshair {
+  stroke: var(--text-color-muted);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.dit-tooltip {
+  position: absolute;
+  top: 0.5rem;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 9rem;
+  padding: 0.45rem 0.6rem;
+  border: var(--dit-border);
+  border-radius: 0.5rem;
+  background: var(--grey-1);
+  box-shadow: var(--shadow-card-soft-hover);
+  font-size: 0.75rem;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.dit-tooltip-title {
+  color: var(--text-color-muted);
+}
+
+.dit-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dit-tooltip-row strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.dit-tooltip-row span {
+  color: var(--text-color-muted);
+}
+
+/* ── 页尾 ─────────────────────────────────────────────────── */
+
+.dit-disclaimer {
+  margin: 1.25rem 0 0;
+  color: var(--text-color-muted);
+  font-size: 0.74rem;
+  line-height: 1.7;
+}
+
+.dit-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.dit-btn {
+  padding: 0.4rem 0.9rem;
+  border: var(--dit-border);
+  border-radius: 0.5rem;
+  background: var(--grey-1);
+  color: var(--text-color);
+  font: inherit;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.dit-btn:hover,
+.dit-btn:focus-visible {
+  border-color: var(--color-pink);
+  background: color-mix(in srgb, var(--color-pink) 8%, transparent);
+  outline: none;
+}
+
+@media (max-width: 480px) {
+  .dit {
+    padding: 1rem 0.875rem;
+  }
+}

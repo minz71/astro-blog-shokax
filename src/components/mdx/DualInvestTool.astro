@@ -1,0 +1,9 @@
+---
+import DualInvestToolSolid from "./DualInvestTool.tsx";
+
+// 样式由 .astro 静态 import，只有载入这颗工具的文章会带进来（理由同 GachaCalculatorTool.astro）。
+import "@/styles/dual-invest-tool.css";
+---
+
+{/* client:only：初始画面取决于 localStorage 的存档，SSR 出来的预设值接手时会整片换掉。 */}
+<DualInvestToolSolid client:only="solid-js" />
