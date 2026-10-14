@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build:site": "astro build",
+    "build:site": "node scripts/ensure-cn-font-split.mjs && astro build",
     "build:index": "pagefind --site ./dist",
     "build": "pnpm run build:site && pnpm run build:index",
     "preview": "astro preview",
