@@ -517,6 +517,70 @@
   transition: color 0.2s ease;
 }
 
+/* 曲线轨道：沿用相关文章时间轴的淡红细线与白框红点，阅读进度用粉橘渐层 */
+.contents .toc-rail-wrap {
+  position: relative;
+}
+
+.contents .toc-rail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.contents .toc-rail-track,
+.contents .toc-rail-progress {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.contents .toc-rail-track {
+  stroke: var(--color-red-a3);
+  stroke-width: 2;
+}
+
+.contents .toc-rail-progress {
+  stroke-width: 2.5;
+  transition: stroke-dasharray 0.45s ease;
+}
+
+.contents .toc-rail-stop-start {
+  stop-color: var(--color-pink);
+}
+
+.contents .toc-rail-stop-end {
+  stop-color: var(--color-orange);
+}
+
+.contents .toc-rail-dot {
+  fill: var(--primary-color);
+  stroke: var(--grey-1);
+  stroke-width: 3;
+  transition: transform 0.45s cubic-bezier(0.31, -0.105, 0.43, 1.59);
+}
+
+.contents .toc-rail-hover {
+  fill: var(--color-blue);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.contents .toc-rail-hover.toc-rail-hover-on {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contents .toc-rail-progress,
+  .contents .toc-rail-dot {
+    transition: none;
+  }
+}
+
 .no-toc {
   color: var(--grey-5);
   text-align: center;
