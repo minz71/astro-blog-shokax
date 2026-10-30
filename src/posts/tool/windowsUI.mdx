@@ -1,11 +1,11 @@
 ---
 title: "我使用的 Windows UI 調整工具"
 date: 2026-03-30
-updated: 2026-03-30
 description: "我使用的 Windows UI 介面調整工具"
 tags:
   - "Oh My Posh"
   - "Terminal"
+  - "Tabby"
   - "TranslucentTB"
   - "Windhawk"
 categories:
@@ -71,6 +71,116 @@ oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\jandedobbeleer.omp.json" | 
 更改主題: 編輯 `$PROFILE` 文件，將 `--config` 的主題路徑修改為你選擇的主題，重啟後生效。
 
 自訂主題:  https://ohmyposh.dev/docs/installation/customize
+
+<img src="/images/tools/windowsUI/oh_my_push.avif" alt="" title="我的自訂主題" style="width: 80%;" />
+
+## 淺色模式主題
+
+`custom-light.omp.json`
+
+Oh My Posh 每一段只有一個 `foreground`，圖示會跟文字同色。要讓愛心有自己的顏色，要在 `template` 裡用 inline color 包起來。
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "blocks": [
+    {
+      "alignment": "left",
+      "segments": [
+        {
+          "background": "#efb0c6",
+          "foreground": "#5e1a38",
+          "leading_diamond": "",
+          "style": "diamond",
+          "template": " <#c2477c></> {{ .UserName }} ",
+          "type": "session"
+        },
+        {
+          "background": "#f2bdd0",
+          "foreground": "#5e1a38",
+          "powerline_symbol": "",
+          "properties": {
+            "style": "full"
+          },
+          "style": "powerline",
+          "template": "  {{ .Path }} ",
+          "type": "path"
+        },
+        {
+          "background": "#f5cbd9",
+          "foreground": "#5e1a38",
+          "powerline_symbol": "",
+          "properties": {
+            "branch_icon": " ",
+            "fetch_status": true,
+            "fetch_upstream_icon": true
+          },
+          "style": "powerline",
+          "template": " {{ .UpstreamIcon }}{{ .HEAD }}{{ if .Working.Changed }} <#c2477c></>{{ .Working.Changed }}{{ end }}{{ if gt .StashCount 0 }} {{ .StashCount }}{{ end }} ",
+          "type": "git"
+        },
+        {
+          "background": "#f8d8e3",
+          "foreground": "#5e1a38",
+          "powerline_symbol": "",
+          "properties": {
+            "display_mode": "files"
+          },
+          "style": "powerline",
+          "template": "  {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }} ",
+          "type": "node"
+        },
+        {
+          "background": "#fbe7ee",
+          "foreground": "#5e1a38",
+          "properties": {
+            "time_format": "15:04"
+          },
+          "style": "diamond",
+          "template": " <#c2477c></> {{ .CurrentDate | date .Format }} <#c2477c></> ",
+          "trailing_diamond": "",
+          "type": "time"
+        }
+      ],
+      "type": "prompt"
+    },
+    {
+      "alignment": "right",
+      "segments": [
+        {
+          "background": "#f2bdd0",
+          "foreground": "#5e1a38",
+          "leading_diamond": "",
+          "style": "diamond",
+          "template": "  {{.Profile}}{{if .Region}}@{{.Region}}{{end}} ",
+          "trailing_diamond": "",
+          "type": "aws"
+        }
+      ],
+      "type": "rprompt"
+    },
+    {
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "foreground": "#c2477c",
+          "style": "plain",
+          "template": " ",
+          "type": "text"
+        }
+      ],
+      "type": "prompt"
+    }
+  ],
+  "final_space": true,
+  "version": 3
+}
+```
+
+## 深色模式主題
+
+`custom.omp.json`
 
 ```json
 {
@@ -170,6 +280,43 @@ oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\jandedobbeleer.omp.json" | 
 }
 ```
 
+## 依系統深淺色自動切換主題
+
+兩份主題放在 `$PROFILE` 同一層的 `Themes` 資料夾，把 `$PROFILE` 裡原本的 `oh-my-posh init` 換成：
+
+```powershell
+$PoshThemeDir = "$(Split-Path $PROFILE)\Themes"
+
+function Get-PoshMode {
+    if ($env:POSH_MODE -in 'light', 'dark') { return $env:POSH_MODE }
+    try {
+        $light = Get-ItemPropertyValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' -Name AppsUseLightTheme -ErrorAction Stop
+    } catch { $light = 0 }
+    if ($light -eq 1) { 'light' } else { 'dark' }
+}
+
+function Set-PoshMode {
+    param([ValidateSet('light', 'dark', 'auto')][string]$Mode = 'auto')
+    $env:POSH_MODE = if ($Mode -eq 'auto') { $null } else { $Mode }
+    $config = if ((Get-PoshMode) -eq 'light') { "$PoshThemeDir\custom-light.omp.json" } else { "$PoshThemeDir\custom.omp.json" }
+    oh-my-posh init pwsh --config $config | Invoke-Expression
+}
+
+Set-PoshMode ($env:POSH_MODE ?? 'auto')
+```
+
+- 開新分頁時，讀 Windows「應用程式模式」的深淺色設定（registry 的 `AppsUseLightTheme`）決定用哪份主題
+- 在目前分頁手動切換：`Set-PoshMode light`、`Set-PoshMode dark`，`Set-PoshMode auto` 回到跟隨系統
+- 想固定用某一份，設環境變數 `POSH_MODE=light` 或 `POSH_MODE=dark`
+
+## Tabby 終端機設定
+
+我現在用 [Tabby](https://tabby.sh/) 當終端機。Tabby 沒有 Oh My Posh 專用設定，主題都在 PowerShell profile 裡處理，Tabby 這邊只要調這幾項（設定存在 `%APPDATA%\tabby\config.yaml`）：
+
+- 字體：Settings > Appearance > Font，選 Nerd Font（我用 `Maple Mono NF CN`）
+- 配色跟隨系統：`appearance.colorSchemeMode: auto`，深色、淺色各設一組配色，跟上面 profile 的自動切換剛好對上
+- 最低對比度調低：`terminal.minimumContrastRatio` 從 6 改成 3 ，比較適合淺色主題
+
 # TranslucentTB
 
 調整 windows 工作列樣式
@@ -185,4 +332,27 @@ https://windhawk.net/
 
 * Taskbar Clock Customization
 
+<img src="/images/tools/windowsUI/Taskbar_Clock_Customization.avif" alt="" title="Taskbar Clock Customization 自訂樣式" style="width: 80%;" />
+
 可以定義工作列的 windows 時間樣式
+
+
+Time Format
+```
+HH':'mm':'ss
+```
+
+Date format
+```Date format
+ddd MM/dd
+```
+
+Top Line
+```Top Line
+CPU:%cpu%  RAM:%ram%
+```
+
+Button Line
+```Button Line
+%date% %time%
+```
