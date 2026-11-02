@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_PRIZES, MIN_PROBABILITY_PERCENT } from "./state";
+import { MAX_PRIZE_NAME_LENGTH, MAX_PRIZES, MIN_PROBABILITY_PERCENT } from "./state";
+import type { GachaPrize } from "./state";
 import { PRIZE_JSON_PROMPT, parsePrizeImport, serializePrizes } from "./prizeJson";
 
 const CLEAN = JSON.stringify({
@@ -11,6 +12,11 @@ const CLEAN = JSON.stringify({
   targetPrizeIndex: 1,
   costPerTrial: 60,
 });
+
+/** 每抽期望价值 Σ p·v（百分比单位，只拿来比较两张表是否相等）。 */
+function expectedValue(rows: readonly GachaPrize[]): number {
+  return rows.reduce((sum, row) => sum + row.probabilityPercent * row.value, 0);
+}
 
 function expectOk(result: ReturnType<typeof parsePrizeImport>) {
   if (!result.ok) throw new Error(`expected success, got: ${result.error}`);
@@ -115,6 +121,90 @@ describe("parsePrizeImport", () => {
     expect(warnings.join()).toContain(String(MAX_PRIZES));
   });
 
+  it("multiplies a merged row's per-item probability by its count", () => {
+    // 让模型照抄单个机率、数个数，乘法由解析器做：模型加总几十个小数并不可靠。
+    const { patch, warnings } = expectOk(
+      parsePrizeImport(
+        '{"prizes":[{"name":"R 道具","probabilityPercent":0.05,"count":20,"value":10}]}',
+      ),
+    );
+    expect(warnings).toEqual([]);
+    // 0.05 × 20 的浮点尾巴要被收掉，不能是 1.0000000000000002。
+    expect(patch.prizes[0]).toEqual({ name: "R 道具 ×20", probabilityPercent: 1, value: 10 });
+  });
+
+  it("keeps the expectation of a merged row identical to listing every item", () => {
+    const items = Array.from({ length: 7 }, (_, i) => ({
+      name: `R${i}`,
+      probabilityPercent: 0.3,
+      value: 40,
+    }));
+    const listed = expectOk(parsePrizeImport(JSON.stringify({ prizes: items }))).patch.prizes;
+    const merged = expectOk(
+      parsePrizeImport('{"prizes":[{"name":"R","probabilityPercent":0.3,"count":7,"value":40}]}'),
+    ).patch.prizes;
+    expect(expectedValue(merged)).toBeCloseTo(expectedValue(listed), 10);
+  });
+
+  it("treats a missing or 1 count as an ordinary row with no suffix", () => {
+    const { patch } = expectOk(
+      parsePrizeImport('{"prizes":[{"name":"SSR","probabilityPercent":0.6,"count":1}]}'),
+    );
+    expect(patch.prizes[0]).toEqual({ name: "SSR", probabilityPercent: 0.6, value: 0 });
+  });
+
+  it("fits the count suffix inside the name length cap", () => {
+    const { patch } = expectOk(
+      parsePrizeImport(
+        `{"prizes":[{"name":"${"道".repeat(20)}","probabilityPercent":0.1,"count":150}]}`,
+      ),
+    );
+    expect(patch.prizes[0].name).toHaveLength(MAX_PRIZE_NAME_LENGTH);
+    expect(patch.prizes[0].name.endsWith(" ×150")).toBe(true);
+  });
+
+  it("still multiplies when the name already carries the count, but warns loudly", () => {
+    // 分不出是「模型把个数写进名称」还是「汇出的合并列被补上 count 又贴回来」，
+    // 后者再乘一次会放大二十倍，所以不能安静地乘。
+    const { patch, warnings } = expectOk(
+      parsePrizeImport('{"prizes":[{"name":"R 道具 ×20","probabilityPercent":0.5,"count":20}]}'),
+    );
+    expect(patch.prizes[0].name).toBe("R 道具 ×20");
+    expect(patch.prizes[0].probabilityPercent).toBe(10);
+    expect(warnings.join()).toContain("已經帶著 ×20");
+  });
+
+  it("round-trips a merged row through export without multiplying again", () => {
+    const merged = expectOk(
+      parsePrizeImport('{"prizes":[{"name":"R 道具","probabilityPercent":0.5,"count":20}]}'),
+    ).patch;
+    const { patch, warnings } = expectOk(parsePrizeImport(serializePrizes(merged)));
+    expect(warnings).toEqual([]);
+    expect(patch.prizes[0]).toEqual({ name: "R 道具 ×20", probabilityPercent: 10, value: 0 });
+  });
+
+  it("fixes a non-integer count and says so", () => {
+    const { patch, warnings } = expectOk(
+      parsePrizeImport('{"prizes":[{"name":"R","probabilityPercent":1,"count":2.6}]}'),
+    );
+    expect(patch.prizes[0].probabilityPercent).toBe(3);
+    expect(warnings.join()).toContain("count");
+
+    const zero = expectOk(
+      parsePrizeImport('{"prizes":[{"name":"R","probabilityPercent":1,"count":0}]}'),
+    );
+    expect(zero.patch.prizes[0].probabilityPercent).toBe(1);
+    expect(zero.warnings.join()).toContain("count");
+  });
+
+  it("clamps a merged row that adds up past 100% and says so", () => {
+    const { patch, warnings } = expectOk(
+      parsePrizeImport('{"prizes":[{"name":"R","probabilityPercent":5,"count":30}]}'),
+    );
+    expect(patch.prizes[0].probabilityPercent).toBe(100);
+    expect(warnings.join()).toContain("夾成 100");
+  });
+
   it("keeps the target index inside the imported table", () => {
     const { patch } = expectOk(
       parsePrizeImport('{"prizes":[{"name":"a","probabilityPercent":1}],"targetPrizeIndex":7}'),
@@ -162,6 +252,21 @@ describe("PRIZE_JSON_PROMPT", () => {
     expect(PRIZE_JSON_PROMPT).toContain("probabilityPercent");
     expect(PRIZE_JSON_PROMPT).toContain("0.6 代表 0.6%");
     expect(PRIZE_JSON_PROMPT).toContain(String(MAX_PRIZES));
+  });
+
+  it("asks for a code fence, so web chat UIs render a copy button", () => {
+    expect(PRIZE_JSON_PROMPT).toContain("```json");
+  });
+
+  it("parses a reply that follows the prompt: one fenced JSON block", () => {
+    const reply = `\`\`\`json\n${CLEAN}\n\`\`\``;
+    expect(expectOk(parsePrizeImport(reply)).patch.prizes).toHaveLength(2);
+  });
+
+  it("tells the model to copy the per-item rate and leave the multiplying to us", () => {
+    expect(PRIZE_JSON_PROMPT).toContain('"count"');
+    expect(PRIZE_JSON_PROMPT).toContain("不要自己把它們加起來");
+    expect(PRIZE_JSON_PROMPT).toContain("絕對不合併");
   });
 
   it("ships an example that the parser itself accepts", () => {

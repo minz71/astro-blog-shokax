@@ -152,7 +152,7 @@
 }
 
 /*
- * 奖品表最多一百列，全部摊开会把后面的结果推到好几个萤幕之外，所以列本身放进
+ * 奖品表最多三百列，全部摊开会把后面的结果推到好几个萤幕之外，所以列本身放进
  * 有高度上限的卷动区，表头留在外面不跟着卷。留一点内距，输入框聚焦时的外框光晕
  * 才不会被 overflow 裁掉。
  */
@@ -694,6 +694,24 @@
   outline: none;
 }
 
+/*
+ * 主要动作用主题色实心按钮，一个弹窗里只放一颗，让人一眼知道该先按哪里。
+ * 用 data-variant 而不是另起 class：样式钩子的 class 名有被 UnoCSS 工具类挟持的风险。
+ * 配色跟主题其他实心元素一致（主题色底、grey-0 字）。
+ */
+.gct-btn[data-variant="primary"] {
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: var(--grey-0);
+}
+
+.gct-btn[data-variant="primary"]:hover:not(:disabled),
+.gct-btn[data-variant="primary"]:focus-visible:not(:disabled) {
+  border-color: var(--primary-color);
+  background: color-mix(in srgb, var(--primary-color) 85%, var(--text-color));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 25%, transparent);
+}
+
 .gct-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -856,6 +874,55 @@
   margin: 0;
   color: var(--text-color-muted);
   font-size: 0.75rem;
+}
+
+/* 弹窗里的收合区块。summary 的箭头自己画，原生三角形在各浏览器长得不一样。 */
+.gct-fold {
+  border: var(--gct-border);
+  border-radius: 0.5rem;
+}
+
+.gct-fold > summary {
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 0.7rem;
+  color: var(--text-color-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  /* 两个都要写：list-style 管标准浏览器，::-webkit-details-marker 管旧版 Safari */
+  list-style: none;
+}
+
+.gct-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.gct-fold > summary:hover,
+.gct-fold > summary:focus-visible {
+  color: var(--text-color);
+}
+
+.gct-fold > summary::after {
+  content: "";
+  flex: 0 0 auto;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-left: auto;
+  border-right: 1.5px solid currentcolor;
+  border-bottom: 1.5px solid currentcolor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.16s ease;
+}
+
+.gct-fold[open] > summary::after {
+  transform: translateY(1px) rotate(225deg);
+}
+
+.gct-fold-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0 0.7rem 0.6rem;
 }
 
 .gct-modal-hint code,

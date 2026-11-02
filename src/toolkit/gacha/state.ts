@@ -28,16 +28,20 @@ const STORAGE_VERSION = 3;
 const STORAGE_KEY = "gacha-binomial-calculator";
 
 /** 奖品名称同理，超过这个长度表格就排不下了。 */
-const MAX_PRIZE_NAME_LENGTH = 16;
+export const MAX_PRIZE_NAME_LENGTH = 16;
 
 /**
  * 奖品列数上限。
  *
- * 有些卡池会把每一个角色、每一把武器都单独列出机率，一张公告动辄几十列，所以上限
- * 要给到一百列，让整张公告不必合并就能照抄进来。上限存在的理由只剩一个：手改的
- * blob 不该能让画面长出几千列。
+ * 有些卡池会把每一个角色、每一把武器都单独列出机率，一张公告超过一百列并不罕见，
+ * 所以上限给到三百列，让大多数公告不必合并就能照抄进来。再多的话由汇入时的
+ * `count` 栏位把同级奖品收成一列（见 prizeJson.ts）。
+ *
+ * 不再往上放，是因为每次按键都会把所有列重算、重新格式化一次（期望值明细与存档），
+ * 三百列还在几毫秒内，再往上就开始吃输入的跟手度；何况手改的 blob 也不该能让画面
+ * 长出几千列。
  */
-export const MAX_PRIZES = 100;
+export const MAX_PRIZES = 300;
 
 /**
  * 机率下限，就是 0。

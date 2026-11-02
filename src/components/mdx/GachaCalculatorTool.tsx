@@ -432,9 +432,12 @@ export default function GachaCalculatorTool() {
   const [importError, setImportError] = createSignal("");
   const [copied, setCopied] = createSignal<"prompt" | "json" | null>(null);
   let copiedTimer: ReturnType<typeof setTimeout> | undefined;
-  let promptDialog: HTMLDialogElement | undefined;
   let prizeRows: HTMLDivElement | undefined;
-  let importDialog: HTMLDialogElement | undefined;
+  /**
+   * 复制提示词与贴回 JSON 放在同一个弹窗：两者本来就是同一趟流程的头尾，
+   * 拆成两颗按钮时使用者常常复制完就找不到贴回去的地方。
+   */
+  let aiDialog: HTMLDialogElement | undefined;
 
   onCleanup(() => clearTimeout(copiedTimer));
 
@@ -449,12 +452,10 @@ export default function GachaCalculatorTool() {
     const text = which === "prompt" ? PRIZE_JSON_PROMPT : currentJson();
     void copyToClipboard(text).then((ok) => {
       if (!ok) {
-        // 复制失败时把内容塞进汇入框，至少使用者还能自己选取——比只丢一句「失败」有用。
-        promptDialog?.close();
+        // 复制失败时把内容塞进同一个弹窗的汇入框，至少使用者还能自己选取——
+        // 比只丢一句「失败」有用。讯息留在弹窗里，奖品表下方被弹窗挡住看不到。
         setImportText(text);
-        setImportError("");
-        importDialog?.showModal();
-        setNotice({ tone: "warn", text: "瀏覽器不讓複製，內容已經放到匯入框裡，請自行選取。" });
+        setImportError("瀏覽器不讓複製，內容已經放到下面的框裡，請自行全選複製。");
         return;
       }
       setCopied(which);
@@ -483,7 +484,7 @@ export default function GachaCalculatorTool() {
     );
 
     setImportError("");
-    importDialog?.close();
+    aiDialog?.close();
     setNotice({
       tone: warnings.length > 0 ? "warn" : "ok",
       text: [`已匯入 ${patch.prizes.length} 列獎品。`, ...warnings].join(" "),
@@ -640,20 +641,11 @@ export default function GachaCalculatorTool() {
               class="gct-btn"
               onClick={() => {
                 setCopied(null);
-                promptDialog?.showModal();
-              }}
-            >
-              交給 AI 填表
-            </button>
-            <button
-              type="button"
-              class="gct-btn"
-              onClick={() => {
                 setImportError("");
-                importDialog?.showModal();
+                aiDialog?.showModal();
               }}
             >
-              匯入 JSON
+              AI 填表／匯入 JSON
             </button>
           </div>
 
@@ -925,9 +917,9 @@ export default function GachaCalculatorTool() {
       </div>
 
       <Modal
-        title="交給 AI 填表的提示詞"
+        title="AI 填表／匯入 JSON"
         ref={(element) => {
-          promptDialog = element;
+          aiDialog = element;
         }}
       >
         {/*
@@ -942,12 +934,17 @@ export default function GachaCalculatorTool() {
           <li>{"把提示詞連同官方的機率公告（文字或截圖都可以）一起貼給任何一個 AI。"}</li>
           <li>
             {
-              "把它回傳的內容整段複製，回到這裡按「匯入 JSON」貼上。前後的「好的，這是整理後的結果」、包住 JSON 的程式碼框都會自動剝掉，不用先清。"
+              "AI 會把 JSON 放在程式碼框裡，按程式碼框右上角的複製，貼到下面的框裡按「匯入」。整段回覆直接貼過來也可以，前後的說明文字和程式碼框會自動剝掉。"
             }
           </li>
         </ol>
         <div class="gct-btn-row">
-          <button type="button" class="gct-btn" onClick={() => copy("prompt")}>
+          <button
+            type="button"
+            class="gct-btn"
+            data-variant="primary"
+            onClick={() => copy("prompt")}
+          >
             {copied() === "prompt" ? "已複製 ✓" : "複製提示詞"}
           </button>
           <button type="button" class="gct-btn" onClick={() => copy("json")}>
@@ -956,19 +953,12 @@ export default function GachaCalculatorTool() {
         </div>
         <p class="gct-modal-hint">
           {
-            "「複製目前的獎品表」輸出的是同一份 JSON 格式：可以把現在這張表丟回去請 AI 接著改（例如補上每一列的價值），改完一樣從「匯入 JSON」貼回來。"
+            "「複製目前的獎品表」輸出的是同一份 JSON 格式：可以把現在這張表丟回去請 AI 接著改（例如補上每一列的價值），改完一樣貼回下面的框。"
           }
         </p>
-      </Modal>
 
-      <Modal
-        title="匯入 JSON"
-        ref={(element) => {
-          importDialog = element;
-        }}
-      >
         <p class="gct-modal-text">
-          {"貼上 AI 給的 JSON，按匯入。這會"}
+          {"匯入會"}
           <strong>整張覆蓋</strong>
           {"現在的獎品表；JSON 裡有寫目標列與單抽成本的話也會一起帶入。"}
         </p>
@@ -1003,20 +993,36 @@ export default function GachaCalculatorTool() {
             匯入
           </button>
         </div>
-        <p class="gct-modal-hint">
-          {"機率欄位只認 "}
-          <code>probabilityPercent</code>
-          {" 與 "}
-          <code>percent</code>
-          {"，不收裸的 "}
-          <code>probability</code>
-          {
-            "：0.6 到底是 0.6% 還是 60%，只有欄位名說得清楚，猜錯會讓整頁數字差一百倍而且錯得很安靜，所以缺了就直接報錯。"
-          }
-        </p>
-        <p class="gct-modal-hint">
-          {`其他不合格的地方會修正後照收，並在獎品表下方告訴你動了什麼：機率超出 0–100 會被夾住、超過 ${MAX_PRIZES} 列會被截掉、機率總和超過 100% 會跳警告。`}
-        </p>
+        {/*
+          格式规则是出错时才需要看的东西，预设收起来只留标题，免得把汇入框挤到弹窗下面。
+          用原生 <details>：键盘操作与 aria-expanded 浏览器都做好了。
+        */}
+        <details class="gct-fold">
+          <summary>匯入規則</summary>
+          <div class="gct-fold-body">
+            <p class="gct-modal-hint">
+              {"機率欄位只認 "}
+              <code>probabilityPercent</code>
+              {" 與 "}
+              <code>percent</code>
+              {"，不收裸的 "}
+              <code>probability</code>
+              {
+                "：0.6 到底是 0.6% 還是 60%，只有欄位名說得清楚，猜錯會讓整頁數字差一百倍而且錯得很安靜，所以缺了就直接報錯。"
+              }
+            </p>
+            <p class="gct-modal-hint">
+              {`公告超過 ${MAX_PRIZES} 個獎品時，同一級、單個機率相同的獎品可以合成一列並加上 `}
+              <code>count</code>
+              {
+                "：機率照抄單個的，工具會自己乘上個數，名稱後面也會補上「×個數」。這樣合併不會改變期望值，只是不能再單獨把其中一個設成目標。"
+              }
+            </p>
+            <p class="gct-modal-hint">
+              {`其他不合格的地方會修正後照收，並在獎品表下方告訴你動了什麼：機率超出 0–100 會被夾住、超過 ${MAX_PRIZES} 列會被截掉、機率總和超過 100% 會跳警告。`}
+            </p>
+          </div>
+        </details>
       </Modal>
     </section>
   );

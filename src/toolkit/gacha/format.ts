@@ -67,19 +67,36 @@ export function formatRatio(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
 }
 
+const fixedFormatters = new Map<number, Intl.NumberFormat>();
+
+/**
+ * 固定小数位数、带千分位的格式器，按位数快取。
+ *
+ * 不直接用 `toLocaleString(locale, options)`：那会在每次呼叫时重建一个格式器，
+ * 而期望值明细每次按键都要把奖品表每一列格式化一遍，列数一多，时间几乎全花在这里。
+ */
+function fixedFormatter(digits: number): Intl.NumberFormat {
+  let formatter = fixedFormatters.get(digits);
+  if (!formatter) {
+    formatter = new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    });
+    fixedFormatters.set(digits, formatter);
+  }
+  return formatter;
+}
+
 /** 次数：整数加千分位。四舍五入前先挡掉 NaN 与 Infinity。 */
 export function formatCount(value: number): string {
   if (!Number.isFinite(value)) return "—";
-  return Math.round(value).toLocaleString("en-US");
+  return fixedFormatter(0).format(Math.round(value));
 }
 
 /** 期望次数这类会有小数的量，保留两位。 */
 export function formatDecimal(value: number, digits = 2): string {
   if (!Number.isFinite(value)) return "—";
-  return value.toLocaleString("en-US", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  });
+  return fixedFormatter(digits).format(value);
 }
 
 /**
@@ -92,9 +109,5 @@ export function formatDecimal(value: number, digits = 2): string {
 export function formatMoney(value: number): string {
   if (!Number.isFinite(value)) return "—";
   const rounded = Math.round(value * 100) / 100;
-  const digits = Number.isInteger(rounded) ? 0 : 2;
-  return rounded.toLocaleString("en-US", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  });
+  return fixedFormatter(Number.isInteger(rounded) ? 0 : 2).format(rounded);
 }
