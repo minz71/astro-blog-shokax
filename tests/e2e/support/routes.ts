@@ -30,6 +30,8 @@ export const TOOLS = {
   articleUnderTools: "/tools/hello-world/",
   /** 站点工具：图片编辑与压缩（cloudflare 负载，见 src/posts/tools/image_editor.mdx） */
   imageEditor: "/tools/image_editor/",
+  /** 站点工具：转蛋机率计算机与模拟转蛋（cloudflare 负载，见 src/posts/tools/gacha_calculator.mdx） */
+  gachaCalculator: "/tools/gacha_calculator/",
 } as const;
 
 export const POSTS = {

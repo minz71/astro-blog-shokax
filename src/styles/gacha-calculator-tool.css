@@ -74,13 +74,6 @@
   color: var(--text-color-muted);
 }
 
-.gct-panel-note {
-  margin: 0;
-  color: var(--text-color-muted);
-  font-size: 0.78rem;
-  line-height: 1.6;
-}
-
 .gct-fields {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -308,12 +301,33 @@
 
 /* ── 主结果 ───────────────────────────────────────────────── */
 
+/*
+ * 主结果与「要抽几次才够」并排。auto-fit + min(100%, …)：容器放得下两张 15rem 的卡就并排，
+ * 放不下（手机）就各占一整列上下叠；min() 让单栏时也不会撑出水平卷轴。
+ */
+.gct-answers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 0.875rem;
+  margin-top: 1.25rem;
+}
+
+.gct-needed {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1rem 1.1rem;
+  border: var(--gct-border);
+  border-radius: calc(var(--gct-radius) - 0.25rem);
+  background: color-mix(in srgb, var(--grey-1) 60%, transparent);
+}
+
 .gct-headline {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.2rem;
-  margin-top: 1.25rem;
   padding: 1.25rem 1rem;
   border-radius: calc(var(--gct-radius) - 0.25rem);
   background: color-mix(in srgb, var(--color-pink) 8%, transparent);
@@ -1079,5 +1093,535 @@
 
   .gct-breakdown-value {
     grid-column: 2;
+  }
+}
+
+/* ── 模拟转蛋（翻牌） ─────────────────────────────────────── */
+
+/*
+ * 配色：目标是薰衣奶蓝的星星、其他奖品是粉色爱心、牌背是樱花。色值写死成 oklch，
+ * 不用 calc(var()) 组色：压缩工具对那种写法的处理没有保证。
+ * 牌面（正面）在深色模式下维持浅色：翻开的是「奖品」，亮一点才像在发光。
+ */
+.gct-sim {
+  /* 发光用：比牌面再饱和一点，否则在浅色底上会看起来像灰色阴影 */
+  --gct-sim-star: oklch(0.82 0.08 268);
+  --gct-sim-star-ink: oklch(0.79 0.063 268);
+  --gct-sim-star-text: oklch(0.6 0.063 268);
+  --gct-sim-star-bg1: oklch(0.985 0.007 268);
+  --gct-sim-star-bg2: oklch(0.93 0.027 268);
+  --gct-sim-heart: oklch(0.76 0.13 355);
+  --gct-sim-heart-ink: oklch(0.66 0.18 2);
+  --gct-sim-sakura-bg: linear-gradient(165deg, oklch(0.975 0.015 350), oklch(0.925 0.045 350));
+  --gct-sim-sakura-ink: oklch(0.7 0.14 355);
+  --gct-sim-sakura-soft: oklch(0.8 0.1 355);
+  --gct-sim-cw: 64px;
+}
+
+:root[data-theme="dark"] .gct-sim {
+  --gct-sim-star-text: oklch(0.86 0.045 268);
+  --gct-sim-heart: oklch(0.78 0.12 355);
+  --gct-sim-sakura-bg: linear-gradient(165deg, oklch(0.37 0.06 350), oklch(0.27 0.045 340));
+  --gct-sim-sakura-ink: oklch(0.78 0.11 355);
+  --gct-sim-sakura-soft: oklch(0.6 0.09 355);
+}
+
+.gct-sim-spacer {
+  flex: 1;
+}
+
+.gct-sim-stage {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  min-height: 21rem;
+  margin: 0.875rem 0;
+  padding: 1.25rem 0.75rem 1rem;
+  overflow: hidden;
+  border: var(--gct-border);
+  border-radius: calc(var(--gct-radius) - 0.25rem);
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      color-mix(in srgb, var(--color-pink) 10%, transparent),
+      transparent 65%
+    ),
+    color-mix(in srgb, var(--grey-1) 60%, transparent);
+}
+
+.gct-sim-hint {
+  margin: 0;
+  color: var(--text-color-muted);
+  font-size: 0.85rem;
+}
+
+/* 暗幕与粒子层：只给演出用，平常完全透明、不挡点击 */
+.gct-sim-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: oklch(0.12 0.02 280);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gct-sim-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.gct-sim-particle {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform, opacity;
+}
+
+/* 只写不带前缀的 mask：esbuild 遇到成对的前缀写法会吃掉其中一条 */
+.gct-sim-particle[data-shape="star"] {
+  border-radius: 0;
+  mask: var(--gct-sim-star-mask) center / contain no-repeat;
+}
+
+.gct-sim-particle[data-shape="heart"] {
+  border-radius: 0;
+  mask: var(--gct-sim-heart-mask) center / contain no-repeat;
+}
+
+/* ── 牌面共用 ── */
+
+.gct-sim-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 1px oklch(0 0 0 / 0.12),
+    0 3px 8px oklch(0 0 0 / 0.18);
+  backface-visibility: hidden;
+}
+
+.gct-sim-face > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.gct-sim-back {
+  background: var(--gct-sim-sakura-bg);
+}
+
+.gct-sim-ink-line {
+  fill: none;
+  stroke: var(--gct-sim-sakura-ink);
+  stroke-opacity: 0.8;
+  stroke-width: 1.3;
+}
+
+.gct-sim-ink-line[data-weight="thin"] {
+  stroke-opacity: 0.45;
+  stroke-width: 0.6;
+}
+
+.gct-sim-ink-soft {
+  fill: var(--gct-sim-sakura-soft);
+  fill-opacity: 0.8;
+}
+
+.gct-sim-ink-wave {
+  fill: none;
+  stroke: var(--gct-sim-sakura-soft);
+  stroke-width: 0.7;
+}
+
+.gct-sim-ink-fill {
+  fill: var(--gct-sim-sakura-ink);
+  fill-opacity: 0.9;
+}
+
+.gct-sim-ink-core {
+  fill: oklch(0.95 0.06 95);
+}
+
+/* ── 牌堆 ── */
+
+/* 牌堆是一颗按钮：清掉按钮外观，悬停时整叠往上浮一点，提示「可以点」 */
+.gct-sim-deck {
+  position: relative;
+  flex: none;
+  width: 66px;
+  height: 92px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.gct-sim-deck:hover:not(:disabled),
+.gct-sim-deck:focus-visible {
+  transform: translateY(-4px);
+}
+
+.gct-sim-deck:focus-visible {
+  outline: 2px solid var(--color-pink);
+  outline-offset: 6px;
+}
+
+.gct-sim-deck:disabled {
+  cursor: default;
+}
+
+/* 标题与按钮列之间的间距：这一区没有说明文字，标题直接接按钮 */
+.gct-sim > .gct-block-title {
+  margin-bottom: 0.75rem;
+}
+
+.gct-sim-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-color-muted);
+}
+
+.gct-sim-count input {
+  width: 3.5rem;
+  padding: 0.3rem 0.45rem;
+  border: var(--gct-border);
+  border-radius: 0.5rem;
+  background: var(--grey-1);
+  color: var(--text-color);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 静止位置要跟 GachaSimulator.tsx 的 DECK_REST 一致 */
+.gct-sim-deck .gct-sim-face:nth-child(1) {
+  transform: translate(-4px, 4px) rotate(-5deg);
+}
+
+.gct-sim-deck .gct-sim-face:nth-child(2) {
+  transform: translate(3px, 2px) rotate(4deg);
+}
+
+/* ── 牌 ── */
+
+.gct-sim-tray {
+  display: grid;
+  /* 栏数由元件依张数给（最多 5），这里只是保底 */
+  grid-template-columns: repeat(var(--gct-sim-cols, 5), auto);
+  justify-content: center;
+  gap: 0.9rem 0.7rem;
+}
+
+.gct-sim-tray[data-count="1"] {
+  --gct-sim-cw: 118px;
+}
+
+/* 超过十张会排到四排，牌缩小一点，免得舞台被拉得太长 */
+.gct-sim-tray[data-size="small"] {
+  --gct-sim-cw: 54px;
+
+  gap: 0.75rem 0.6rem;
+}
+
+.gct-sim-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: calc(var(--gct-sim-cw) + 12px);
+  margin: 0;
+}
+
+/* 揭晓目标的那几秒浮到暗幕（z-index 3）上面 */
+.gct-sim-card[data-focus="true"] {
+  position: relative;
+  z-index: 4;
+}
+
+.gct-sim-lift {
+  position: relative;
+  isolation: isolate;
+  perspective: 900px;
+}
+
+.gct-sim-inner {
+  position: relative;
+  width: var(--gct-sim-cw);
+  height: calc(var(--gct-sim-cw) * 1.4);
+  transform-style: preserve-3d;
+}
+
+.gct-sim-card[data-state="revealed"] .gct-sim-inner {
+  transform: rotateY(180deg);
+}
+
+/* 揭晓前的预告：牌背边缘透出层级颜色；目标还会从牌里漏出光来 */
+.gct-sim-card[data-tier="star"] {
+  --gct-sim-hint: var(--gct-sim-star);
+}
+
+.gct-sim-card[data-tier="heart"] {
+  --gct-sim-hint: var(--gct-sim-heart);
+}
+
+.gct-sim-card[data-state="opening"] .gct-sim-back {
+  box-shadow:
+    0 0 0 2px var(--gct-sim-hint),
+    0 0 18px 4px var(--gct-sim-hint);
+}
+
+.gct-sim-card[data-tier="star"][data-state="opening"] .gct-sim-back::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    oklch(1 0.007 268 / 0.95),
+    color-mix(in oklch, var(--gct-sim-star) 55%, transparent) 35%,
+    transparent 70%
+  );
+  animation: gct-sim-leak 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes gct-sim-leak {
+  from {
+    opacity: 0.25;
+  }
+
+  to {
+    opacity: 0.9;
+  }
+}
+
+/* ── 正面 ── */
+
+.gct-sim-front {
+  display: grid;
+  place-items: center;
+  transform: rotateY(180deg);
+}
+
+.gct-sim-dash {
+  color: var(--text-color-muted);
+  font-size: calc(var(--gct-sim-cw) * 0.26);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.gct-sim-icon {
+  width: 64%;
+  height: auto;
+  overflow: visible;
+}
+
+.gct-sim-card[data-tier="star"] .gct-sim-front {
+  background: linear-gradient(160deg, var(--gct-sim-star-bg1), var(--gct-sim-star-bg2));
+  box-shadow:
+    inset 0 0 0 3px oklch(1 0 0 / 0.75),
+    inset 0 0 0 4.5px color-mix(in oklch, var(--gct-sim-star) 70%, transparent);
+}
+
+.gct-sim-card[data-tier="star"] .gct-sim-icon {
+  filter: drop-shadow(0 2px 4px color-mix(in oklch, var(--gct-sim-star-ink) 45%, transparent));
+}
+
+.gct-sim-card[data-tier="star"] .gct-sim-icon path {
+  fill: var(--gct-sim-star-ink);
+  stroke: oklch(1 0 0);
+  stroke-width: 5;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+/* 星卡正面的流光，翻开后持续扫过 */
+.gct-sim-card[data-tier="star"] .gct-sim-front::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(105deg, transparent 38%, oklch(1 0 0 / 0.7) 50%, transparent 62%);
+  /* 静止位置在牌外：减少动态时动画被关掉，光带才不会卡在牌面正中间 */
+  transform: translateX(-70%);
+  animation: gct-sim-sheen 2.6s ease-in-out 0.4s infinite;
+}
+
+@keyframes gct-sim-sheen {
+  0% {
+    transform: translateX(-70%);
+  }
+
+  45%,
+  100% {
+    transform: translateX(70%);
+  }
+}
+
+/* 翻开后整张牌四周持续发光：用 drop-shadow 贴着牌的轮廓，不是背后另画一个光圈 */
+.gct-sim-card[data-tier="star"][data-state="revealed"] .gct-sim-lift {
+  animation: gct-sim-glow 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes gct-sim-glow {
+  from {
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--gct-sim-star) 70%, transparent));
+  }
+
+  to {
+    filter: drop-shadow(0 0 16px var(--gct-sim-star)) drop-shadow(0 0 4px oklch(1 0 0 / 0.8));
+  }
+}
+
+.gct-sim-card[data-tier="heart"] .gct-sim-front {
+  background: linear-gradient(160deg, oklch(0.985 0.012 350), oklch(0.9 0.05 355));
+  box-shadow:
+    inset 0 0 0 3px oklch(1 0 0 / 0.75),
+    inset 0 0 0 4.5px oklch(0.82 0.08 355 / 0.6);
+}
+
+.gct-sim-card[data-tier="heart"] .gct-sim-icon {
+  width: 58%;
+  filter: drop-shadow(0 2px 4px oklch(0.6 0.15 0 / 0.3));
+}
+
+.gct-sim-card[data-tier="heart"] .gct-sim-icon path {
+  fill: var(--gct-sim-heart-ink);
+  stroke: oklch(1 0 0);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.gct-sim-card[data-tier="heart"][data-state="revealed"] .gct-sim-lift {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--gct-sim-heart) 75%, transparent));
+}
+
+/* 演出只给最稀有的两组：其余奖品（plain）与没中同样是素面牌，只差在牌下的名字颜色 */
+.gct-sim-card[data-tier="plain"] .gct-sim-front,
+.gct-sim-card[data-tier="miss"] .gct-sim-front {
+  background: var(--grey-3);
+  box-shadow:
+    inset 0 0 0 3px var(--grey-1),
+    0 0 0 1px oklch(0 0 0 / 0.08);
+}
+
+.gct-sim-name {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: gct-appear 0.24s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+.gct-sim-tray[data-count="1"] .gct-sim-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.gct-sim-card[data-tier="star"] .gct-sim-name {
+  color: var(--gct-sim-star-text);
+  font-weight: 700;
+}
+
+.gct-sim-card[data-tier="miss"] .gct-sim-name {
+  color: var(--text-color-muted);
+}
+
+/* ── 摘要与累计 ── */
+
+.gct-sim-summary {
+  min-height: 1.6em;
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+}
+
+.gct-sim-summary b[data-tier="star"] {
+  color: var(--gct-sim-star-text);
+}
+
+.gct-sim-tally {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.gct-sim-tally th,
+.gct-sim-tally td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: var(--gct-border);
+  text-align: right;
+}
+
+.gct-sim-tally th:first-child,
+.gct-sim-tally td:first-child {
+  text-align: left;
+}
+
+.gct-sim-tally th {
+  color: var(--text-color-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.gct-sim-swatch {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  background: var(--grey-4);
+}
+
+.gct-sim-swatch[data-tier="star"] {
+  background: var(--gct-sim-star-ink);
+}
+
+.gct-sim-swatch[data-tier="heart"] {
+  background: var(--gct-sim-heart);
+}
+
+@media (max-width: 520px) {
+  .gct-sim {
+    --gct-sim-cw: 50px;
+  }
+
+  .gct-sim-tray,
+  .gct-sim-tray[data-size="small"] {
+    gap: 0.7rem 0.3rem;
+  }
+
+  /* 手机上一律 50px，超过十张也一样，否则五栏会超出舞台 */
+  .gct-sim-tray[data-size="small"] {
+    --gct-sim-cw: 50px;
+  }
+
+  .gct-sim-tray:not([data-count="1"]) .gct-sim-card {
+    width: calc(var(--gct-sim-cw) + 6px);
+  }
+
+  .gct-sim-tray:not([data-count="1"]) .gct-sim-name {
+    font-size: 0.66rem;
+  }
+
+  .gct-sim-tally th,
+  .gct-sim-tally td {
+    padding: 0.35rem 0.3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gct-sim-stage *,
+  .gct-sim-stage *::after {
+    animation: none !important;
   }
 }

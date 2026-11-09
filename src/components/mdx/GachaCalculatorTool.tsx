@@ -33,6 +33,8 @@ import {
 } from "@/toolkit/gacha/state";
 import type { DistColumns, GachaState } from "@/toolkit/gacha/state";
 
+import GachaSimulator from "./GachaSimulator";
+
 /** 分布表固定给 13 列：够看出形状与累积的走势，又不会在 n 很大时把 DOM 塞爆。 */
 const DISTRIBUTION_ROWS = 13;
 
@@ -531,13 +533,9 @@ export default function GachaCalculatorTool() {
   };
 
   return (
-    <section class="gct" aria-label="轉蛋機率與期望值計算機">
+    <section class="gct" aria-label="抽卡轉蛋機率計算機">
       <fieldset class="gct-panel">
         <legend>獎品表</legend>
-        <p class="gct-panel-note">
-          一列一種獎品。機率計算只看標為「目標」的那一列（二項式分布一次只能算一個事件），
-          期望值則把所有列加起來——副產物的價值就填在這裡。
-        </p>
 
         <div class="gct-prizes">
           <div class="gct-prize-head" aria-hidden="true">
@@ -718,12 +716,61 @@ export default function GachaCalculatorTool() {
         </div>
       </fieldset>
 
-      <div class="gct-headline">
-        <span class="gct-headline-label">
-          抽 {formatCount(state.trials)} 次，至少中 1 次「{targetName()}」的機率
-        </span>
-        <strong class="gct-headline-value">{formatProbability(headline().any)}</strong>
-        <span class="gct-headline-note">一次都沒中：{formatProbability(headline().none)}</span>
+      {/*
+        两个最常被问的答案并排：「抽这么多次中的机会多大」与反过来的「要几次才够」。
+        栏宽用 auto-fit，容器窄到放不下两栏（手机）时自动上下叠，不必另写断点。
+      */}
+      <div class="gct-answers">
+        <div class="gct-headline">
+          <span class="gct-headline-label">
+            抽 {formatCount(state.trials)} 次，至少中 1 次「{targetName()}」的機率
+          </span>
+          <strong class="gct-headline-value">{formatProbability(headline().any)}</strong>
+          <span class="gct-headline-note">一次都沒中：{formatProbability(headline().none)}</span>
+        </div>
+
+        <div class="gct-needed">
+          <h3 class="gct-block-title">要抽幾次才夠</h3>
+          <div class="gct-inline">
+            <span>想要有</span>
+            <input
+              ref={confidenceInput.ref}
+              class="gct-inline-input"
+              type="number"
+              inputmode="decimal"
+              aria-label="信心水準百分比"
+              min="1"
+              max="99.99"
+              step="1"
+              onFocus={confidenceInput.onFocus}
+              onInput={confidenceInput.onInput}
+              onBlur={confidenceInput.onBlur}
+            />
+            <span>
+              % 的把握至少中 {formatCount(Math.max(1, targetSuccesses()))} 次「{targetName()}」，
+            </span>
+            {/* 答案接在同一句后面，不另起一行：整句读下来才是一个完整的问答。 */}
+            <Show
+              when={needed()}
+              fallback={
+                <span class="gct-answer" data-fail="true">
+                  在 {formatCount(MAX_TRIALS)} 抽以內達不到這個把握。
+                </span>
+              }
+            >
+              {(trials) => (
+                <span class="gct-answer">
+                  需要 <strong>{formatCount(trials())}</strong> 抽
+                  <Show when={state.costPerTrial > 0}>
+                    <span class="gct-answer-extra">
+                      ，折合 {formatMoney(trials() * state.costPerTrial)}
+                    </span>
+                  </Show>
+                </span>
+              )}
+            </Show>
+          </div>
+        </div>
       </div>
 
       <div class="gct-block">
@@ -799,49 +846,6 @@ export default function GachaCalculatorTool() {
         </div>
       </div>
 
-      <div class="gct-block">
-        <h3 class="gct-block-title">要抽幾次才夠</h3>
-        <div class="gct-inline">
-          <span>想要有</span>
-          <input
-            ref={confidenceInput.ref}
-            class="gct-inline-input"
-            type="number"
-            inputmode="decimal"
-            aria-label="信心水準百分比"
-            min="1"
-            max="99.99"
-            step="1"
-            onFocus={confidenceInput.onFocus}
-            onInput={confidenceInput.onInput}
-            onBlur={confidenceInput.onBlur}
-          />
-          <span>
-            % 的把握至少中 {formatCount(Math.max(1, targetSuccesses()))} 次「{targetName()}」，
-          </span>
-          {/* 答案接在同一句后面，不另起一行：整句读下来才是一个完整的问答。 */}
-          <Show
-            when={needed()}
-            fallback={
-              <span class="gct-answer" data-fail="true">
-                在 {formatCount(MAX_TRIALS)} 抽以內達不到這個把握。
-              </span>
-            }
-          >
-            {(trials) => (
-              <span class="gct-answer">
-                需要 <strong>{formatCount(trials())}</strong> 抽
-                <Show when={state.costPerTrial > 0}>
-                  <span class="gct-answer-extra">
-                    ，折合 {formatMoney(trials() * state.costPerTrial)}
-                  </span>
-                </Show>
-              </span>
-            )}
-          </Show>
-        </div>
-      </div>
-
       <Show when={hasMoney()}>
         <div class="gct-block gct-appear">
           <h3 class="gct-block-title">期望值</h3>
@@ -905,6 +909,9 @@ export default function GachaCalculatorTool() {
           </div>
         </div>
       </Show>
+
+      {/* 模拟结果是一次性的，不进 GachaState：存档格式不必升版，重新整理也不该留着上次的手气。 */}
+      <GachaSimulator prizes={state.prizes} targetIndex={targetIndex()} />
 
       {/*
         用 div 而不是 <footer>：主题的 `.post footer::before` 会给文章里每个 footer
